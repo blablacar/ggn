@@ -27,11 +27,11 @@ godep go test -cover $dir/...
 
 # build
 if `command -v parallel >/dev/null 2>&1`; then
-    echo -e "darwin\nwindows\nlinux" | parallel --will-cite -j10 --workdir . "GOOS={} GOARCH=amd64 godep go build -o dist/{}-amd64/green-garden"
-    mv dist/windows-amd64/green-garden dist/windows-amd64/green-garden.exe
+    echo -e "darwin\nlinux" | parallel --will-cite -j10 --workdir . "GOOS={} GOARCH=amd64 godep go build -o dist/{}-amd64/green-garden"
+#    mv dist/windows-amd64/green-garden dist/windows-amd64/green-garden.exe
 else
     GOOS=darwin GOARCH=amd64 godep go build -o dist/darwin-amd64/green-garden
-    GOOS=windows GOARCH=amd64 godep go build -o dist/windows-amd64/green-garden.exe
+#    GOOS=windows GOARCH=amd64 godep go build -o dist/windows-amd64/green-garden.exe
     GOOS=linux GOARCH=amd64 godep go build -o $dir/dist/linux-amd64/green-garden
 fi
 
