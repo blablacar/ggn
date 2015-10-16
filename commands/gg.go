@@ -22,6 +22,7 @@ const PATH_ENV = "/env"
 func Execute() {
 	log.Set(logger.NewLogger())
 	config.GetConfig().Load()
+	checkFleetVersion()
 
 	var rootCmd = &cobra.Command{
 		Use: "green-garden",
@@ -58,7 +59,6 @@ func checkFleetVersion() {
 			break
 		}
 	}
-
 }
 
 var runner = func(cmd *cobra.Command, args []string) {
@@ -70,10 +70,48 @@ var runner = func(cmd *cobra.Command, args []string) {
 	}
 
 	for _, unit := range strings.Split(units, "\n") {
-		utils.ExecCmdGetOutput("fleetctl", "-strict-host-key-checking=false", "cat", unit)
-		log.Get().Info(">>")
-	}
+		content, err := utils.ExecCmdGetOutput("fleetctl", "-strict-host-key-checking=false", "cat", unit)
+		if err != nil {
+			log.Get().Panic("Fleetctl failed to cat service content : ", unit)
+		}
+		unitInfo := strings.Split(unit, "_")
+		if unitInfo[0] != cmd.Use {
+			log.Get().Warn("Unknown unit" + unit)
+			continue
+		}
 
+		unitPath := config.GetConfig().EnvPath + PATH_ENV + "/" + cmd.Use + "/services/" + unitInfo[1] + "/units/" + unit
+		unitFileContent, err := ioutil.ReadFile(unitPath)
+		if err != nil {
+			log.Get().Warn("Cannot read unit file : " + unitPath)
+			continue
+		}
+
+		res := convertMultilineUnitToString(unitFileContent)
+		if res != content {
+			log.Get().Info("Unit '" + unit + "' is not up to date")
+			log.Get().Trace(content)
+			//			log.Get().Trace(fmt.Sprintf("%x", content))
+			log.Get().Trace(res)
+			//			log.Get().Trace(fmt.Sprintf("%x", res))
+		}
+	}
+}
+
+func convertMultilineUnitToString(content []byte) string {
+	var lines []string
+	var currentLine string
+	scanner := bufio.NewScanner(strings.NewReader(string(content)))
+	for scanner.Scan() {
+		currentLine += strings.TrimRight(scanner.Text(), " ")
+		if strings.HasSuffix(currentLine, "\\") {
+			currentLine = currentLine[0:len(currentLine)-2] + "  "
+		} else {
+			lines = append(lines, currentLine)
+			currentLine = ""
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 func loadEnvCommands(rootCmd *cobra.Command) {
