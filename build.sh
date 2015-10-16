@@ -26,12 +26,17 @@ gofmt -w -s .
 godep go test -cover $dir/...
 
 # build
-#GOOS=darwin GOARCH=amd64 godep go build -o dist/darwin-amd64/green-garden&
-#GOOS=windows GOARCH=amd64 godep go build -o dist/windows-amd64/green-garden.exe&
-GOOS=linux GOARCH=amd64 godep go build -o $dir/dist/linux-amd64/gg
+if `command -v parallel >/dev/null 2>&1`; then
+    echo -e "darwin\nwindows\nlinux" | parallel --will-cite -j10 --workdir . "GOOS={} GOARCH=amd64 godep go build -o dist/{}-amd64/green-garden"
+    mv dist/windows-amd64/green-garden dist/windows-amd64/green-garden.exe
+else
+    GOOS=darwin GOARCH=amd64 godep go build -o dist/darwin-amd64/green-garden
+    GOOS=windows GOARCH=amd64 godep go build -o dist/windows-amd64/green-garden.exe
+    GOOS=linux GOARCH=amd64 godep go build -o $dir/dist/linux-amd64/green-garden
+fi
 
 # install
-cp $dir/dist/linux-amd64/gg $GOPATH/bin/gg
+cp $dir/dist/linux-amd64/green-garden $GOPATH/bin/green-garden
 
 end=`date +%s`
 echo "Duration : $((end-start))s"

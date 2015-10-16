@@ -22,7 +22,7 @@ func (c *GgConfig) Load() {
 }
 
 func init() {
-	ggConfig = GgConfig{Path: utils.UserHomeOrFatal() + "/.config/gg"}
+	ggConfig = GgConfig{Path: utils.UserHomeOrFatal() + "/.config/green-garden"}
 
 	if source, err := ioutil.ReadFile(ggConfig.Path + "/config.yml"); err == nil {
 		err = yaml.Unmarshal([]byte(source), &ggConfig)
