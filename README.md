@@ -1,4 +1,4 @@
-# gg
+# green-garden
 
 
 
@@ -8,5 +8,5 @@
 
 # configuration file
 ```
-
+envPath: /home/myuser/build-tools
 ```
