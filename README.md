@@ -8,5 +8,5 @@
 
 # configuration file
 ```
-envPath: /home/myuser/build-tools
+workPath: /home/myuser/build-tools
 ```

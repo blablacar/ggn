@@ -10,8 +10,8 @@ import (
 var ggConfig GgConfig
 
 type GgConfig struct {
-	Path    string
-	EnvPath string `yaml:"envPath,omitempty"`
+	Path     string
+	WorkPath string `yaml:"workPath,omitempty"`
 }
 
 func GetConfig() *GgConfig {
