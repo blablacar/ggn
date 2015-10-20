@@ -14,14 +14,31 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 	work := work.NewWork(config.GetConfig().WorkPath)
 
 	for _, f := range work.ListEnvs() {
+		var env = f
 		var envCmd = &cobra.Command{
-			Use: f,
+			Use:   env,
+			Short: "Run command for " + env,
 			Run: func(cmd *cobra.Command, args []string) {
 				runner(cmd, args, work)
 			},
 		}
+
+		var generateCmd = &cobra.Command{
+			Use:   "generate",
+			Short: "Generate units for " + env,
+			Run: func(cmd *cobra.Command, args []string) {
+				generate(cmd, args, work, env)
+			},
+		}
+		envCmd.AddCommand(generateCmd)
+
 		rootCmd.AddCommand(envCmd)
 	}
+}
+
+func generate(cmd *cobra.Command, args []string, work *work.Work, env string) {
+	log.Get().Debug("Generate units for env " + env)
+	work.LoadEnv(env).Generate()
 }
 
 func runner(cmd *cobra.Command, args []string, work *work.Work) {
@@ -45,7 +62,7 @@ func runner(cmd *cobra.Command, args []string, work *work.Work) {
 			continue
 		}
 
-		res, err := env.GetUnitContentAsFleeted(unitInfo[1], unit)
+		res, err := env.LoadService(unitInfo[1]).LoadUnit(unit).GetUnitContentAsFleeted()
 		if err != nil {
 			log.Get().Warn("Cannot read unit file : " + unit)
 			continue

@@ -21,13 +21,13 @@ import (
 
 func TestAppValid(t *testing.T) {
 	tests := []App{
-		App{
+		{
 			Exec:             []string{"/bin/httpd"},
 			User:             "0",
 			Group:            "0",
 			WorkingDirectory: "/tmp",
 		},
-		App{
+		{
 			Exec:  []string{"/app"},
 			User:  "0",
 			Group: "0",
@@ -40,7 +40,7 @@ func TestAppValid(t *testing.T) {
 			},
 			WorkingDirectory: "/tmp",
 		},
-		App{
+		{
 			Exec:             []string{"/app", "arg1", "arg2"},
 			User:             "0",
 			Group:            "0",
@@ -56,20 +56,20 @@ func TestAppValid(t *testing.T) {
 
 func TestAppExecInvalid(t *testing.T) {
 	tests := []App{
-		App{
+		{
 			Exec: nil,
 		},
-		App{
+		{
 			Exec:  []string{},
 			User:  "0",
 			Group: "0",
 		},
-		App{
+		{
 			Exec:  []string{"app"},
 			User:  "0",
 			Group: "0",
 		},
-		App{
+		{
 			Exec:  []string{"bin/app", "arg1"},
 			User:  "0",
 			Group: "0",
@@ -84,31 +84,31 @@ func TestAppExecInvalid(t *testing.T) {
 
 func TestAppEventHandlersInvalid(t *testing.T) {
 	tests := []App{
-		App{
+		{
 			Exec:  []string{"/bin/httpd"},
 			User:  "0",
 			Group: "0",
 			EventHandlers: []EventHandler{
-				EventHandler{
+				{
 					Name: "pre-start",
 				},
-				EventHandler{
+				{
 					Name: "pre-start",
 				},
 			},
 		},
-		App{
+		{
 			Exec:  []string{"/bin/httpd"},
 			User:  "0",
 			Group: "0",
 			EventHandlers: []EventHandler{
-				EventHandler{
+				{
 					Name: "post-stop",
 				},
-				EventHandler{
+				{
 					Name: "pre-start",
 				},
-				EventHandler{
+				{
 					Name: "post-stop",
 				},
 			},
@@ -123,14 +123,14 @@ func TestAppEventHandlersInvalid(t *testing.T) {
 
 func TestUserGroupInvalid(t *testing.T) {
 	tests := []App{
-		App{
+		{
 			Exec: []string{"/app"},
 		},
-		App{
+		{
 			Exec: []string{"/app"},
 			User: "0",
 		},
-		App{
+		{
 			Exec:  []string{"app"},
 			Group: "0",
 		},
@@ -144,13 +144,13 @@ func TestUserGroupInvalid(t *testing.T) {
 
 func TestAppWorkingDirectoryInvalid(t *testing.T) {
 	tests := []App{
-		App{
+		{
 			Exec:             []string{"/app"},
 			User:             "foo",
 			Group:            "bar",
 			WorkingDirectory: "stuff",
 		},
-		App{
+		{
 			Exec:             []string{"/app"},
 			User:             "foo",
 			Group:            "bar",
@@ -166,7 +166,7 @@ func TestAppWorkingDirectoryInvalid(t *testing.T) {
 
 func TestAppEnvironmentInvalid(t *testing.T) {
 	tests := []App{
-		App{
+		{
 			Exec:  []string{"/app"},
 			User:  "foo",
 			Group: "bar",

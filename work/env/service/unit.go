@@ -1,33 +1,25 @@
-package env
+package service
 
 import (
 	"bufio"
-	"github.com/blablacar/cnt/log"
 	"io/ioutil"
 	"strings"
 )
 
-const PATH_SERVICES = "/services"
-const PATH_UNITS = "/units"
-
-type Env struct {
-	Path string
+type Unit struct {
+	path string
+	name string
 }
 
-func NewEnvironment(root string, name string) *Env {
-	path := root + "/" + name
-	_, err := ioutil.ReadDir(path)
-	if err != nil {
-		log.Get().Panic("Cannot read env directory : "+path, err)
-	}
-
-	env := new(Env)
-	env.Path = path
-	return env
+func NewUnit(path string, name string) *Unit {
+	unit := new(Unit)
+	unit.path = path
+	unit.name = name
+	return unit
 }
 
-func (e Env) GetUnitContentAsFleeted(service string, unitName string) (string, error) {
-	unitPath := e.Path + "/services/" + service + "/units/" + unitName
+func (u Unit) GetUnitContentAsFleeted() (string, error) {
+	unitPath := u.path + "/units/" + u.name
 	unitFileContent, err := ioutil.ReadFile(unitPath)
 	if err != nil {
 		return "", err

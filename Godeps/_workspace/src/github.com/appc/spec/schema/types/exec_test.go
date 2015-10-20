@@ -18,9 +18,9 @@ import "testing"
 
 func TestExecValid(t *testing.T) {
 	tests := []Exec{
-		Exec{"/bin/httpd"},
-		Exec{"/app"},
-		Exec{"/app", "arg1", "arg2"},
+		{"/bin/httpd"},
+		{"/app"},
+		{"/app", "arg1", "arg2"},
 	}
 	for i, tt := range tests {
 		if err := tt.assertValid(); err != nil {
@@ -31,8 +31,8 @@ func TestExecValid(t *testing.T) {
 
 func TestExecInvalid(t *testing.T) {
 	tests := []Exec{
-		Exec{},
-		Exec{"app"},
+		{},
+		{"app"},
 	}
 	for i, tt := range tests {
 		if err := tt.assertValid(); err == nil {

@@ -3,7 +3,6 @@ package work
 import (
 	"github.com/blablacar/cnt/log"
 	"github.com/blablacar/green-garden/config"
-	"github.com/blablacar/green-garden/env"
 	"io/ioutil"
 	"os"
 )
@@ -20,8 +19,8 @@ func NewWork(path string) *Work {
 	return work
 }
 
-func (w Work) LoadEnv(name string) *env.Env {
-	return env.NewEnvironment(w.path+PATH_ENV, name)
+func (w Work) LoadEnv(name string) *Env {
+	return NewEnvironment(w.path+PATH_ENV, name)
 }
 
 func (w Work) ListEnvs() []string {
