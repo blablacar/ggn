@@ -2,7 +2,11 @@ package spec
 
 import (
 	"encoding/json"
+	"github.com/appc/spec/discovery"
 	"github.com/blablacar/cnt/log"
+	"github.com/juju/errors"
+	"net/http"
+	"regexp"
 	"strings"
 )
 
@@ -11,16 +15,41 @@ type ACFullname string
 func (n *ACFullname) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
-		log.Get().Panic(err)
 		return err
 	}
 	nn, err := NewACFullName(s)
 	if err != nil {
-		log.Get().Panic(err)
-		return err
+		return errors.Annotate(err, "Construction of AcFullname failed for : "+s)
 	}
 	*n = *nn
 	return nil
+}
+
+func (n ACFullname) LatestVersion() (string, error) {
+	app, err := discovery.NewAppFromString(n.Name() + ":latest")
+	if app.Labels["os"] == "" {
+		app.Labels["os"] = "linux"
+	}
+	if app.Labels["arch"] == "" {
+		app.Labels["arch"] = "amd64"
+	}
+
+	endpoint, _, err := discovery.DiscoverEndpoints(*app, false)
+	if err != nil {
+		return "", errors.Annotate(err, "Latest discovery fail")
+	}
+
+	r, _ := regexp.Compile(`^(\d+\.)?(\d+\.)?(\*|\d+)$`)
+
+	url := getRedirectForLatest(endpoint.ACIEndpoints[0].ACI)
+	log.Debug("latest version url is ", url)
+
+	for _, part := range strings.Split(url, "/") {
+		if r.Match([]byte(part)) {
+			return part, nil
+		}
+	}
+	return "", errors.New("No latest version found")
 }
 
 func (n ACFullname) MarshalJSON() ([]byte, error) {
@@ -35,6 +64,18 @@ func (n ACFullname) String() string {
 func NewACFullName(s string) (*ACFullname, error) {
 	n := ACFullname(s)
 	return &n, nil
+}
+
+func (n ACFullname) FullyResolved() (*ACFullname, error) {
+	version := n.Version()
+	if version != "" {
+		return &n, nil
+	}
+	version, err := n.LatestVersion()
+	if err != nil {
+		return nil, errors.Annotate(err, "Cannot fully resolve AcFullname")
+	}
+	return NewACFullName(n.Name() + ":" + version)
 }
 
 /* 1 */
@@ -59,4 +100,33 @@ func (n ACFullname) ShortName() string {
 /* example.com/yopla */
 func (n ACFullname) Name() string {
 	return strings.Split(string(n), ":")[0]
+}
+
+////////////////////////////////
+
+func getRedirectForLatest(url string) string {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return ""
+	}
+	transport := http.DefaultTransport
+	//	if insecureSkipVerify {
+	//		transport = &http.Transport{
+	//			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	//		}
+	//	}
+	client := &http.Client{Transport: transport}
+	myurl := ""
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		myurl = req.URL.Path
+		return errors.New("do not want to get the file")
+	}
+	_, err2 := client.Do(req)
+	if err2 != nil {
+		if myurl != "" {
+			return myurl
+		}
+		return ""
+	}
+	return myurl
 }

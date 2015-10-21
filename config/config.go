@@ -31,5 +31,5 @@ func init() {
 		}
 	}
 
-	log.Get().Debug("Home folder is " + ggConfig.Path)
+	log.Debug("Home folder is " + ggConfig.Path)
 }

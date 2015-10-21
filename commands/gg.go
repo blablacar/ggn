@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/blablacar/cnt/log"
 	"github.com/blablacar/cnt/logger"
 	"github.com/blablacar/cnt/utils"
@@ -9,6 +10,7 @@ import (
 	"github.com/blablacar/green-garden/config"
 	"github.com/coreos/go-semver/semver"
 	"github.com/spf13/cobra"
+	"os"
 	"strings"
 )
 
@@ -17,26 +19,39 @@ var buildArgs = builder.BuildArgs{}
 const FLEET_SUPPORTED_VERSION = "0.11.5"
 
 func Execute() {
-	log.Set(logger.NewLogger())
+
 	config.GetConfig().Load()
 	checkFleetVersion()
 
+	var logLevel string
 	var rootCmd = &cobra.Command{
 		Use: "green-garden",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			level, err := log.LogLevel(logLevel)
+			if err != nil {
+				fmt.Printf("Unknown log level : %s", logLevel)
+			}
+
+			o, ok := log.Logger.(*logger.Logger)
+			if ok {
+				o.Level = *level
+			}
+		},
 	}
+	rootCmd.PersistentFlags().StringVarP(&logLevel, "loglevel", "L", "info", "Set log level")
+	rootCmd.AddCommand(versionCmd, generateCmd)
 
 	loadEnvCommands(rootCmd)
 
-	rootCmd.AddCommand(versionCmd, generateCmd)
 	rootCmd.Execute()
-
-	log.Get().Info("Victory !")
+	log.Info("Victory !")
 }
 
 func checkFleetVersion() {
 	output, err := utils.ExecCmdGetOutput("fleetctl")
 	if err != nil {
-		log.Get().Panic("fleetctl is required in PATH")
+		log.Error("fleetctl is required in PATH")
+		os.Exit(1)
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(output))
@@ -47,11 +62,13 @@ func checkFleetVersion() {
 			versionString := strings.TrimSpace(scanner.Text())
 			version, err := semver.NewVersion(versionString)
 			if err != nil {
-				log.Get().Panic("Cannot parse version of fleetctl", versionString)
+				log.Error("Cannot parse version of fleetctl", versionString)
+				os.Exit(1)
 			}
 			supported, _ := semver.NewVersion(FLEET_SUPPORTED_VERSION)
 			if version.LessThan(*supported) {
-				log.Get().Panic("fleetctl version in your path is too old. Require >= " + FLEET_SUPPORTED_VERSION)
+				log.Error("fleetctl version in your path is too old. Require >= " + FLEET_SUPPORTED_VERSION)
+				os.Exit(1)
 			}
 			break
 		}

@@ -5,6 +5,7 @@ import (
 	"github.com/blablacar/green-garden/spec"
 	"github.com/blablacar/green-garden/work/env"
 	"io/ioutil"
+	"os"
 )
 
 const PATH_SERVICES = "/services"
@@ -18,7 +19,8 @@ func NewEnvironment(root string, name string) *Env {
 	path := root + "/" + name
 	_, err := ioutil.ReadDir(path)
 	if err != nil {
-		log.Get().Panic("Cannot read env directory : "+path, err)
+		log.Error("Cannot read env directory : "+path, err)
+		os.Exit(1)
 	}
 
 	env := new(Env)

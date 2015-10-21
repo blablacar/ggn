@@ -3,29 +3,39 @@
 	"GoVersion": "go1.5.1",
 	"Deps": [
 		{
+			"ImportPath": "github.com/appc/spec/discovery",
+			"Comment": "v0.6.1-42-g2981bdf",
+			"Rev": "2981bdf7017cc2cd04fcaf0caf6342e552fa176e"
+		},
+		{
 			"ImportPath": "github.com/appc/spec/schema",
 			"Comment": "v0.6.1-42-g2981bdf",
 			"Rev": "2981bdf7017cc2cd04fcaf0caf6342e552fa176e"
 		},
 		{
+			"ImportPath": "github.com/blablacar/attributes-merger/attributes",
+			"Comment": "0.1-1-g30159b5",
+			"Rev": "30159b53699ee5ed712452fc8adc11d7a2d78306"
+		},
+		{
 			"ImportPath": "github.com/blablacar/cnt/log",
-			"Comment": "39",
-			"Rev": "e0bb79421d39dd9d3befc7a3228fa12e9a169c52"
+			"Comment": "39-12-g1bcbbe0",
+			"Rev": "1bcbbe0323dfbd35effc4fd08371f77adf921b88"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/logger",
-			"Comment": "39",
-			"Rev": "e0bb79421d39dd9d3befc7a3228fa12e9a169c52"
+			"Comment": "39-12-g1bcbbe0",
+			"Rev": "1bcbbe0323dfbd35effc4fd08371f77adf921b88"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/spec",
-			"Comment": "39",
-			"Rev": "e0bb79421d39dd9d3befc7a3228fa12e9a169c52"
+			"Comment": "39-12-g1bcbbe0",
+			"Rev": "1bcbbe0323dfbd35effc4fd08371f77adf921b88"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/utils",
-			"Comment": "39",
-			"Rev": "e0bb79421d39dd9d3befc7a3228fa12e9a169c52"
+			"Comment": "39-12-g1bcbbe0",
+			"Rev": "1bcbbe0323dfbd35effc4fd08371f77adf921b88"
 		},
 		{
 			"ImportPath": "github.com/coreos/go-semver/semver",
@@ -36,8 +46,24 @@
 			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
 		},
 		{
+			"ImportPath": "github.com/juju/errors",
+			"Rev": "1b5e39b83d1835fa480e0c2ddefb040ee82d58b3"
+		},
+		{
+			"ImportPath": "github.com/kelseyhightower/memkv",
+			"Rev": "32a4556de2a1aab8ea4c8600f5ea24db3fbd8908"
+		},
+		{
 			"ImportPath": "github.com/mitchellh/go-homedir",
 			"Rev": "1f6da4a72e57d4e7edd4a7295a585e0a3999a2d4"
+		},
+		{
+			"ImportPath": "github.com/op/go-logging",
+			"Rev": "e8d5414f0947014548c2334044a0fac13187dfee"
+		},
+		{
+			"ImportPath": "github.com/peterbourgon/mergemap",
+			"Rev": "e21c03b7a721e413718d2703181ead350d3c9d6f"
 		},
 		{
 			"ImportPath": "github.com/spf13/cobra",
@@ -46,6 +72,10 @@
 		{
 			"ImportPath": "github.com/spf13/pflag",
 			"Rev": "67cbc198fd11dab704b214c1e629a97af392c085"
+		},
+		{
+			"ImportPath": "golang.org/x/net/html",
+			"Rev": "ea47fc708ee3e20177f3ca3716217c4ab75942cb"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",

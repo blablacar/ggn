@@ -26,12 +26,14 @@ func (w Work) LoadEnv(name string) *Env {
 func (w Work) ListEnvs() []string {
 	path := config.GetConfig().WorkPath + PATH_ENV
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		log.Get().Panic("env directory not found in " + config.GetConfig().WorkPath)
+		log.Error("env directory not found in " + config.GetConfig().WorkPath)
+		os.Exit(1)
 	}
 
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		log.Get().Panic("Cannot read env directory : "+path, err)
+		log.Error("Cannot read env directory : "+path, err)
+		os.Exit(1)
 	}
 
 	var envs []string

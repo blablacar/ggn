@@ -3,7 +3,6 @@ package env
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/blablacar/cnt/log"
 	"github.com/kelseyhightower/memkv"
 	"io"
 	"os"
@@ -25,7 +24,6 @@ func NewTemplating(name, content string) *Templating {
 	t := new(Templating)
 	t.name = name
 	t.content = cleanupOfTemplate(content)
-	log.Get().Error(t.content)
 	t.functions = newFuncMap()
 	t.vars = memkv.New()
 	addFuncs(t.functions, t.vars.FuncMap)
