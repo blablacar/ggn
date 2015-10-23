@@ -96,7 +96,7 @@ func (s Service) GenerateUnits(envAttributePath string, envName string) {
 					if err != nil {
 						logAci.WithError(err).Fatal("Cannot fully resolve ACI")
 					}
-					acis += resolved.String()
+					acis += resolved.String() + " "
 				}
 			}
 
