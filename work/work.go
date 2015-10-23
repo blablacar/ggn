@@ -1,7 +1,7 @@
 package work
 
 import (
-	"github.com/blablacar/cnt/log"
+	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/green-garden/config"
 	"io/ioutil"
 	"os"

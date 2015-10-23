@@ -3,25 +3,34 @@ package env
 import (
 	"bytes"
 	"encoding/json"
+	log "github.com/Sirupsen/logrus"
+	"github.com/appc/spec/discovery"
+	"github.com/appc/spec/schema"
 	"github.com/blablacar/attributes-merger/attributes"
-	"github.com/blablacar/cnt/log"
+	cntspec "github.com/blablacar/cnt/spec"
+	"github.com/blablacar/green-garden/Godeps/_workspace/src/github.com/juju/errors"
 	"github.com/blablacar/green-garden/spec"
 	"github.com/blablacar/green-garden/work/env/service"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"net/http"
 	"os"
+	"strings"
 )
 
 type Service struct {
 	path     string
 	name     string
 	manifest spec.ServiceManifest
+	log      *log.Entry
 }
 
 func NewService(path string, name string) *Service {
-	service := new(Service)
-	service.path = path + "/" + name
-	service.name = name
+	service := &Service{
+		log:  log.WithField("service", name),
+		path: path + "/" + name,
+		name: name,
+	}
 	service.loadManifest()
 	return service
 }
@@ -34,28 +43,83 @@ func (s Service) LoadUnit(name string) *service.Unit {
 }
 
 func (s Service) GenerateUnits(envAttributePath string, envName string) {
-	tmpl := s.loadUnitTemplate()
+	s.log.Debug("Generating units")
+
+	tmpl, err := s.loadUnitTemplate()
+	if err != nil {
+		s.log.WithError(err).Error("Cannot load units template")
+		return
+	}
 
 	var acis string
 	for _, aci := range s.manifest.Containers {
-		aci, err := aci.FullyResolved()
-		log.Error(aci)
-		if err != nil {
-			panic("Cannot resolve aci" + err.Error())
+		if strings.HasPrefix(aci.ShortName(), "pod-") {
+			logAci := s.log.WithField("aci", aci)
+
+			app, err := discovery.NewAppFromString(aci.String())
+			if app.Labels["os"] == "" {
+				app.Labels["os"] = "linux"
+			}
+			if app.Labels["arch"] == "" {
+				app.Labels["arch"] = "amd64"
+			}
+
+			endpoint, _, err := discovery.DiscoverEndpoints(*app, false)
+			if err != nil {
+				logAci.WithError(err).Fatal("pod discovery failed")
+			}
+
+			url := endpoint.ACIEndpoints[0].ACI
+			url = strings.Replace(url, "=aci", "=pod", 1) // TODO this is nexus specific
+
+			logUrl := logAci.WithField("url", url)
+			response, err := http.Get(url)
+			if err != nil {
+				logUrl.WithError(err).Fatal("Cannot get pod manifest content")
+			} else {
+				defer response.Body.Close()
+				contents, err := ioutil.ReadAll(response.Body)
+				if err != nil {
+					logUrl.WithError(err).Fatal("Cannot read pod manifest content")
+				}
+				pod := schema.BlankPodManifest()
+				pod.UnmarshalJSON(contents)
+
+				for _, podAci := range pod.Apps {
+					version, ok := podAci.Image.Labels.Get("version")
+					if !ok {
+						version = "latest"
+					}
+					fullname := cntspec.NewACFullName(podAci.Image.Name.String() + ":" + version)
+
+					resolved, err := fullname.FullyResolved()
+					if err != nil {
+						logAci.WithError(err).Fatal("Cannot fully resolve ACI")
+					}
+					acis += resolved.String()
+				}
+			}
+
+		} else {
+			aci, err := aci.FullyResolved()
+			if err != nil {
+				s.log.WithError(err).WithField("aci", aci).Error("Cannot resolve aci")
+				return
+			}
+			acis += aci.String() + " "
 		}
-		acis += aci.String() + " "
 	}
 
 	for i, node := range s.manifest.Nodes {
 
 		if node[spec.NODE_HOSTNAME].(string) == "" {
-			log.Error("hostname is mandatory in node informations :", s.manifestPath(), "node["+string(i)+"]")
+			s.log.Error("hostname is mandatory in node informations :", s.manifestPath(), "node["+string(i)+"]")
 			os.Exit(1)
 		}
-		log.Debug("Processing node : " + s.name + ":" + node[spec.NODE_HOSTNAME].(string))
+		s.log.Debug("Processing node :" + node[spec.NODE_HOSTNAME].(string))
 
 		unitName := envName + "_" + s.name + "_" + node[spec.NODE_HOSTNAME].(string) + ".service"
-		log.Trace("Unit name is :" + unitName)
+		s.log.Debug("Unit name is :" + unitName)
 
 		attributes := attributes.MergeAttributes(mergeAttributesDirectories(envAttributePath, s.path+spec.PATH_ATTRIBUTES))
 		attributes["node"] = node //TODO this should be merged
@@ -66,7 +130,7 @@ func (s Service) GenerateUnits(envAttributePath string, envName string) {
 		var b bytes.Buffer
 		err = tmpl.Execute(&b, attributes)
 		if err != nil {
-			log.Error("Failed to run templating for unit "+unitName, err)
+			s.log.Error("Failed to run templating for unit "+unitName, err)
 			os.Exit(1)
 		}
 		ioutil.WriteFile(s.path+"/units"+"/"+unitName, b.Bytes(), 0644)
@@ -106,15 +170,15 @@ func mergeAttributesDirectories(envAttributesPath string, serviceAttributesPath 
 	return res
 }
 
-func (s *Service) loadUnitTemplate() *Templating {
+func (s *Service) loadUnitTemplate() (*Templating, error) {
 	path := s.path + spec.PATH_UNIT_TEMPLATE
 	source, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Warn("Cannot read unit template file '" + s.name + "' : " + path)
+		return nil, errors.Annotate(err, "Cannot read unit template file")
 	}
 	template := NewTemplating(s.name, string(source))
 	template.Parse()
-	return template
+	return template, nil
 }
 
 func (s Service) manifestPath() string {
@@ -124,14 +188,13 @@ func (s Service) manifestPath() string {
 func (s *Service) loadManifest() {
 	manifest := spec.ServiceManifest{}
 	path := s.manifestPath()
-	log.Trace("Service manifest is at : " + path)
 	source, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Warn("Cannot find manifest for service '" + s.name + "' : " + path)
+		s.log.WithError(err).WithField("path", path).Warn("Cannot find manifest for service")
 	}
 	err = yaml.Unmarshal([]byte(source), &manifest)
 	if err != nil {
-		panic(err)
+		s.log.WithError(err).Fatal("Cannot Read service manifest")
 	}
 	s.manifest = manifest
 }

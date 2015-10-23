@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/log"
-	"github.com/blablacar/cnt/logger"
 	"github.com/blablacar/green-garden/commands"
 )
 
-//go:generate go run compile/info_generate.go
+//go:generate go run compile/version_generate.go
 func main() {
-	log.Logger = logger.NewLogger()
+	logrus.SetFormatter(&log.BlaFormatter{})
 	commands.Execute()
 }

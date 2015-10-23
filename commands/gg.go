@@ -3,8 +3,7 @@ package commands
 import (
 	"bufio"
 	"fmt"
-	"github.com/blablacar/cnt/log"
-	"github.com/blablacar/cnt/logger"
+	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/utils"
 	"github.com/blablacar/green-garden/builder"
 	"github.com/blablacar/green-garden/config"
@@ -19,6 +18,7 @@ var buildArgs = builder.BuildArgs{}
 const FLEET_SUPPORTED_VERSION = "0.11.5"
 
 func Execute() {
+	//	log.SetFormatter(new(log.JSONFormatter))
 
 	config.GetConfig().Load()
 	checkFleetVersion()
@@ -27,15 +27,12 @@ func Execute() {
 	var rootCmd = &cobra.Command{
 		Use: "green-garden",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			level, err := log.LogLevel(logLevel)
+			level, err := log.ParseLevel(logLevel)
 			if err != nil {
 				fmt.Printf("Unknown log level : %s", logLevel)
+				os.Exit(1)
 			}
-
-			o, ok := log.Logger.(*logger.Logger)
-			if ok {
-				o.Level = *level
-			}
+			log.SetLevel(level)
 		},
 	}
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "loglevel", "L", "info", "Set log level")

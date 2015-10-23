@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/blablacar/cnt/log"
+	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/utils"
 	"github.com/blablacar/green-garden/config"
 	"github.com/blablacar/green-garden/work"
@@ -10,7 +10,7 @@ import (
 )
 
 func loadEnvCommands(rootCmd *cobra.Command) {
-	log.Info("Work path is :", config.GetConfig().WorkPath)
+	log.WithField("path", config.GetConfig().WorkPath).Debug("Loading envs")
 	work := work.NewWork(config.GetConfig().WorkPath)
 
 	for _, f := range work.ListEnvs() {
@@ -37,42 +37,43 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 }
 
 func generate(cmd *cobra.Command, args []string, work *work.Work, env string) {
-	log.Debug("Generate units for env " + env)
+	log.WithField("env", env).Debug("Generating units")
 	work.LoadEnv(env).Generate()
 }
 
 func runner(cmd *cobra.Command, args []string, work *work.Work) {
-	log.Info("Running command on " + cmd.Use)
+	logEnv := log.WithField("env", cmd.Use)
+	logEnv.Info("Running command")
 
 	env := work.LoadEnv(cmd.Use)
 
 	units, err := utils.ExecCmdGetOutput("fleetctl", "-strict-host-key-checking=false", "list-unit-files", "-no-legend", "-fields", "unit")
 	if err != nil {
-		panic("Cannot list unit files" + err.Error())
+		log.WithError(err).Fatal("Cannot list unit files")
 	}
 
 	for _, unit := range strings.Split(units, "\n") {
+		logUnit := logEnv.WithField("unit", unit)
+
 		content, err := utils.ExecCmdGetOutput("fleetctl", "-strict-host-key-checking=false", "cat", unit)
 		if err != nil {
-			panic("Fleetctl failed to cat service content : " + unit)
+			logUnit.WithError(err).Fatal("Fleetctl failed to cat service content")
 		}
 		unitInfo := strings.Split(unit, "_")
 		if unitInfo[0] != cmd.Use {
-			log.Warn("Unknown unit" + unit)
+			logUnit.Warn("Unknown unit")
 			continue
 		}
 
 		res, err := env.LoadService(unitInfo[1]).LoadUnit(unit).GetUnitContentAsFleeted()
 		if err != nil {
-			log.Warn("Cannot read unit file : " + unit)
+			logUnit.Warn("Cannot read unit file")
 			continue
 		}
 		if res != content {
-			log.Info("Unit '" + unit + "' is not up to date")
-			log.Debug(content)
-			//			log.Trace(fmt.Sprintf("%x", content))
-			log.Debug(res)
-			//			log.Trace(fmt.Sprintf("%x", res))
+			logUnit.Info("Unit is not up to date")
+			logUnit.WithField("source", "fleet").Debug(content)
+			logUnit.WithField("source", "file").Debug(res)
 		}
 	}
 }

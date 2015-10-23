@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -x
 start=`date +%s`
 dir=$( dirname $0 )
 
