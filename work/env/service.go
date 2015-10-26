@@ -125,7 +125,7 @@ func (s Service) GenerateUnits(envAttributePath string, envName string) {
 		attributes["node"] = node //TODO this should be merged
 		attributes["node"].(map[string]interface{})["acis"] = acis
 		out, err := json.Marshal(attributes)
-		attributes["attributes"] = string(out)
+		attributes["attributes"] = strings.Replace(string(out), "\\\"", "\\\\\\\"", -1)
 
 		var b bytes.Buffer
 		err = tmpl.Execute(&b, attributes)
