@@ -49,7 +49,7 @@ func runner(cmd *cobra.Command, args []string, work *work.Work) {
 
 	units, err := utils.ExecCmdGetOutput("fleetctl", "-strict-host-key-checking=false", "list-unit-files", "-no-legend", "-fields", "unit")
 	if err != nil {
-		log.WithError(err).Fatal("Cannot list unit files")
+		logEnv.WithError(err).Fatal("Cannot list unit files")
 	}
 
 	for _, unit := range strings.Split(units, "\n") {
@@ -67,7 +67,7 @@ func runner(cmd *cobra.Command, args []string, work *work.Work) {
 
 		res, err := env.LoadService(unitInfo[1]).LoadUnit(unit).GetUnitContentAsFleeted()
 		if err != nil {
-			logUnit.Warn("Cannot read unit file")
+			logUnit.WithError(err).Warn("Cannot read unit file")
 			continue
 		}
 		if res != content {
