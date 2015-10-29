@@ -18,3 +18,6 @@ type ServiceManifest struct {
 	ExecStart    []string                 `yaml:"execStart"`
 	Nodes        []map[string]interface{} `yaml:"nodes"`
 }
+
+type Service interface {
+}

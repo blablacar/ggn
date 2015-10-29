@@ -35,12 +35,25 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 			Use:   "generate",
 			Short: "Generate units for " + env,
 			Run: func(cmd *cobra.Command, args []string) {
-				generate(cmd, args, work, env)
+				generateEnv(cmd, args, work, env)
 			},
 		}
 		envCmd.AddCommand(generateCmd)
 
 		rootCmd.AddCommand(envCmd)
+
+		for _, g := range work.LoadEnv(env).ListServices() {
+			var service = g
+			var serviceCmd = &cobra.Command{
+				Use:   service,
+				Short: "run command for " + service + " on env :" + env,
+				Run: func(cmd *cobra.Command, args []string) {
+					generateService(cmd, args, work, env, service)
+				},
+			}
+
+			envCmd.AddCommand(serviceCmd)
+		}
 	}
 }
 
@@ -49,7 +62,11 @@ func run(cmd *cobra.Command, args []string, work *work.Work, env string) {
 	work.LoadEnv(env).Run(args)
 }
 
-func generate(cmd *cobra.Command, args []string, work *work.Work, env string) {
+func generateService(cmd *cobra.Command, args []string, work *work.Work, env string, service string) {
+	work.LoadEnv(env).LoadService(service).GenerateUnits()
+}
+
+func generateEnv(cmd *cobra.Command, args []string, work *work.Work, env string) {
 	log.WithField("env", env).Debug("Generating units")
 	work.LoadEnv(env).Generate()
 }

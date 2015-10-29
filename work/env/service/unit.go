@@ -2,19 +2,23 @@ package service
 
 import (
 	"bufio"
+	"github.com/blablacar/green-garden/spec"
 	"io/ioutil"
 	"strings"
 )
 
 type Unit struct {
-	path string
-	name string
+	path    string
+	name    string
+	service spec.Service
 }
 
-func NewUnit(path string, name string) *Unit {
-	unit := new(Unit)
-	unit.path = path
-	unit.name = name
+func NewUnit(path string, name string, service spec.Service) *Unit {
+	unit := &Unit{
+		path:    path,
+		name:    name,
+		service: service,
+	}
 	return unit
 }
 

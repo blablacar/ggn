@@ -11,9 +11,7 @@ import (
 	"strconv"
 )
 
-func MergeAttributes(files []string) map[string]interface{} {
-	omap := make(map[string]interface{})
-
+func MergeAttributesFilesForMap(omap map[string]interface{}, files []string) {
 	// loop over attributes files
 	// merge override files to default files
 	for _, file := range files {
@@ -35,7 +33,15 @@ func MergeAttributes(files []string) map[string]interface{} {
 		json := data.(map[string]interface{})
 		omap = mergemap.Merge(omap, json)
 	}
+}
 
+func MergeAttributesFiles(files []string) map[string]interface{} {
+	omap := make(map[string]interface{})
+	MergeAttributesFilesForMap(omap, files)
+	return ProcessOverride(omap)
+}
+
+func ProcessOverride(omap map[string]interface{}) map[string]interface{} {
 	// merge override to default inside the file
 	_, okd := omap["default"]
 	if okd == false {
@@ -52,7 +58,7 @@ func MergeAttributes(files []string) map[string]interface{} {
 
 func Merge(envName string, files []string) []byte { // inputDir string,
 	// "out map" to store merged yamls
-	omap := MergeAttributes(files)
+	omap := MergeAttributesFiles(files)
 
 	envjson := os.Getenv(envName)
 	if envjson != "" {

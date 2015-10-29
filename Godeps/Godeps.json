@@ -19,8 +19,8 @@
 		},
 		{
 			"ImportPath": "github.com/blablacar/attributes-merger/attributes",
-			"Comment": "0.1-1-g30159b5",
-			"Rev": "30159b53699ee5ed712452fc8adc11d7a2d78306"
+			"Comment": "0.1-2-gbf75c5b",
+			"Rev": "bf75c5bb64a5016808862fcf00917ebb8db6157a"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/log",

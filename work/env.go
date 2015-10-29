@@ -5,11 +5,13 @@ import (
 	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
-	"github.com/blablacar/cnt/utils"
+	cntUtils "github.com/blablacar/cnt/utils"
 	"github.com/blablacar/green-garden/spec"
+	"github.com/blablacar/green-garden/utils"
 	"github.com/blablacar/green-garden/work/env"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 const PATH_SERVICES = "/services"
@@ -34,41 +36,40 @@ func NewEnvironment(root string, name string) *Env {
 		name: name,
 		log:  log,
 	}
-	env.attributes = env.loadAttributes()
+	env.loadAttributes()
 	return env
 }
 
+func (e Env) GetName() string {
+	return e.name
+}
+
+func (e Env) GetLog() logrus.Entry {
+	return e.log
+}
+
+func (e Env) GetAttributes() map[string]interface{} {
+	return e.attributes
+}
+
 func (e Env) LoadService(name string) *env.Service {
-	return env.NewService(e.path+"/services", name)
+	return env.NewService(e.path+"/services", name, e)
 }
 
 func (e Env) attributesDir() string {
 	return e.path + spec.PATH_ATTRIBUTES
 }
 
-func (e Env) loadAttributes() map[string]interface{} {
-	attributes := attributes.MergeAttributes(e.attributeFiles())
-	e.log.WithField("attributes", attributes).Debug("Attributes loaded")
-	return attributes
-}
-
-func (e Env) attributeFiles() []string {
-	res := []string{}
-
-	in := attributes.NewInputs(e.path + spec.PATH_ATTRIBUTES)
-	// initialize input files list
-	err := in.ListFiles()
+func (e *Env) loadAttributes() {
+	files, err := utils.AttributeFiles(e.path + spec.PATH_ATTRIBUTES)
 	if err != nil {
-		panic(err)
+		e.log.WithError(err).WithField("path", e.path+spec.PATH_ATTRIBUTES).Panic("Cannot load Attributes files")
 	}
-
-	for _, file := range in.Files {
-		res = append(res, in.Directory+file)
-	}
-	return res
+	e.attributes = attributes.MergeAttributesFiles(files)
+	e.log.WithField("attributes", e.attributes).Debug("Attributes loaded")
 }
 
-func (e Env) listServices() []string {
+func (e Env) ListServices() []string {
 	path := e.path + PATH_SERVICES
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
@@ -83,6 +84,27 @@ func (e Env) listServices() []string {
 		services = append(services, file.Name())
 	}
 	return services
+}
+
+func (e Env) ListMachineNames() []string {
+	out, err := e.RunFleetCmdGetOutput("list-machines", "--fields=metadata", "--no-legend")
+	if err != nil {
+		e.log.WithError(err).Fatal("Cannot list-machines")
+	}
+
+	var names []string
+
+	machines := strings.Split(out, "\n")
+	for _, machine := range machines {
+		metas := strings.Split(machine, ",")
+		for _, meta := range metas {
+			elem := strings.Split(meta, "=")
+			if elem[0] == "name" { // TODO this is specific to blablacar's metadata ??
+				names = append(names, elem[1])
+			}
+		}
+	}
+	return names
 }
 
 const FLEETCTL_ENDPOINT = "FLEETCTL_ENDPOINT"
@@ -113,9 +135,9 @@ func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, error)
 	var out string
 	var err error
 	if getOutput {
-		out, err = utils.ExecCmdGetOutput("fleetctl", args...)
+		out, err = cntUtils.ExecCmdGetOutput("fleetctl", args...)
 	} else {
-		err = utils.ExecCmd("fleetctl", args...)
+		err = cntUtils.ExecCmd("fleetctl", args...)
 	}
 	//	if err != nil {
 	//		e.log.WithError(err).
