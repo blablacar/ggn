@@ -34,12 +34,12 @@ func NewService(path string, name string, env spec.Env) *Service {
 }
 
 func (s *Service) loadAttributes() {
-	attr := s.env.GetAttributes()
+	attr := utils.CopyMap(s.env.GetAttributes())
 	files, err := utils.AttributeFiles(s.path + spec.PATH_ATTRIBUTES)
 	if err != nil {
 		s.log.WithError(err).WithField("path", s.path+spec.PATH_ATTRIBUTES).Panic("Cannot load Attributes files")
 	}
-	attributes.MergeAttributesFilesForMap(attr, files)
+	attr = attributes.MergeAttributesFilesForMap(attr, files)
 	s.attributes = attr
 	s.log.WithField("attributes", s.attributes).Debug("Attributes loaded")
 }

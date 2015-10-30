@@ -9,6 +9,7 @@ import (
 	"github.com/blablacar/green-garden/spec"
 	"github.com/blablacar/green-garden/utils"
 	"github.com/blablacar/green-garden/work/env"
+	"github.com/juju/errors"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -122,6 +123,9 @@ func (e Env) RunFleetCmdGetOutput(args ...string) (string, error) {
 }
 
 func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, error) {
+	if e.attributes["fleet"] == nil || e.attributes["fleet"].(map[string]interface{})["endpoint"] == nil {
+		return "", errors.New("Cannot find ['fleet']['endpoint'] env attribute to call fleetctl")
+	}
 	endpoint := "http://" + e.attributes["fleet"].(map[string]interface{})["endpoint"].(string)
 	username := e.attributes["fleet"].(map[string]interface{})["username"].(string)
 	strict_host_key_checking := e.attributes["fleet"].(map[string]interface{})["strict_host_key_checking"].(bool)

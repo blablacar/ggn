@@ -11,7 +11,11 @@ import (
 	"strconv"
 )
 
-func MergeAttributesFilesForMap(omap map[string]interface{}, files []string) {
+func MergeAttributesFilesForMap(omap map[string]interface{}, files []string) map[string]interface{} {
+
+	newMap := make(map[string]interface{})
+	newMap["default"] = omap
+
 	// loop over attributes files
 	// merge override files to default files
 	for _, file := range files {
@@ -31,14 +35,14 @@ func MergeAttributesFilesForMap(omap map[string]interface{}, files []string) {
 		}
 		// data to map
 		json := data.(map[string]interface{})
-		omap = mergemap.Merge(omap, json)
+		omap = mergemap.Merge(newMap, json)
 	}
+	return ProcessOverride(newMap)
 }
 
 func MergeAttributesFiles(files []string) map[string]interface{} {
 	omap := make(map[string]interface{})
-	MergeAttributesFilesForMap(omap, files)
-	return ProcessOverride(omap)
+	return MergeAttributesFilesForMap(omap, files)
 }
 
 func ProcessOverride(omap map[string]interface{}) map[string]interface{} {
