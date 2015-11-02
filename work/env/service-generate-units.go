@@ -10,6 +10,7 @@ import (
 	"github.com/blablacar/green-garden/utils"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -76,6 +77,10 @@ func (s Service) writeUnit(i int, node map[string]interface{}, tmpl *Templating,
 	err = tmpl.Execute(&b, attributes)
 	if err != nil {
 		s.log.Error("Failed to run templating for unit "+unitName, err)
+	}
+	ok, err := utils.Exists(s.path + "/units")
+	if !ok || err != nil {
+		os.Mkdir(s.path+"/units", 0755)
 	}
 	err = ioutil.WriteFile(s.path+"/units"+"/"+unitName, b.Bytes(), 0644)
 	if err != nil {
