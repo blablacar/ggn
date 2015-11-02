@@ -18,8 +18,6 @@ var buildArgs = builder.BuildArgs{}
 const FLEET_SUPPORTED_VERSION = "0.11.5"
 
 func Execute() {
-	//	log.SetFormatter(new(log.JSONFormatter))
-
 	config.GetConfig().Load()
 	checkFleetVersion()
 
@@ -47,8 +45,7 @@ func Execute() {
 func checkFleetVersion() {
 	output, err := utils.ExecCmdGetOutput("fleetctl")
 	if err != nil {
-		log.Error("fleetctl is required in PATH")
-		os.Exit(1)
+		log.Fatal("fleetctl is required in PATH")
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(output))

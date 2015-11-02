@@ -127,14 +127,16 @@ func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, error)
 		return "", errors.New("Cannot find ['fleet']['endpoint'] env attribute to call fleetctl")
 	}
 	endpoint := "http://" + e.attributes["fleet"].(map[string]interface{})["endpoint"].(string)
-	username := e.attributes["fleet"].(map[string]interface{})["username"].(string)
-	strict_host_key_checking := e.attributes["fleet"].(map[string]interface{})["strict_host_key_checking"].(bool)
-	sudo := e.attributes["fleet"].(map[string]interface{})["sudo"].(bool)
-
 	os.Setenv(FLEETCTL_ENDPOINT, endpoint)
-	os.Setenv(FLEETCTL_SSH_USERNAME, username)
-	os.Setenv(FLEETCTL_STRICT_HOST_KEY_CHECKING, fmt.Sprintf("%t", strict_host_key_checking))
-	os.Setenv(FLEETCTL_SUDO, fmt.Sprintf("%t", sudo))
+	if e.attributes["fleet"].(map[string]interface{})["username"] != nil {
+		os.Setenv(FLEETCTL_SSH_USERNAME, e.attributes["fleet"].(map[string]interface{})["username"].(string))
+	}
+	if e.attributes["fleet"].(map[string]interface{})["strict_host_key_checking"] != nil {
+		os.Setenv(FLEETCTL_STRICT_HOST_KEY_CHECKING, fmt.Sprintf("%t", e.attributes["fleet"].(map[string]interface{})["strict_host_key_checking"].(bool)))
+	}
+	if e.attributes["fleet"].(map[string]interface{})["sudo"] != nil {
+		os.Setenv(FLEETCTL_SUDO, fmt.Sprintf("%t", e.attributes["fleet"].(map[string]interface{})["sudo"].(bool)))
+	}
 
 	var out string
 	var err error
@@ -143,14 +145,6 @@ func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, error)
 	} else {
 		err = cntUtils.ExecCmd("fleetctl", args...)
 	}
-	//	if err != nil {
-	//		e.log.WithError(err).
-	//		WithField("FLEETCTL_ENDPOINT", endpoint).
-	//		WithField("FLEETCTL_SSH_USERNAME", username).
-	//		WithField("FLEETCTL_STRICT_HOST_KEY_CHECKING", strict_host_key_checking).
-	//		WithField("FLEETCTL_SUDO", sudo).
-	//		Error("Fleetctl command failed")
-	//	}
 
 	os.Setenv(FLEETCTL_ENDPOINT, "")
 	os.Setenv(FLEETCTL_SSH_USERNAME, "")
