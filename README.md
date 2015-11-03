@@ -47,11 +47,15 @@ containers:
 nodes:                                          # list of nodes for this service
   - hostname: cass1                             # hostname of the service
     ip: 10.2.135.136                            # any other property used in the template
+    attributes:                                 # per node attributes configuration 
+        node-id: 1
     fleet:
       - MachineMetadata="rack=113" "pos=4"
 
   - hostname: cass2
     ip: 10.2.143.136
+    attributes:
+        node-id: 2
     fleet:
       - MachineMetadata="rack=213" "pos=4"
 ```
