@@ -66,15 +66,18 @@ func (s Service) writeUnit(i int, node map[string]interface{}, tmpl *Templating,
 	unitName := s.env.GetName() + "_" + s.name + "_" + node[spec.NODE_HOSTNAME].(string) + ".service"
 	s.log.Debug("Unit name is :" + unitName)
 
-	attributes := utils.CopyMap(s.attributes)
-
-	attributes["node"] = node //TODO this should be merged
-	attributes["node"].(map[string]interface{})["acis"] = acis
-	out, err := json.Marshal(attributes)
-	attributes["attributes"] = strings.Replace(string(out), "\\\"", "\\\\\\\"", -1)
+	data  := make(map[string]interface{})
+	data["attribute"] = utils.CopyMap(s.attributes)
+	out, err := json.Marshal(data["attribute"])
+	if err != nil {
+		s.log.WithError(err).Panic("Cannot marshall attributes")
+	}
+	data["attributes"] = strings.Replace(string(out), "\\\"", "\\\\\\\"", -1)
+	data["node"] = node
+	data["node"].(map[string]interface{})["acis"] = acis
 
 	var b bytes.Buffer
-	err = tmpl.Execute(&b, attributes)
+	err = tmpl.Execute(&b, data)
 	if err != nil {
 		s.log.Error("Failed to run templating for unit "+unitName, err)
 	}

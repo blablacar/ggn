@@ -10,6 +10,7 @@ import (
 	"github.com/blablacar/green-garden/utils"
 	"github.com/blablacar/green-garden/work/env"
 	"github.com/juju/errors"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -17,11 +18,21 @@ import (
 
 const PATH_SERVICES = "/services"
 
+type Config struct {
+	Fleet struct {
+		Endpoint                 string `yaml:"endpoint,omitempty"`
+		Username                 string `yaml:"username,omitempty"`
+		Strict_host_key_checking bool   `yaml:"strict_host_key_checking,omitempty"`
+		Sudo                     bool   `yaml:"sudo,omitempty"`
+	} `yaml:"fleet,omitempty"`
+}
+
 type Env struct {
 	path       string
 	name       string
 	log        logrus.Entry
 	attributes map[string]interface{}
+	config     Config
 }
 
 func NewEnvironment(root string, name string) *Env {
@@ -33,11 +44,13 @@ func NewEnvironment(root string, name string) *Env {
 	}
 
 	env := &Env{
-		path: path,
-		name: name,
-		log:  log,
+		path:   path,
+		name:   name,
+		log:    log,
+		config: Config{},
 	}
 	env.loadAttributes()
+	env.loadConfig()
 	return env
 }
 
@@ -59,6 +72,15 @@ func (e Env) LoadService(name string) *env.Service {
 
 func (e Env) attributesDir() string {
 	return e.path + spec.PATH_ATTRIBUTES
+}
+
+func (e *Env) loadConfig() {
+	if source, err := ioutil.ReadFile(e.path + "/config.yml"); err == nil {
+		err = yaml.Unmarshal([]byte(source), &e.config)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (e *Env) loadAttributes() {
@@ -123,20 +145,16 @@ func (e Env) RunFleetCmdGetOutput(args ...string) (string, error) {
 }
 
 func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, error) {
-	if e.attributes["fleet"] == nil || e.attributes["fleet"].(map[string]interface{})["endpoint"] == nil {
-		return "", errors.New("Cannot find ['fleet']['endpoint'] env attribute to call fleetctl")
+	if e.config.Fleet.Endpoint == "" {
+		return "", errors.New("Cannot find fleet.endpoint env config to call fleetctl")
 	}
-	endpoint := "http://" + e.attributes["fleet"].(map[string]interface{})["endpoint"].(string)
+	endpoint := "http://" + e.config.Fleet.Endpoint
 	os.Setenv(FLEETCTL_ENDPOINT, endpoint)
-	if e.attributes["fleet"].(map[string]interface{})["username"] != nil {
-		os.Setenv(FLEETCTL_SSH_USERNAME, e.attributes["fleet"].(map[string]interface{})["username"].(string))
+	if e.config.Fleet.Username != "" {
+		os.Setenv(FLEETCTL_SSH_USERNAME, e.config.Fleet.Username)
 	}
-	if e.attributes["fleet"].(map[string]interface{})["strict_host_key_checking"] != nil {
-		os.Setenv(FLEETCTL_STRICT_HOST_KEY_CHECKING, fmt.Sprintf("%t", e.attributes["fleet"].(map[string]interface{})["strict_host_key_checking"].(bool)))
-	}
-	if e.attributes["fleet"].(map[string]interface{})["sudo"] != nil {
-		os.Setenv(FLEETCTL_SUDO, fmt.Sprintf("%t", e.attributes["fleet"].(map[string]interface{})["sudo"].(bool)))
-	}
+	os.Setenv(FLEETCTL_STRICT_HOST_KEY_CHECKING, fmt.Sprintf("%t", e.config.Fleet.Strict_host_key_checking))
+	os.Setenv(FLEETCTL_SUDO, fmt.Sprintf("%t", e.config.Fleet.Sudo))
 
 	var out string
 	var err error

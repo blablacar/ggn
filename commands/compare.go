@@ -11,7 +11,7 @@ func compareEnv(cmd *cobra.Command, args []string, work *work.Work, envString st
 	logEnv := logrus.WithField("env", envString)
 	logEnv.Info("Running command")
 
-	env := work.LoadEnv(cmd.Use)
+	env := work.LoadEnv(envString)
 
 	units, err := env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-unit-files", "-no-legend", "-fields", "unit")
 	if err != nil {
