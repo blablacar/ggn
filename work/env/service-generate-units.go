@@ -66,7 +66,7 @@ func (s Service) writeUnit(i int, node map[string]interface{}, tmpl *Templating,
 	unitName := s.env.GetName() + "_" + s.name + "_" + node[spec.NODE_HOSTNAME].(string) + ".service"
 	s.log.Debug("Unit name is :" + unitName)
 
-	data  := make(map[string]interface{})
+	data := make(map[string]interface{})
 	data["attribute"] = utils.CopyMap(s.attributes)
 	out, err := json.Marshal(data["attribute"])
 	if err != nil {
