@@ -44,6 +44,7 @@ func compareEnv(cmd *cobra.Command, args []string, work *work.Work, envString st
 	}
 }
 
-func compareService(cmd *cobra.Command, args []string, work *work.Work, env string, service string) {
-	logrus.Fatal("Not implemented")
+func compareService(cmd *cobra.Command, args []string, work *work.Work, env string, serviceName string) {
+	service := work.LoadEnv(env).LoadService(serviceName)
+	service.Compare()
 }

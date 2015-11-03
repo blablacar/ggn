@@ -8,6 +8,7 @@ import (
 	cntspec "github.com/blablacar/cnt/spec"
 	"github.com/blablacar/green-garden/spec"
 	"github.com/blablacar/green-garden/utils"
+	"github.com/peterbourgon/mergemap"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -57,24 +58,34 @@ func (s Service) GenerateUnits() {
 	}
 }
 
+func (s Service) UnitName(hostname string) string {
+	return s.env.GetName() + "_" + s.name + "_" + hostname + ".service"
+}
+
 func (s Service) writeUnit(i int, node map[string]interface{}, tmpl *Templating, acis string) {
 	if node[spec.NODE_HOSTNAME].(string) == "" {
 		s.log.WithField("index", i).Error("hostname is mandatory in node informations")
 	}
 	s.log.Debug("Processing node :" + node[spec.NODE_HOSTNAME].(string))
 
-	unitName := s.env.GetName() + "_" + s.name + "_" + node[spec.NODE_HOSTNAME].(string) + ".service"
-	s.log.Debug("Unit name is :" + unitName)
+	unitName := s.UnitName(node[spec.NODE_HOSTNAME].(string))
 
 	data := make(map[string]interface{})
+
+	data["node"] = node
+	data["node"].(map[string]interface{})["acis"] = acis
+
 	data["attribute"] = utils.CopyMap(s.attributes)
+	if data["node"].(map[string]interface{})["attributes"] != nil {
+		source := utils.CopyMapInterface(data["node"].(map[string]interface{})["attributes"].(map[interface{}]interface{}))
+		data["attribute"] = mergemap.Merge(data["attribute"].(map[string]interface{}), source.(map[string]interface{}))
+	}
+
 	out, err := json.Marshal(data["attribute"])
 	if err != nil {
 		s.log.WithError(err).Panic("Cannot marshall attributes")
 	}
 	data["attributes"] = strings.Replace(string(out), "\\\"", "\\\\\\\"", -1)
-	data["node"] = node
-	data["node"].(map[string]interface{})["acis"] = acis
 
 	var b bytes.Buffer
 	err = tmpl.Execute(&b, data)

@@ -27,10 +27,10 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 		}
 
 		var runCmd = &cobra.Command{
-			Use:   "run",
+			Use:   "fleetctl",
 			Short: "Run fleetctl command on " + env,
 			Run: func(cmd *cobra.Command, args []string) {
-				run(cmd, args, work, env)
+				fleetctl(cmd, args, work, env)
 			},
 		}
 		envCmd.AddCommand(runCmd, compare)

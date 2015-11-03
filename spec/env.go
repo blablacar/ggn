@@ -9,4 +9,5 @@ type Env interface {
 	GetLog() logrus.Entry
 	GetAttributes() map[string]interface{}
 	ListMachineNames() []string
+	RunFleetCmdGetOutput(args ...string) (string, error)
 }

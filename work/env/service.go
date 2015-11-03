@@ -33,6 +33,56 @@ func NewService(path string, name string, env spec.Env) *Service {
 	return service
 }
 
+func (s *Service) LoadUnit(name string) *service.Unit {
+	unit := service.NewUnit(s.path+"/units", name, s)
+	return unit
+}
+
+func (s *Service) ListUnits() []string {
+	res := []string{}
+	if s.manifest.Nodes[0][spec.NODE_HOSTNAME].(string) == "*" {
+		machines := s.env.ListMachineNames()
+		for _, node := range machines {
+			res = append(res, s.UnitName(node))
+		}
+	} else {
+		for _, node := range s.manifest.Nodes {
+			res = append(res, s.UnitName(node[spec.NODE_HOSTNAME].(string)))
+		}
+	}
+	return res
+}
+
+func (s *Service) Compare() {
+	unitNames := s.ListUnits()
+	for _, unit := range unitNames {
+		logUnit := s.log.WithField("unit", unit)
+		localContent, err := s.LoadUnit(unit).GetUnitContentAsFleeted()
+		if err != nil {
+			logUnit.WithError(err).Error("Cannot read unit file")
+			continue
+		}
+		remoteContent, err := s.GetFleetUnitContent(unit)
+		if err != nil {
+			logUnit.WithError(err).Error("Cannot read unit file")
+			continue
+		}
+
+		if localContent != remoteContent {
+			logUnit.Error("Unit is not up to date")
+			logUnit.WithField("source", "fleet").Debug(remoteContent)
+			logUnit.WithField("source", "file").Debug(localContent)
+		}
+	}
+
+}
+
+func (s *Service) GetFleetUnitContent(unit string) (string, error) {
+	return s.env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "cat", unit)
+}
+
+/////////////////////////////////////////////////
+
 func (s *Service) loadAttributes() {
 	attr := utils.CopyMap(s.env.GetAttributes())
 	files, err := utils.AttributeFiles(s.path + spec.PATH_ATTRIBUTES)
@@ -42,13 +92,6 @@ func (s *Service) loadAttributes() {
 	attr = attributes.MergeAttributesFilesForMap(attr, files)
 	s.attributes = attr
 	s.log.WithField("attributes", s.attributes).Debug("Attributes loaded")
-}
-
-/////////////////////////////////////////////////
-
-func (s *Service) LoadUnit(name string) *service.Unit {
-	unit := service.NewUnit(s.path+"/units", name, s)
-	return unit
 }
 
 func (s *Service) loadUnitTemplate() (*Templating, error) {
