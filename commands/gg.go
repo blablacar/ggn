@@ -38,7 +38,10 @@ func Execute() {
 
 	loadEnvCommands(rootCmd)
 
-	rootCmd.Execute()
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
 	log.Info("Victory !")
 }
 
