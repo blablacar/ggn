@@ -194,7 +194,7 @@ func (s Service) discoverPod(name cntspec.ACFullname) []cntspec.ACFullname {
 		if err := s.podManifestToMap(tmpMap, content); err != nil {
 			logUrl.WithError(err).Fatal("Cannot read pod content")
 		}
-		acis := tmpMap[name.ShortName()]
+		acis := tmpMap[name.Name()]
 		if acis == nil {
 			logUrl.Fatal("Discovered pod name does not match requested")
 		}
