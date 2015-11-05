@@ -62,8 +62,9 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 			}
 
 			var generateCmd = &cobra.Command{
-				Use:   "generate",
+				Use:   "generate [manifest...]",
 				Short: "generate units for " + service + " on env :" + env,
+				Long:  `generate units using remote resolved or local pod/aci manifests`,
 				Run: func(cmd *cobra.Command, args []string) {
 					generateService(cmd, args, work, env, service)
 				},

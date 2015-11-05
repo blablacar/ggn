@@ -20,7 +20,7 @@ var generateCmd = &cobra.Command{
 }
 
 func generateService(cmd *cobra.Command, args []string, work *work.Work, env string, service string) {
-	work.LoadEnv(env).LoadService(service).GenerateUnits()
+	work.LoadEnv(env).LoadService(service).GenerateUnits(args)
 }
 
 func generateEnv(cmd *cobra.Command, args []string, work *work.Work, env string) {

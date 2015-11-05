@@ -24,18 +24,18 @@
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/log",
-			"Comment": "40-3-g1f0726a",
-			"Rev": "1f0726a76fd50d4b31edde64c28fd29b1df1c4d4"
+			"Comment": "40-7-g3f8eed9",
+			"Rev": "3f8eed9f960dddccfe4c89be8ac964295a8b0f32"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/spec",
-			"Comment": "40-3-g1f0726a",
-			"Rev": "1f0726a76fd50d4b31edde64c28fd29b1df1c4d4"
+			"Comment": "40-7-g3f8eed9",
+			"Rev": "3f8eed9f960dddccfe4c89be8ac964295a8b0f32"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/utils",
-			"Comment": "40-3-g1f0726a",
-			"Rev": "1f0726a76fd50d4b31edde64c28fd29b1df1c4d4"
+			"Comment": "40-7-g3f8eed9",
+			"Rev": "3f8eed9f960dddccfe4c89be8ac964295a8b0f32"
 		},
 		{
 			"ImportPath": "github.com/coreos/go-semver/semver",
