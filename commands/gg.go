@@ -27,7 +27,7 @@ func Execute() {
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			level, err := log.ParseLevel(logLevel)
 			if err != nil {
-				fmt.Printf("Unknown log level : %s", logLevel)
+				fmt.Printf("Unknown log level : %s\n", logLevel)
 				os.Exit(1)
 			}
 			log.SetLevel(level)
