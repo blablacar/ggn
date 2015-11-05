@@ -185,6 +185,10 @@ func (s Service) discoverPod(name cntspec.ACFullname) []cntspec.ACFullname {
 		logUrl.WithError(err).Fatal("Cannot get pod manifest content")
 		return nil
 	} else {
+		if response.StatusCode != 200 {
+			logUrl.WithField("status_code", response.StatusCode).WithField("status_message", response.Status).
+				Fatal("Receive response error for discovery")
+		}
 		defer response.Body.Close()
 		content, err := ioutil.ReadAll(response.Body)
 		if err != nil {
