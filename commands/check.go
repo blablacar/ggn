@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func compareEnv(cmd *cobra.Command, args []string, work *work.Work, envString string) {
+func checkEnv(cmd *cobra.Command, args []string, work *work.Work, envString string) {
 	logEnv := logrus.WithField("env", envString)
 	logEnv.Info("Running command")
 
@@ -44,7 +44,7 @@ func compareEnv(cmd *cobra.Command, args []string, work *work.Work, envString st
 	}
 }
 
-func compareService(cmd *cobra.Command, args []string, work *work.Work, env string, serviceName string) {
+func checkService(cmd *cobra.Command, args []string, work *work.Work, env string, serviceName string) {
 	service := work.LoadEnv(env).LoadService(serviceName)
-	service.Compare()
+	service.Check()
 }

@@ -18,11 +18,11 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 			Short: "Run command for " + env,
 		}
 
-		var compare = &cobra.Command{
-			Use:   "compare",
-			Short: "Compare local units with what is running on fleet on " + env,
+		var check = &cobra.Command{
+			Use:   "check",
+			Short: "Check local units with what is running on fleet on " + env,
 			Run: func(cmd *cobra.Command, args []string) {
-				compareEnv(cmd, args, work, env)
+				checkEnv(cmd, args, work, env)
 			},
 		}
 
@@ -33,7 +33,7 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 				fleetctl(cmd, args, work, env)
 			},
 		}
-		envCmd.AddCommand(runCmd, compare)
+		envCmd.AddCommand(runCmd, check)
 
 		var generateCmd = &cobra.Command{
 			Use:   "generate",
@@ -53,11 +53,11 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 				Short: "run command for " + service + " on env " + env,
 			}
 
-			var compareCmd = &cobra.Command{
-				Use:   "compare",
-				Short: "Compare local units with what is running on fleet on " + env + "for " + service,
+			var checkCmd = &cobra.Command{
+				Use:   "check",
+				Short: "Check local units matches what is running on " + env + " for " + service,
 				Run: func(cmd *cobra.Command, args []string) {
-					compareService(cmd, args, work, env, service)
+					checkService(cmd, args, work, env, service)
 				},
 			}
 
@@ -70,7 +70,7 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 				},
 			}
 
-			serviceCmd.AddCommand(generateCmd, compareCmd)
+			serviceCmd.AddCommand(generateCmd, checkCmd)
 
 			envCmd.AddCommand(serviceCmd)
 		}

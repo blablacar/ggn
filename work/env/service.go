@@ -53,7 +53,7 @@ func (s *Service) ListUnits() []string {
 	return res
 }
 
-func (s *Service) Compare() {
+func (s *Service) Check() {
 	unitNames := s.ListUnits()
 	for _, unit := range unitNames {
 		logUnit := s.log.WithField("unit", unit)
