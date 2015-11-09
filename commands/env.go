@@ -88,7 +88,15 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 				},
 			}
 
-			serviceCmd.AddCommand(generateCmd, checkCmd, lockCmd, unlockCmd)
+			var updateCmd = &cobra.Command{
+				Use:   "update",
+				Short: "update " + service + " on env " + env,
+				Run: func(cmd *cobra.Command, args []string) {
+					update(cmd, args, work, env, service)
+				},
+			}
+
+			serviceCmd.AddCommand(generateCmd, checkCmd, lockCmd, unlockCmd, updateCmd)
 
 			envCmd.AddCommand(serviceCmd)
 		}

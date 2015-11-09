@@ -2,34 +2,73 @@ package service
 
 import (
 	"bufio"
+	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/green-garden/spec"
 	"io/ioutil"
 	"strings"
 )
 
 type Unit struct {
-	path    string
-	name    string
-	service spec.Service
+	log      logrus.Entry
+	path     string
+	name     string
+	unitPath string
+	service  spec.Service
 }
 
 func NewUnit(path string, name string, service spec.Service) *Unit {
+	l := service.GetLog()
 	unit := &Unit{
-		path:    path,
-		name:    name,
-		service: service,
+		log:      *l.WithField("unit", name),
+		service:  service,
+		path:     path,
+		name:     name,
+		unitPath: path + "/" + name,
 	}
 	return unit
 }
 
 func (u Unit) GetUnitContentAsFleeted() (string, error) {
-	unitPath := u.path + "/" + u.name
-	unitFileContent, err := ioutil.ReadFile(unitPath)
+	unitFileContent, err := ioutil.ReadFile(u.unitPath)
 	if err != nil {
 		return "", err
 	}
 	return convertMultilineUnitToString(unitFileContent), nil
 }
+
+func (u Unit) Start() error {
+	u.log.Info("Starting")
+	_, err := u.service.GetEnv().RunFleetCmdGetOutput("start", u.unitPath)
+	if err != nil {
+		logrus.WithError(err).Error("Cannot start unit")
+		return err
+	}
+	return nil
+}
+
+func (u Unit) Destroy() error {
+	u.log.Info("Destroying") // todo check that service exists before destroy
+	_, err := u.service.GetEnv().RunFleetCmdGetOutput("destroy", u.name)
+	if err != nil {
+		logrus.WithError(err).Warn("Cannot destroy unit")
+		return err
+	}
+	return nil
+}
+
+//func (u Unit) Stop() {
+//	u.service.GetEnv().RunFleetCmdGetOutput("stop", u.name)
+//}
+//
+//func (u Unit) Status() {
+//	u.service.GetEnv().RunFleetCmdGetOutput("status ", u.name)
+//}
+//
+//func (u Unit) Cat() {
+//	u.service.GetEnv().RunFleetCmdGetOutput("cat ", u.name)
+//}
+
+///////////////////////////////////////////
 
 func convertMultilineUnitToString(content []byte) string {
 	var lines []string

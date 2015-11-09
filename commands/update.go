@@ -1,21 +1,10 @@
 package commands
 
-// check running tmux
-// running as root ??
+import (
+	"github.com/blablacar/green-garden/work"
+	"github.com/spf13/cobra"
+)
 
-// lock
-// notify slack
-
-// store old version
-
-// tell LB to stop stop sending requests
-// wait
-// tell service X to stop
-// wait
-// start new version of X
-// check that service is running well
-
-// go to next server
-
-// notify slack end
-// release lock
+func update(cmd *cobra.Command, args []string, work *work.Work, env string, service string) {
+	work.LoadEnv(env).LoadService(service).Update()
+}

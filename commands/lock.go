@@ -9,7 +9,7 @@ import (
 )
 
 func unLock(cmd *cobra.Command, args []string, work *work.Work, env string, service string) {
-	work.LoadEnv(env).LoadService(service).LockRelease()
+	work.LoadEnv(env).LoadService(service).Unlock()
 }
 
 func lock(cmd *cobra.Command, args []string, work *work.Work, env string, service string, duration string) {
@@ -23,5 +23,5 @@ func lock(cmd *cobra.Command, args []string, work *work.Work, env string, servic
 		logrus.WithError(err).Fatal("Wrong value for ttl")
 	}
 
-	work.LoadEnv(env).LoadService(service).LockService(ttl, message)
+	work.LoadEnv(env).LoadService(service).Lock(ttl, message)
 }

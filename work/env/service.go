@@ -1,6 +1,7 @@
 package env
 
 import (
+	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
 	"github.com/blablacar/green-garden/spec"
@@ -11,6 +12,7 @@ import (
 	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"os"
 	"time"
 )
 
@@ -36,6 +38,14 @@ func NewService(path string, name string, env spec.Env) *Service {
 	service.loadManifest()
 	service.loadAttributes()
 	return service
+}
+
+func (s *Service) GetEnv() spec.Env {
+	return s.env
+}
+
+func (s *Service) GetLog() logrus.Entry {
+	return s.log
 }
 
 func (s *Service) LoadUnit(name string) *service.Unit {
@@ -86,20 +96,22 @@ func (s *Service) GetFleetUnitContent(unit string) (string, error) {
 	return s.env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "cat", unit)
 }
 
-/////////////////////////////////////////////////
+func (s *Service) Unlock() {
+	s.log.Info("Unlock")
 
-func (s *Service) LockRelease() {
 	kapi := s.env.EtcdClient()
 	kapi.Delete(context.Background(), s.lockPath, nil)
 }
 
-func (s *Service) LockService(ttlSecond time.Duration, message string) {
+func (s *Service) Lock(ttl time.Duration, message string) {
+	s.log.WithField("ttl", ttl).WithField("message", message).Info("lock")
+
 	kapi := s.env.EtcdClient()
 	resp, err := kapi.Get(context.Background(), s.lockPath, nil)
 	if cerr, ok := err.(*client.ClusterError); ok {
 		s.log.WithError(cerr).Fatal("Server error reading on fleet")
 	} else if err != nil {
-		_, err := kapi.Set(context.Background(), s.lockPath, message, &client.SetOptions{TTL: ttlSecond})
+		_, err := kapi.Set(context.Background(), s.lockPath, message, &client.SetOptions{TTL: ttl})
 		if err != nil {
 			s.log.WithError(err).Fatal("Cannot write lock")
 		}
@@ -109,6 +121,33 @@ func (s *Service) LockService(ttlSecond time.Duration, message string) {
 			Fatal("Service is already locked")
 	}
 }
+
+func (s *Service) Update() {
+	s.log.Info("Updating service")
+	s.GenerateUnits(nil)
+
+	hostname, _ := os.Hostname()
+	s.Lock(time.Hour*1, "["+os.Getenv("USER")+"@"+hostname+"] Updating")
+	for _, unit := range s.ListUnits() {
+		s.LoadUnit(unit).Destroy()
+		time.Sleep(time.Second * 2)
+		err := s.LoadUnit(unit).Start()
+		if err != nil {
+			log.WithError(err).Fatal("Failed to start service. Keeping lock")
+		}
+	}
+	s.Unlock()
+
+	// TODO
+	// check running tmux
+	// running as root ??
+	// notify slack
+	// store old version
+	// !!!!! check that service is running well before going to next server !!!
+
+}
+
+/////////////////////////////////////////////////
 
 func (s *Service) loadAttributes() {
 	attr := utils.CopyMap(s.env.GetAttributes())

@@ -1,6 +1,9 @@
 package spec
 
-import "github.com/blablacar/cnt/spec"
+import (
+	"github.com/Sirupsen/logrus"
+	cntspec "github.com/blablacar/cnt/spec"
+)
 
 const PATH_SERVICE_MANIFEST = "/service-manifest.yml"
 
@@ -13,11 +16,13 @@ const PATH_SERVICE_MANIFEST = "/service-manifest.yml"
 const NODE_HOSTNAME = "hostname"
 
 type ServiceManifest struct {
-	Containers   []spec.ACFullname        `yaml:"containers"`
+	Containers   []cntspec.ACFullname     `yaml:"containers"`
 	ExecStartPre []string                 `yaml:"execStartPre"`
 	ExecStart    []string                 `yaml:"execStart"`
 	Nodes        []map[string]interface{} `yaml:"nodes"`
 }
 
 type Service interface {
+	GetEnv() Env
+	GetLog() logrus.Entry
 }
