@@ -9,11 +9,13 @@ import (
 	"github.com/blablacar/green-garden/spec"
 	"github.com/blablacar/green-garden/utils"
 	"github.com/blablacar/green-garden/work/env"
+	"github.com/coreos/etcd/client"
 	"github.com/juju/errors"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 )
 
 const PATH_SERVICES = "/services"
@@ -22,6 +24,7 @@ type Config struct {
 	Fleet struct {
 		Endpoint                 string `yaml:"endpoint,omitempty"`
 		Username                 string `yaml:"username,omitempty"`
+		Password                 string `yaml:"password,omitempty"`
 		Strict_host_key_checking bool   `yaml:"strict_host_key_checking,omitempty"`
 		Sudo                     bool   `yaml:"sudo,omitempty"`
 	} `yaml:"fleet,omitempty"`
@@ -142,6 +145,22 @@ func (e Env) RunFleetCmd(args ...string) error {
 
 func (e Env) RunFleetCmdGetOutput(args ...string) (string, error) {
 	return e.runFleetCmdInternal(true, args...)
+}
+
+func (e Env) EtcdClient() client.KeysAPI {
+	cfg := client.Config{
+		Endpoints:               []string{"http://" + e.config.Fleet.Endpoint},
+		Username:                e.config.Fleet.Username,
+		Password:                e.config.Fleet.Password,
+		Transport:               client.DefaultTransport,
+		HeaderTimeoutPerRequest: time.Second,
+	}
+	c, err := client.New(cfg)
+	if err != nil {
+		e.log.WithError(err).Fatal("Failed to create etcd client")
+	}
+	kapi := client.NewKeysAPI(c)
+	return kapi
 }
 
 func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, error) {

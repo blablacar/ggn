@@ -1,6 +1,9 @@
 package spec
 
-import "github.com/Sirupsen/logrus"
+import (
+	"github.com/Sirupsen/logrus"
+	"github.com/coreos/etcd/client"
+)
 
 const PATH_ATTRIBUTES = "/attributes"
 
@@ -10,4 +13,5 @@ type Env interface {
 	GetAttributes() map[string]interface{}
 	ListMachineNames() []string
 	RunFleetCmdGetOutput(args ...string) (string, error)
+	EtcdClient() client.KeysAPI
 }

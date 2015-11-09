@@ -6,9 +6,12 @@ import (
 	"github.com/blablacar/green-garden/spec"
 	"github.com/blablacar/green-garden/utils"
 	"github.com/blablacar/green-garden/work/env/service"
+	"github.com/coreos/etcd/client"
 	"github.com/juju/errors"
+	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"time"
 )
 
 type Service struct {
@@ -17,16 +20,18 @@ type Service struct {
 	name       string
 	manifest   spec.ServiceManifest
 	log        log.Entry
+	lockPath   string
 	attributes map[string]interface{}
 }
 
 func NewService(path string, name string, env spec.Env) *Service {
 	l := env.GetLog()
 	service := &Service{
-		log:  *l.WithField("service", name),
-		path: path + "/" + name,
-		name: name,
-		env:  env,
+		log:      *l.WithField("service", name),
+		path:     path + "/" + name,
+		name:     name,
+		env:      env,
+		lockPath: "/ggn-lock/" + name + "/lock",
 	}
 	service.loadManifest()
 	service.loadAttributes()
@@ -82,6 +87,28 @@ func (s *Service) GetFleetUnitContent(unit string) (string, error) {
 }
 
 /////////////////////////////////////////////////
+
+func (s *Service) LockRelease() {
+	kapi := s.env.EtcdClient()
+	kapi.Delete(context.Background(), s.lockPath, nil)
+}
+
+func (s *Service) LockService(ttlSecond time.Duration, message string) {
+	kapi := s.env.EtcdClient()
+	resp, err := kapi.Get(context.Background(), s.lockPath, nil)
+	if cerr, ok := err.(*client.ClusterError); ok {
+		s.log.WithError(cerr).Fatal("Server error reading on fleet")
+	} else if err != nil {
+		_, err := kapi.Set(context.Background(), s.lockPath, message, &client.SetOptions{TTL: ttlSecond})
+		if err != nil {
+			s.log.WithError(err).Fatal("Cannot write lock")
+		}
+	} else {
+		s.log.WithField("message", resp.Node.Value).
+			WithField("ttl", resp.Node.TTLDuration().String()).
+			Fatal("Service is already locked")
+	}
+}
 
 func (s *Service) loadAttributes() {
 	attr := utils.CopyMap(s.env.GetAttributes())

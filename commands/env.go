@@ -63,14 +63,32 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 
 			var generateCmd = &cobra.Command{
 				Use:   "generate [manifest...]",
-				Short: "generate units for " + service + " on env :" + env,
+				Short: "generate units for " + service + " on env " + env,
 				Long:  `generate units using remote resolved or local pod/aci manifests`,
 				Run: func(cmd *cobra.Command, args []string) {
 					generateService(cmd, args, work, env, service)
 				},
 			}
 
-			serviceCmd.AddCommand(generateCmd, checkCmd)
+			var ttl string
+			var lockCmd = &cobra.Command{
+				Use:   "lock [message...]",
+				Short: "lock " + service + " on env " + env,
+				Run: func(cmd *cobra.Command, args []string) {
+					lock(cmd, args, work, env, service, ttl)
+				},
+			}
+			lockCmd.Flags().StringVarP(&ttl, "duration", "t", "1h", "lock duration")
+
+			var unlockCmd = &cobra.Command{
+				Use:   "unlock",
+				Short: "unlock " + service + " on env " + env,
+				Run: func(cmd *cobra.Command, args []string) {
+					unLock(cmd, args, work, env, service)
+				},
+			}
+
+			serviceCmd.AddCommand(generateCmd, checkCmd, lockCmd, unlockCmd)
 
 			envCmd.AddCommand(serviceCmd)
 		}
