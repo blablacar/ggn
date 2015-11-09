@@ -9,10 +9,10 @@ import (
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Version of gg",
+	Short: "Version of ggn",
 	Long:  `Print the version number of cnt`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Print("gg\n\n")
+		fmt.Print("ggn\n\n")
 		fmt.Printf("version    : %s\n", application.Version)
 		if application.BuildDate != "" {
 			fmt.Printf("build date : %s\n", application.BuildDate)
