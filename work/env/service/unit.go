@@ -2,13 +2,13 @@ package service
 
 import (
 	"bufio"
-	"errors"
 	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/utils"
 	"github.com/blablacar/green-garden/spec"
 	"github.com/coreos/fleet/unit"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -42,8 +42,7 @@ func (u Unit) GetUnitContentAsFleeted() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fleetunit.String(), nil
-	//	return convertMultilineUnitToString(unitFileContent), nil
+	return convertMultilineUnitToString([]byte(fleetunit.String())), nil
 }
 
 func (u Unit) DisplayDiff() error {
@@ -58,7 +57,7 @@ func (u Unit) DisplayDiff() error {
 	defer os.Remove("/tmp/ggn-local")
 	ioutil.WriteFile("/tmp/ggn-remote", []byte(remote), 0644)
 	defer os.Remove("/tmp/ggn-remote")
-	utils.ExecCmd("git", "diff", "/tmp/ggn-local", "/tmp/ggn-remote")
+	utils.ExecCmd("git", "diff", "/tmp/ggn-remote", "/tmp/ggn-local")
 	return nil
 }
 
@@ -78,7 +77,6 @@ func (u Unit) serviceLocalAndRemoteContent() (string, string, error) {
 	}
 
 	remoteContent, err := u.service.GetFleetUnitContent(u.Name)
-	remoteContent += "\n"
 	if err != nil {
 		u.Log.WithError(err).Error("Cannot read unit file")
 		return "", "", err
@@ -109,14 +107,20 @@ func (u Unit) Destroy() error {
 func (u Unit) Status() (string, error) {
 	content, err := u.service.GetEnv().RunFleetCmdGetOutput("status", u.Name)
 	if err != nil {
-		return content, err
+		return "", err
 	}
 
-	if !strings.Contains(content, "Active: active (running)") { // Active: failed
-		return content, errors.New("unit is not in running state")
+	reg, err := regexp.Compile(`Active: (active|inactive|deactivating|activating)`)
+	if err != nil {
+		u.Log.Panic("Cannot compule regex")
 	}
+	matched := reg.FindStringSubmatch(content)
 
-	return content, err
+	//	if !strings.Contains(content, "Active: %s ") { // Active: failed
+	//		return content, errors.New("unit is not in running state")
+	//	}
+
+	return matched[1], err
 }
 
 //func (u Unit) Stop() {

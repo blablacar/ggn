@@ -103,7 +103,10 @@ func (s *Service) Unlock() {
 	s.log.Info("Unlocking")
 
 	kapi := s.env.EtcdClient()
-	kapi.Delete(context.Background(), s.lockPath, nil)
+	_, err := kapi.Delete(context.Background(), s.lockPath, nil)
+	if cerr, ok := err.(*client.ClusterError); ok {
+		s.log.WithError(cerr).Panic("Cannot unlock service")
+	}
 }
 
 func (s *Service) Lock(ttl time.Duration, message string) {
@@ -179,13 +182,18 @@ units:
 			return err
 		}
 		time.Sleep(time.Second * 2)
-		_, err = u.Status()
-		if err != nil {
-			log.WithError(err).Error("Unit failed just after start")
-			return err
-		}
-
-		s.checkServiceRunning()
+		//		status, err2 := u.Status()
+		//		u.Log.WithField("status", status).Debug("Log status")
+		//		if err2 != nil {
+		//			log.WithError(err2).WithField("status", status).Panic("Unit failed just after start")
+		//			return err2
+		//		}
+		//		if status == "inactive" {
+		//			log.WithField("status", status).Panic("Unit failed just after start")
+		//			return errors.New("unit is inactive just after start")
+		//		}
+		//
+		//		s.checkServiceRunning()
 
 		// TODO ask deploy pod version ()
 		// TODO YES/NO
