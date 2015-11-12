@@ -33,8 +33,8 @@ func TestSerialize(t *testing.T) {
 		// options with same section share the header
 		{
 			[]*UnitOption{
-				&UnitOption{"Unit", "Description", "Foo"},
-				&UnitOption{"Unit", "BindsTo", "bar.service"},
+				{"Unit", "Description", "Foo"},
+				{"Unit", "BindsTo", "bar.service"},
 			},
 			`[Unit]
 Description=Foo
@@ -45,8 +45,8 @@ BindsTo=bar.service
 		// options with same name are not combined
 		{
 			[]*UnitOption{
-				&UnitOption{"Unit", "Description", "Foo"},
-				&UnitOption{"Unit", "Description", "Bar"},
+				{"Unit", "Description", "Foo"},
+				{"Unit", "Description", "Bar"},
 			},
 			`[Unit]
 Description=Foo
@@ -57,8 +57,8 @@ Description=Bar
 		// multiple options printed under different section headers
 		{
 			[]*UnitOption{
-				&UnitOption{"Unit", "Description", "Foo"},
-				&UnitOption{"Service", "ExecStart", "/usr/bin/sleep infinity"},
+				{"Unit", "Description", "Foo"},
+				{"Service", "ExecStart", "/usr/bin/sleep infinity"},
 			},
 			`[Unit]
 Description=Foo
@@ -71,9 +71,9 @@ ExecStart=/usr/bin/sleep infinity
 		// options are grouped into sections
 		{
 			[]*UnitOption{
-				&UnitOption{"Unit", "Description", "Foo"},
-				&UnitOption{"Service", "ExecStart", "/usr/bin/sleep infinity"},
-				&UnitOption{"Unit", "BindsTo", "bar.service"},
+				{"Unit", "Description", "Foo"},
+				{"Service", "ExecStart", "/usr/bin/sleep infinity"},
+				{"Unit", "BindsTo", "bar.service"},
 			},
 			`[Unit]
 Description=Foo
@@ -87,12 +87,12 @@ ExecStart=/usr/bin/sleep infinity
 		// options are ordered within groups, and sections are ordered in the order in which they were first seen
 		{
 			[]*UnitOption{
-				&UnitOption{"Unit", "Description", "Foo"},
-				&UnitOption{"Service", "ExecStart", "/usr/bin/sleep infinity"},
-				&UnitOption{"Unit", "BindsTo", "bar.service"},
-				&UnitOption{"X-Foo", "Bar", "baz"},
-				&UnitOption{"Service", "ExecStop", "/usr/bin/sleep 1"},
-				&UnitOption{"Unit", "Documentation", "https://foo.com"},
+				{"Unit", "Description", "Foo"},
+				{"Service", "ExecStart", "/usr/bin/sleep infinity"},
+				{"Unit", "BindsTo", "bar.service"},
+				{"X-Foo", "Bar", "baz"},
+				{"Service", "ExecStop", "/usr/bin/sleep 1"},
+				{"Unit", "Documentation", "https://foo.com"},
 			},
 			`[Unit]
 Description=Foo
@@ -111,7 +111,7 @@ Bar=baz
 		// utf8 characters are not a problem
 		{
 			[]*UnitOption{
-				&UnitOption{"©", "µ☃", "ÇôrèÕ$"},
+				{"©", "µ☃", "ÇôrèÕ$"},
 			},
 			`[©]
 µ☃=ÇôrèÕ$
@@ -121,7 +121,7 @@ Bar=baz
 		// no verification is done on section names
 		{
 			[]*UnitOption{
-				&UnitOption{"Un\nit", "Description", "Foo"},
+				{"Un\nit", "Description", "Foo"},
 			},
 			`[Un
 it]
@@ -132,7 +132,7 @@ Description=Foo
 		// no verification is done on option names
 		{
 			[]*UnitOption{
-				&UnitOption{"Unit", "Desc\nription", "Foo"},
+				{"Unit", "Desc\nription", "Foo"},
 			},
 			`[Unit]
 Desc
@@ -143,7 +143,7 @@ ription=Foo
 		// no verification is done on option values
 		{
 			[]*UnitOption{
-				&UnitOption{"Unit", "Description", "Fo\no"},
+				{"Unit", "Description", "Fo\no"},
 			},
 			`[Unit]
 Description=Fo

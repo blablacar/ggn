@@ -24,18 +24,18 @@
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/log",
-			"Comment": "44-3-g34eae88",
-			"Rev": "34eae883aa77ba620a9d9f9ec7e93f1077afbd28"
+			"Comment": "44-4-g391f15a",
+			"Rev": "391f15a12d3723708f03fda1923732dfc60cce4a"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/spec",
-			"Comment": "44-3-g34eae88",
-			"Rev": "34eae883aa77ba620a9d9f9ec7e93f1077afbd28"
+			"Comment": "44-4-g391f15a",
+			"Rev": "391f15a12d3723708f03fda1923732dfc60cce4a"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/utils",
-			"Comment": "44-3-g34eae88",
-			"Rev": "34eae883aa77ba620a9d9f9ec7e93f1077afbd28"
+			"Comment": "44-4-g391f15a",
+			"Rev": "391f15a12d3723708f03fda1923732dfc60cce4a"
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/client",
@@ -119,7 +119,7 @@
 		},
 		{
 			"ImportPath": "github.com/ugorji/go/codec",
-			"Rev": "1d5269ed4e89d423d40362a0914e1c99adb13cc8"
+			"Rev": "8bb56663530600b54f72c79871451ea5725b6763"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",

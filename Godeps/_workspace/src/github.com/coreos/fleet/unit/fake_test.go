@@ -100,7 +100,7 @@ func TestFakeUnitManagerGetUnitStates(t *testing.T) {
 	}
 
 	expectStates := map[string]*UnitState{
-		"hello.service": &UnitState{
+		"hello.service": {
 			LoadState:   "loaded",
 			ActiveState: "active",
 			SubState:    "running",
