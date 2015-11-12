@@ -2,7 +2,7 @@ package utils
 
 import (
 	"github.com/blablacar/attributes-merger/attributes"
-	"k8s.io/kubernetes/Godeps/_workspace/src/github.com/google/cadvisor/utils"
+	"github.com/google/cadvisor/utils"
 )
 
 func AttributeFiles(path string) ([]string, error) {
