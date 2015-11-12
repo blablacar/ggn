@@ -25,4 +25,5 @@ type ServiceManifest struct {
 type Service interface {
 	GetEnv() Env
 	GetLog() logrus.Entry
+	GetFleetUnitContent(unit string) (string, error)
 }

@@ -24,26 +24,70 @@
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/log",
-			"Comment": "40-7-g3f8eed9",
-			"Rev": "3f8eed9f960dddccfe4c89be8ac964295a8b0f32"
+			"Comment": "44-3-g34eae88",
+			"Rev": "34eae883aa77ba620a9d9f9ec7e93f1077afbd28"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/spec",
-			"Comment": "40-7-g3f8eed9",
-			"Rev": "3f8eed9f960dddccfe4c89be8ac964295a8b0f32"
+			"Comment": "44-3-g34eae88",
+			"Rev": "34eae883aa77ba620a9d9f9ec7e93f1077afbd28"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/utils",
-			"Comment": "40-7-g3f8eed9",
-			"Rev": "3f8eed9f960dddccfe4c89be8ac964295a8b0f32"
+			"Comment": "44-3-g34eae88",
+			"Rev": "34eae883aa77ba620a9d9f9ec7e93f1077afbd28"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/client",
+			"Comment": "v2.3.0-alpha.0-7-gdcf0b45",
+			"Rev": "dcf0b454838a1b554bd276d4a341ae08f6e2f660"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/pkg/pathutil",
+			"Comment": "v2.3.0-alpha.0-7-gdcf0b45",
+			"Rev": "dcf0b454838a1b554bd276d4a341ae08f6e2f660"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/pkg/types",
+			"Comment": "v2.3.0-alpha.0-7-gdcf0b45",
+			"Rev": "dcf0b454838a1b554bd276d4a341ae08f6e2f660"
+		},
+		{
+			"ImportPath": "github.com/coreos/fleet/log",
+			"Comment": "v0.10.1-116-g2d02451",
+			"Rev": "2d024517a2c9f1e7492ef00f9ac26500b27556b2"
+		},
+		{
+			"ImportPath": "github.com/coreos/fleet/pkg",
+			"Comment": "v0.10.1-116-g2d02451",
+			"Rev": "2d024517a2c9f1e7492ef00f9ac26500b27556b2"
+		},
+		{
+			"ImportPath": "github.com/coreos/fleet/unit",
+			"Comment": "v0.10.1-116-g2d02451",
+			"Rev": "2d024517a2c9f1e7492ef00f9ac26500b27556b2"
 		},
 		{
 			"ImportPath": "github.com/coreos/go-semver/semver",
 			"Rev": "d043ae190b3202550d026daf009359bb5d761672"
 		},
 		{
+			"ImportPath": "github.com/coreos/go-systemd/unit",
+			"Comment": "v4",
+			"Rev": "b4a58d95188dd092ae20072bac14cece0e67c388"
+		},
+		{
+			"ImportPath": "github.com/google/cadvisor/utils",
+			"Comment": "v0.19.3-16-g587c022",
+			"Rev": "587c02275537c2d32e62963d61c191715bdb16de"
+		},
+		{
 			"ImportPath": "github.com/inconshreveable/mousetrap",
 			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+		},
+		{
+			"ImportPath": "github.com/jonboulle/clockwork",
+			"Rev": "fad208dd89dbc316a149043e332a192477f0e2a2"
 		},
 		{
 			"ImportPath": "github.com/juju/errors",
@@ -72,6 +116,14 @@
 		{
 			"ImportPath": "github.com/spf13/pflag",
 			"Rev": "67cbc198fd11dab704b214c1e629a97af392c085"
+		},
+		{
+			"ImportPath": "github.com/ugorji/go/codec",
+			"Rev": "1d5269ed4e89d423d40362a0914e1c99adb13cc8"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "ea47fc708ee3e20177f3ca3716217c4ab75942cb"
 		},
 		{
 			"ImportPath": "golang.org/x/net/html",

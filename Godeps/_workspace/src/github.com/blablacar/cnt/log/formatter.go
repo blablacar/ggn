@@ -53,13 +53,13 @@ func (f *BlaFormatter) Format(entry *log.Entry) ([]byte, error) {
 	paths := strings.SplitN(file, "/", pathSkip+1)
 
 	b := &bytes.Buffer{}
-	fmt.Fprintf(b, "%s %s%-5s%s %s%40s:%-3d%s %s%-44s%s",
+	fmt.Fprintf(b, "%s %s%-5s%s %s%30s:%-3d%s %s%-44s%s",
 		f.timeColor(entry.Level)(time),
 		f.levelColor(entry.Level),
 		level,
 		reset,
 		f.fileColor(entry.Level),
-		paths[pathSkip],
+		f.reduceFilePath(paths[pathSkip], 30),
 		line,
 		reset,
 		f.textColor(entry.Level),
@@ -71,6 +71,29 @@ func (f *BlaFormatter) Format(entry *log.Entry) ([]byte, error) {
 	}
 	b.WriteByte('\n')
 	return b.Bytes(), nil
+}
+
+func (f *BlaFormatter) reduceFilePath(path string, max int) string {
+	if len(path) <= max {
+		return path
+	}
+
+	split := strings.Split(path, "/")
+	splitlen := len(split)
+	reducedSize := len(path)
+	var buffer bytes.Buffer
+	for i, e := range split {
+		if reducedSize > max && i+1 < splitlen {
+			buffer.WriteByte(e[0])
+			reducedSize -= len(e) - 1
+		} else {
+			buffer.WriteString(e)
+		}
+		if i+1 < splitlen {
+			buffer.WriteByte('/')
+		}
+	}
+	return buffer.String()
 }
 
 func (f *BlaFormatter) findFileAndLine() (string, int) {

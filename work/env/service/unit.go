@@ -2,16 +2,20 @@ package service
 
 import (
 	"bufio"
+	"errors"
 	"github.com/Sirupsen/logrus"
+	"github.com/blablacar/cnt/utils"
 	"github.com/blablacar/green-garden/spec"
+	"github.com/coreos/fleet/unit"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
 type Unit struct {
-	log      logrus.Entry
+	Log      logrus.Entry
 	path     string
-	name     string
+	Name     string
 	unitPath string
 	service  spec.Service
 }
@@ -19,10 +23,10 @@ type Unit struct {
 func NewUnit(path string, name string, service spec.Service) *Unit {
 	l := service.GetLog()
 	unit := &Unit{
-		log:      *l.WithField("unit", name),
+		Log:      *l.WithField("unit", name),
 		service:  service,
 		path:     path,
-		name:     name,
+		Name:     name,
 		unitPath: path + "/" + name,
 	}
 	return unit
@@ -33,11 +37,57 @@ func (u Unit) GetUnitContentAsFleeted() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return convertMultilineUnitToString(unitFileContent), nil
+
+	fleetunit, err := unit.NewUnitFile(string(unitFileContent))
+	if err != nil {
+		return "", err
+	}
+	return fleetunit.String(), nil
+	//	return convertMultilineUnitToString(unitFileContent), nil
+}
+
+func (u Unit) DisplayDiff() error {
+	u.Log.Info("Diff")
+
+	local, remote, err := u.serviceLocalAndRemoteContent()
+	if err != nil {
+		return err
+	}
+
+	ioutil.WriteFile("/tmp/ggn-local", []byte(local), 0644)
+	defer os.Remove("/tmp/ggn-local")
+	ioutil.WriteFile("/tmp/ggn-remote", []byte(remote), 0644)
+	defer os.Remove("/tmp/ggn-remote")
+	utils.ExecCmd("git", "diff", "/tmp/ggn-local", "/tmp/ggn-remote")
+	return nil
+}
+
+func (u Unit) IsLocalContentSameAsRemote() (bool, error) {
+	local, remote, err := u.serviceLocalAndRemoteContent()
+	if err != nil {
+		return false, err
+	}
+	return local == remote, nil
+}
+
+func (u Unit) serviceLocalAndRemoteContent() (string, string, error) {
+	localContent, err := u.GetUnitContentAsFleeted()
+	if err != nil {
+		u.Log.WithError(err).Error("Cannot read unit file")
+		return "", "", err
+	}
+
+	remoteContent, err := u.service.GetFleetUnitContent(u.Name)
+	remoteContent += "\n"
+	if err != nil {
+		u.Log.WithError(err).Error("Cannot read unit file")
+		return "", "", err
+	}
+	return localContent, remoteContent, nil
 }
 
 func (u Unit) Start() error {
-	u.log.Info("Starting")
+	u.Log.Info("Starting")
 	_, err := u.service.GetEnv().RunFleetCmdGetOutput("start", u.unitPath)
 	if err != nil {
 		logrus.WithError(err).Error("Cannot start unit")
@@ -47,8 +97,8 @@ func (u Unit) Start() error {
 }
 
 func (u Unit) Destroy() error {
-	u.log.Info("Destroying") // todo check that service exists before destroy
-	_, err := u.service.GetEnv().RunFleetCmdGetOutput("destroy", u.name)
+	u.Log.Info("Destroying") // todo check that service exists before destroy
+	_, err := u.service.GetEnv().RunFleetCmdGetOutput("destroy", u.Name)
 	if err != nil {
 		logrus.WithError(err).Warn("Cannot destroy unit")
 		return err
@@ -56,13 +106,23 @@ func (u Unit) Destroy() error {
 	return nil
 }
 
+func (u Unit) Status() (string, error) {
+	content, err := u.service.GetEnv().RunFleetCmdGetOutput("status", u.Name)
+	if err != nil {
+		return content, err
+	}
+
+	if !strings.Contains(content, "Active: active (running)") { // Active: failed
+		return content, errors.New("unit is not in running state")
+	}
+
+	return content, err
+}
+
 //func (u Unit) Stop() {
 //	u.service.GetEnv().RunFleetCmdGetOutput("stop", u.name)
 //}
 //
-//func (u Unit) Status() {
-//	u.service.GetEnv().RunFleetCmdGetOutput("status ", u.name)
-//}
 //
 //func (u Unit) Cat() {
 //	u.service.GetEnv().RunFleetCmdGetOutput("cat ", u.name)

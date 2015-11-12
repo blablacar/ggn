@@ -176,6 +176,9 @@ func (s Service) discoverPod(name cntspec.ACFullname) []cntspec.ACFullname {
 		logAci.WithError(err).Fatal("pod discovery failed")
 	}
 
+	if len(endpoint.ACIEndpoints) == 0 {
+		s.log.Panic("Discovery does not contain a url")
+	}
 	url := endpoint.ACIEndpoints[0].ACI
 	url = strings.Replace(url, "=aci", "=pod", 1) // TODO this is nexus specific
 

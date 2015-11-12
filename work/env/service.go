@@ -1,6 +1,8 @@
 package env
 
 import (
+	"bufio"
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
@@ -9,10 +11,12 @@ import (
 	"github.com/blablacar/green-garden/work/env/service"
 	"github.com/coreos/etcd/client"
 	"github.com/juju/errors"
+	"github.com/mgutz/ansi"
 	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -89,7 +93,6 @@ func (s *Service) Check() {
 			logUnit.WithField("source", "file").Debug(localContent)
 		}
 	}
-
 }
 
 func (s *Service) GetFleetUnitContent(unit string) (string, error) {
@@ -97,14 +100,14 @@ func (s *Service) GetFleetUnitContent(unit string) (string, error) {
 }
 
 func (s *Service) Unlock() {
-	s.log.Info("Unlock")
+	s.log.Info("Unlocking")
 
 	kapi := s.env.EtcdClient()
 	kapi.Delete(context.Background(), s.lockPath, nil)
 }
 
 func (s *Service) Lock(ttl time.Duration, message string) {
-	s.log.WithField("ttl", ttl).WithField("message", message).Info("lock")
+	s.log.WithField("ttl", ttl).WithField("message", message).Info("locking")
 
 	kapi := s.env.EtcdClient()
 	resp, err := kapi.Get(context.Background(), s.lockPath, nil)
@@ -122,32 +125,119 @@ func (s *Service) Lock(ttl time.Duration, message string) {
 	}
 }
 
-func (s *Service) Update() {
+func (s *Service) Update() error {
 	s.log.Info("Updating service")
 	s.GenerateUnits(nil)
 
 	hostname, _ := os.Hostname()
 	s.Lock(time.Hour*1, "["+os.Getenv("USER")+"@"+hostname+"] Updating")
-	for _, unit := range s.ListUnits() {
-		s.LoadUnit(unit).Destroy()
-		time.Sleep(time.Second * 2)
-		err := s.LoadUnit(unit).Start()
-		if err != nil {
-			log.WithError(err).Fatal("Failed to start service. Keeping lock")
+	lock := true
+	defer func() {
+		if lock {
+			s.log.WithField("service", s.name).Warn("!! Leaving but Service is still lock !!")
 		}
+	}()
+units:
+	for i, unit := range s.ListUnits() {
+		u := s.LoadUnit(unit)
+
+	ask:
+		for {
+			same, err := u.IsLocalContentSameAsRemote()
+			if err != nil {
+				u.Log.WithError(err).Warn("Cannot compare local and remote service")
+			}
+			if same {
+				u.Log.Warn("Remote service is already up to date")
+			}
+			action := s.askToProcessService(i, u)
+			switch action {
+			case ACTION_DIFF:
+				u.DisplayDiff()
+			case ACTION_QUIT:
+				u.Log.Info("User want to quit")
+				if i == 0 {
+					s.Unlock()
+					lock = false
+				}
+				return errors.New("User want to quit")
+			case ACTION_SKIP:
+				u.Log.Info("User skip this service")
+				continue units
+			case ACTION_YES:
+				break ask
+			default:
+				u.Log.Fatal("Should not be here")
+			}
+		}
+
+		u.Destroy()
+		time.Sleep(time.Second * 2)
+		err := u.Start()
+		if err != nil {
+			log.WithError(err).Error("Failed to start service. Keeping lock")
+			return err
+		}
+		time.Sleep(time.Second * 2)
+		_, err = u.Status()
+		if err != nil {
+			log.WithError(err).Error("Unit failed just after start")
+			return err
+		}
+
+		s.checkServiceRunning()
+
+		// TODO ask deploy pod version ()
+		// TODO YES/NO
+		// TODO check running tmux
+		// TODO running as root ??
+		// TODO notify slack
+		// TODO store old version
+		// TODO !!!!! check that service is running well before going to next server !!!
+
 	}
 	s.Unlock()
-
-	// TODO
-	// check running tmux
-	// running as root ??
-	// notify slack
-	// store old version
-	// !!!!! check that service is running well before going to next server !!!
-
+	lock = false
+	return nil
 }
 
 /////////////////////////////////////////////////
+
+type Action int
+
+const (
+	ACTION_YES Action = iota
+	ACTION_SKIP
+	ACTION_DIFF
+	ACTION_QUIT
+)
+
+func (s *Service) askToProcessService(index int, unit *service.Unit) Action {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print("Update unit " + ansi.LightGreen + unit.Name + ansi.Reset + " ? : (yes,skip,diff,quit) ")
+		text, _ := reader.ReadString('\n')
+		t := strings.ToLower(strings.Trim(text, " \n"))
+		if t == "o" || t == "y" || t == "ok" || t == "yes" {
+			return ACTION_YES
+		}
+		if t == "s" || t == "skip" {
+			return ACTION_SKIP
+		}
+		if t == "d" || t == "diff" {
+			return ACTION_DIFF
+		}
+		if t == "q" || t == "quit" {
+			return ACTION_QUIT
+		}
+		continue
+	}
+	return ACTION_QUIT
+}
+
+func (s *Service) checkServiceRunning() {
+
+}
 
 func (s *Service) loadAttributes() {
 	attr := utils.CopyMap(s.env.GetAttributes())
