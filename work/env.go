@@ -149,7 +149,7 @@ func (e Env) RunFleetCmdGetOutput(args ...string) (string, error) {
 
 func (e Env) EtcdClient() client.KeysAPI {
 	cfg := client.Config{
-		Endpoints:               []string{"http://" + e.config.Fleet.Endpoint},
+		Endpoints:               strings.Split(e.config.Fleet.Endpoint, ","),
 		Username:                e.config.Fleet.Username,
 		Password:                e.config.Fleet.Password,
 		Transport:               client.DefaultTransport,
@@ -167,7 +167,7 @@ func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, error)
 	if e.config.Fleet.Endpoint == "" {
 		return "", errors.New("Cannot find fleet.endpoint env config to call fleetctl")
 	}
-	endpoint := "http://" + e.config.Fleet.Endpoint
+	endpoint := e.config.Fleet.Endpoint
 	os.Setenv(FLEETCTL_ENDPOINT, endpoint)
 	if e.config.Fleet.Username != "" {
 		os.Setenv(FLEETCTL_SSH_USERNAME, e.config.Fleet.Username)
