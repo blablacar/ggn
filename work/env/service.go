@@ -157,6 +157,9 @@ units:
 					continue units
 				}
 			}
+			if builder.BuildFlags.Yes {
+				break ask
+			}
 			action := s.askToProcessService(i, u)
 			switch action {
 			case ACTION_DIFF:

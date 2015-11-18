@@ -97,6 +97,7 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 				},
 			}
 			updateCmd.Flags().BoolVarP(&builder.BuildFlags.All, "all", "a", false, "process all units, even up to date")
+			updateCmd.Flags().BoolVarP(&builder.BuildFlags.Yes, "yes", "y", false, "process units without asking")
 
 			serviceCmd.AddCommand(generateCmd, checkCmd, lockCmd, unlockCmd, updateCmd)
 
