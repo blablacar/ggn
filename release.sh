@@ -50,7 +50,7 @@ for i in ${dir}/dist/*-amd64/ ; do
     if [ -d "$i" ]; then
         cd $i
         platform=${PWD##*/}
-        tar cvzf green-garden-$platform-$version.tar.gz green-garden
+        tar cvzf green-garden-$platform-$version.tar.gz ggn
         cd -
     fi
 done
