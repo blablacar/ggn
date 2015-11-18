@@ -12,6 +12,7 @@ func checkEnv(cmd *cobra.Command, args []string, work *work.Work, envString stri
 	logEnv.Info("Running command")
 
 	env := work.LoadEnv(envString)
+	env.Generate()
 
 	units, err := env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-unit-files", "-no-legend", "-fields", "unit")
 	if err != nil {
@@ -30,5 +31,6 @@ func checkEnv(cmd *cobra.Command, args []string, work *work.Work, envString stri
 
 func checkService(cmd *cobra.Command, args []string, work *work.Work, env string, serviceName string) {
 	service := work.LoadEnv(env).LoadService(serviceName)
+	service.GenerateUnits(nil)
 	service.Check()
 }
