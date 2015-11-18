@@ -5,15 +5,12 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/utils"
-	"github.com/blablacar/green-garden/builder"
 	"github.com/blablacar/green-garden/config"
 	"github.com/coreos/go-semver/semver"
 	"github.com/spf13/cobra"
 	"os"
 	"strings"
 )
-
-var buildArgs = builder.BuildArgs{}
 
 const FLEET_SUPPORTED_VERSION = "0.11.5"
 

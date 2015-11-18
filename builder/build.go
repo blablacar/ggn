@@ -1,5 +1,7 @@
 package builder
 
-type BuildArgs struct {
-	//	Env string
+type Flags struct {
+	All bool
 }
+
+var BuildFlags = Flags{}

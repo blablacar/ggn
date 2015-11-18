@@ -2,6 +2,7 @@ package commands
 
 import (
 	log "github.com/Sirupsen/logrus"
+	"github.com/blablacar/green-garden/builder"
 	"github.com/blablacar/green-garden/config"
 	"github.com/blablacar/green-garden/work"
 	"github.com/spf13/cobra"
@@ -95,6 +96,7 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 					update(cmd, args, work, env, service)
 				},
 			}
+			updateCmd.Flags().BoolVarP(&builder.BuildFlags.All, "all", "a", false, "process all units, even up to date")
 
 			serviceCmd.AddCommand(generateCmd, checkCmd, lockCmd, unlockCmd, updateCmd)
 

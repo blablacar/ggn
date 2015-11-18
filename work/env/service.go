@@ -6,6 +6,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
+	"github.com/blablacar/green-garden/builder"
 	"github.com/blablacar/green-garden/spec"
 	"github.com/blablacar/green-garden/utils"
 	"github.com/blablacar/green-garden/work/env/service"
@@ -151,7 +152,10 @@ units:
 				u.Log.WithError(err).Warn("Cannot compare local and remote service")
 			}
 			if same {
-				u.Log.Warn("Remote service is already up to date")
+				u.Log.Info("Remote service is already up to date")
+				if !builder.BuildFlags.All {
+					continue units
+				}
 			}
 			action := s.askToProcessService(i, u)
 			switch action {
