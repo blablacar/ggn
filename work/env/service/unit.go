@@ -155,7 +155,6 @@ func convertMultilineUnitToString(content []byte) string {
 		line := scanner.Text()
 		if line == "" && currentLine != "" {
 			currentLine = strings.TrimRight(currentLine, " ")
-			line = "\n"
 		}
 		currentLine += strings.TrimRight(line, " ")
 		if strings.HasSuffix(currentLine, "\\") {
