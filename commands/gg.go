@@ -23,7 +23,7 @@ func Execute() {
 
 	var logLevel string
 	var rootCmd = &cobra.Command{
-		Use: "green-garden",
+		Use: "ggn",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			level, err := log.ParseLevel(logLevel)
 			if err != nil {
@@ -34,7 +34,7 @@ func Execute() {
 		},
 	}
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "loglevel", "L", "info", "Set log level")
-	rootCmd.AddCommand(versionCmd, generateCmd)
+	rootCmd.AddCommand(versionCmd, generateCmd, genautocompleteCmd)
 
 	loadEnvCommands(rootCmd)
 
