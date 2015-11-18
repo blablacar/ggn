@@ -39,7 +39,7 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
-	log.Info("Victory !")
+	log.Debug("Victory !")
 }
 
 func checkFleetVersion() {
