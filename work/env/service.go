@@ -75,24 +75,8 @@ func (s *Service) ListUnits() []string {
 
 func (s *Service) Check() {
 	unitNames := s.ListUnits()
-	for _, unit := range unitNames {
-		logUnit := s.log.WithField("unit", unit)
-		localContent, err := s.LoadUnit(unit).GetUnitContentAsFleeted()
-		if err != nil {
-			logUnit.WithError(err).Error("Cannot read unit file")
-			continue
-		}
-		remoteContent, err := s.GetFleetUnitContent(unit)
-		if err != nil {
-			logUnit.WithError(err).Error("Cannot read unit file")
-			continue
-		}
-
-		if localContent != remoteContent {
-			logUnit.Error("Unit is not up to date")
-			logUnit.WithField("source", "fleet").Debug(remoteContent)
-			logUnit.WithField("source", "file").Debug(localContent)
-		}
+	for _, unitName := range unitNames {
+		s.LoadUnit(unitName).Check()
 	}
 }
 

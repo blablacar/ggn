@@ -32,6 +32,17 @@ func NewUnit(path string, name string, service spec.Service) *Unit {
 	return unit
 }
 
+func (u Unit) Check() {
+	same, err := u.IsLocalContentSameAsRemote()
+	if err != nil {
+		u.Log.WithError(err).Warn("Cannot diff with remote")
+	}
+	if !same {
+		u.Log.Info("Unit is not up to date")
+		u.DisplayDiff()
+	}
+}
+
 func (u Unit) GetUnitContentAsFleeted() (string, error) {
 	unitFileContent, err := ioutil.ReadFile(u.unitPath)
 	if err != nil {
@@ -46,19 +57,21 @@ func (u Unit) GetUnitContentAsFleeted() (string, error) {
 }
 
 func (u Unit) DisplayDiff() error {
-	u.Log.Info("Diff")
+	u.Log.Debug("Diff")
 
 	local, remote, err := u.serviceLocalAndRemoteContent()
 	if err != nil {
 		return err
 	}
 
-	ioutil.WriteFile("/tmp/ggn-local", []byte(local), 0644)
-	defer os.Remove("/tmp/ggn-local")
-	ioutil.WriteFile("/tmp/ggn-remote", []byte(remote), 0644)
-	defer os.Remove("/tmp/ggn-remote")
-	utils.ExecCmd("git", "diff", "/tmp/ggn-remote", "/tmp/ggn-local")
-	return nil
+	localPath := "/tmp/" + u.Name + "__local"
+	remotePath := "/tmp/" + u.Name + "__remote"
+
+	ioutil.WriteFile(localPath, []byte(local), 0644)
+	defer os.Remove(localPath)
+	ioutil.WriteFile(remotePath, []byte(remote), 0644)
+	defer os.Remove(remotePath)
+	return utils.ExecCmd("git", "diff", remotePath, localPath)
 }
 
 func (u Unit) IsLocalContentSameAsRemote() (bool, error) {
@@ -85,7 +98,7 @@ func (u Unit) serviceLocalAndRemoteContent() (string, string, error) {
 }
 
 func (u Unit) Start() error {
-	u.Log.Info("Starting")
+	u.Log.Debug("Starting")
 	_, err := u.service.GetEnv().RunFleetCmdGetOutput("start", u.unitPath)
 	if err != nil {
 		logrus.WithError(err).Error("Cannot start unit")
@@ -95,7 +108,7 @@ func (u Unit) Start() error {
 }
 
 func (u Unit) Destroy() error {
-	u.Log.Info("Destroying") // todo check that service exists before destroy
+	u.Log.Debug("Destroying") // todo check that service exists before destroy
 	_, err := u.service.GetEnv().RunFleetCmdGetOutput("destroy", u.Name)
 	if err != nil {
 		logrus.WithError(err).Warn("Cannot destroy unit")

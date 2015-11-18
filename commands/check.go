@@ -18,29 +18,13 @@ func checkEnv(cmd *cobra.Command, args []string, work *work.Work, envString stri
 		logEnv.WithError(err).Fatal("Cannot list unit files")
 	}
 
-	for _, unit := range strings.Split(units, "\n") {
-		logUnit := logEnv.WithField("unit", unit)
-
-		content, err := env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "cat", unit)
-		if err != nil {
-			logUnit.WithError(err).Fatal("Fleetctl failed to cat service content")
-		}
-		unitInfo := strings.Split(unit, "_")
-		if unitInfo[0] != cmd.Use {
-			logUnit.Warn("Unknown unit")
+	for _, unitName := range strings.Split(units, "\n") {
+		unitInfo := strings.Split(unitName, "_")
+		if len(unitInfo) != 3 {
+			logEnv.WithField("unit", unitName).Warn("Unknown unit format for GGN")
 			continue
 		}
-
-		res, err := env.LoadService(unitInfo[1]).LoadUnit(unit).GetUnitContentAsFleeted()
-		if err != nil {
-			logUnit.WithError(err).Warn("Cannot read unit file")
-			continue
-		}
-		if res != content {
-			logUnit.Info("Unit is not up to date")
-			logUnit.WithField("source", "fleet").Debug(content)
-			logUnit.WithField("source", "file").Debug(res)
-		}
+		env.LoadService(unitInfo[1]).LoadUnit(unitName).Check()
 	}
 }
 
