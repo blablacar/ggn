@@ -71,7 +71,7 @@ func (u Unit) DisplayDiff() error {
 	defer os.Remove(localPath)
 	ioutil.WriteFile(remotePath, []byte(remote), 0644)
 	defer os.Remove(remotePath)
-	return utils.ExecCmd("git", "diff", remotePath, localPath)
+	return utils.ExecCmd("git", "diff", "--word-diff", remotePath, localPath)
 }
 
 func (u Unit) IsLocalContentSameAsRemote() (bool, error) {
