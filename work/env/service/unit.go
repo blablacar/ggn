@@ -76,6 +76,9 @@ func (u Unit) DisplayDiff() error {
 
 func (u Unit) IsLocalContentSameAsRemote() (bool, error) {
 	local, remote, err := u.serviceLocalAndRemoteContent()
+	if local != "" && err != nil {
+		return false, nil
+	}
 	if err != nil {
 		return false, err
 	}
@@ -99,7 +102,7 @@ func (u Unit) serviceLocalAndRemoteContent() (string, string, error) {
 
 func (u Unit) Start() error {
 	u.Log.Debug("Starting")
-	_, err := u.service.GetEnv().RunFleetCmdGetOutput("start", u.unitPath)
+	_, _, err := u.service.GetEnv().RunFleetCmdGetOutput("start", u.unitPath)
 	if err != nil {
 		logrus.WithError(err).Error("Cannot start unit")
 		return err
@@ -109,7 +112,7 @@ func (u Unit) Start() error {
 
 func (u Unit) Destroy() error {
 	u.Log.Debug("Destroying") // todo check that service exists before destroy
-	_, err := u.service.GetEnv().RunFleetCmdGetOutput("destroy", u.Name)
+	_, _, err := u.service.GetEnv().RunFleetCmdGetOutput("destroy", u.Name)
 	if err != nil {
 		logrus.WithError(err).Warn("Cannot destroy unit")
 		return err
@@ -118,7 +121,7 @@ func (u Unit) Destroy() error {
 }
 
 func (u Unit) Status() (string, error) {
-	content, err := u.service.GetEnv().RunFleetCmdGetOutput("status", u.Name)
+	content, _, err := u.service.GetEnv().RunFleetCmdGetOutput("status", u.Name)
 	if err != nil {
 		return "", err
 	}

@@ -80,8 +80,12 @@ func (s *Service) Check() {
 	}
 }
 
-func (s *Service) GetFleetUnitContent(unit string) (string, error) {
-	return s.env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "cat", unit)
+func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this method should be in unit
+	stdout, stderr, err := s.env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "cat", unit)
+	if err != nil && stderr == "Unit "+unit+" not found" {
+		return "", nil
+	}
+	return stdout, err
 }
 
 func (s *Service) Unlock() {

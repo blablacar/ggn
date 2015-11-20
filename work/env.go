@@ -113,7 +113,7 @@ func (e Env) ListServices() []string {
 }
 
 func (e Env) ListMachineNames() []string {
-	out, err := e.RunFleetCmdGetOutput("list-machines", "--fields=metadata", "--no-legend")
+	out, _, err := e.RunFleetCmdGetOutput("list-machines", "--fields=metadata", "--no-legend")
 	if err != nil {
 		e.log.WithError(err).Fatal("Cannot list-machines")
 	}
@@ -139,11 +139,11 @@ const FLEETCTL_STRICT_HOST_KEY_CHECKING = "FLEETCTL_STRICT_HOST_KEY_CHECKING"
 const FLEETCTL_SUDO = "FLEETCTL_SUDO"
 
 func (e Env) RunFleetCmd(args ...string) error {
-	_, err := e.runFleetCmdInternal(false, args...)
+	_, _, err := e.runFleetCmdInternal(false, args...)
 	return err
 }
 
-func (e Env) RunFleetCmdGetOutput(args ...string) (string, error) {
+func (e Env) RunFleetCmdGetOutput(args ...string) (string, string, error) {
 	return e.runFleetCmdInternal(true, args...)
 }
 
@@ -163,9 +163,9 @@ func (e Env) EtcdClient() client.KeysAPI {
 	return kapi
 }
 
-func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, error) {
+func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, string, error) {
 	if e.config.Fleet.Endpoint == "" {
-		return "", errors.New("Cannot find fleet.endpoint env config to call fleetctl")
+		return "", "", errors.New("Cannot find fleet.endpoint env config to call fleetctl")
 	}
 	endpoint := e.config.Fleet.Endpoint
 	os.Setenv(FLEETCTL_ENDPOINT, endpoint)
@@ -175,10 +175,11 @@ func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, error)
 	os.Setenv(FLEETCTL_STRICT_HOST_KEY_CHECKING, fmt.Sprintf("%t", e.config.Fleet.Strict_host_key_checking))
 	os.Setenv(FLEETCTL_SUDO, fmt.Sprintf("%t", e.config.Fleet.Sudo))
 
-	var out string
+	var stdout string
+	var stderr string
 	var err error
 	if getOutput {
-		out, err = cntUtils.ExecCmdGetOutput("fleetctl", args...)
+		stdout, stderr, err = cntUtils.ExecCmdGetStdoutAndStderr("fleetctl", args...)
 	} else {
 		err = cntUtils.ExecCmd("fleetctl", args...)
 	}
@@ -187,5 +188,5 @@ func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, error)
 	os.Setenv(FLEETCTL_SSH_USERNAME, "")
 	os.Setenv(FLEETCTL_STRICT_HOST_KEY_CHECKING, "")
 	os.Setenv(FLEETCTL_SUDO, "")
-	return out, err
+	return stdout, stderr, err
 }

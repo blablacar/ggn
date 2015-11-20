@@ -14,7 +14,7 @@ func checkEnv(cmd *cobra.Command, args []string, work *work.Work, envString stri
 	env := work.LoadEnv(envString)
 	env.Generate()
 
-	units, err := env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-unit-files", "-no-legend", "-fields", "unit")
+	units, _, err := env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-unit-files", "-no-legend", "-fields", "unit")
 	if err != nil {
 		logEnv.WithError(err).Fatal("Cannot list unit files")
 	}
