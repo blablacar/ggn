@@ -13,13 +13,13 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 	work := work.NewWork(config.GetConfig().WorkPath)
 
 	for _, f := range work.ListEnvs() {
-		var env = f
-		var envCmd = &cobra.Command{
+		env := f
+		envCmd := &cobra.Command{
 			Use:   env,
 			Short: "Run command for " + env,
 		}
 
-		var check = &cobra.Command{
+		checkCmd := &cobra.Command{
 			Use:   "check",
 			Short: "Check local units with what is running on fleet on " + env,
 			Run: func(cmd *cobra.Command, args []string) {
@@ -27,23 +27,30 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 			},
 		}
 
-		var runCmd = &cobra.Command{
+		statusCmd := &cobra.Command{
+			Use:   "status",
+			Short: "Status of " + env,
+			Run: func(cmd *cobra.Command, args []string) {
+				statusEnv(cmd, args, work, env)
+			},
+		}
+
+		fleetctlCmd := &cobra.Command{
 			Use:   "fleetctl",
 			Short: "Run fleetctl command on " + env,
 			Run: func(cmd *cobra.Command, args []string) {
 				fleetctl(cmd, args, work, env)
 			},
 		}
-		envCmd.AddCommand(runCmd, check)
 
-		var generateCmd = &cobra.Command{
+		generateCmd := &cobra.Command{
 			Use:   "generate",
 			Short: "Generate units for " + env,
 			Run: func(cmd *cobra.Command, args []string) {
 				generateEnv(cmd, args, work, env)
 			},
 		}
-		envCmd.AddCommand(generateCmd)
+		envCmd.AddCommand(generateCmd, fleetctlCmd, checkCmd/*, statusCmd*/)
 
 		rootCmd.AddCommand(envCmd)
 

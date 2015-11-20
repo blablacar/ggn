@@ -74,6 +74,8 @@ func (s *Service) ListUnits() []string {
 }
 
 func (s *Service) Check() {
+	s.log.Debug("Check")
+	s.GenerateUnits(nil)
 	unitNames := s.ListUnits()
 	for _, unitName := range unitNames {
 		s.LoadUnit(unitName).Check()

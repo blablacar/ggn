@@ -32,6 +32,16 @@ func NewUnit(path string, name string, service spec.Service) *Unit {
 	return unit
 }
 
+func (u Unit) Status() {
+	same, err := u.IsLocalContentSameAsRemote()
+	if err != nil {
+		u.Log.WithError(err).Panic("Cannot read remote unit")
+	}
+	if !same {
+		u.Log.Warn("Unit is not up to date")
+	}
+}
+
 func (u Unit) Check() {
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
@@ -120,7 +130,7 @@ func (u Unit) Destroy() error {
 	return nil
 }
 
-func (u Unit) Status() (string, error) {
+func (u Unit) State() (string, error) {
 	content, _, err := u.service.GetEnv().RunFleetCmdGetOutput("status", u.Name)
 	if err != nil {
 		return "", err
@@ -128,7 +138,7 @@ func (u Unit) Status() (string, error) {
 
 	reg, err := regexp.Compile(`Active: (active|inactive|deactivating|activating)`)
 	if err != nil {
-		u.Log.Panic("Cannot compule regex")
+		u.Log.Panic("Cannot compile regex")
 	}
 	matched := reg.FindStringSubmatch(content)
 
