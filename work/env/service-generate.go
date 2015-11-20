@@ -171,7 +171,7 @@ func (s Service) discoverPod(name cntspec.ACFullname) []cntspec.ACFullname {
 		app.Labels["arch"] = "amd64"
 	}
 
-	endpoint, _, err := discovery.DiscoverEndpoints(*app, false)
+	endpoint, _, err := discovery.DiscoverEndpoints(*app, nil, false)
 	if err != nil {
 		logAci.WithError(err).Fatal("pod discovery failed")
 	}

@@ -9,13 +9,13 @@
 		},
 		{
 			"ImportPath": "github.com/appc/spec/discovery",
-			"Comment": "v0.6.1-42-g2981bdf",
-			"Rev": "2981bdf7017cc2cd04fcaf0caf6342e552fa176e"
+			"Comment": "v0.7.1-30-g1e5ab3d",
+			"Rev": "1e5ab3d857c146e0834c5a14857728d6c04c6f85"
 		},
 		{
 			"ImportPath": "github.com/appc/spec/schema",
-			"Comment": "v0.6.1-42-g2981bdf",
-			"Rev": "2981bdf7017cc2cd04fcaf0caf6342e552fa176e"
+			"Comment": "v0.7.1-30-g1e5ab3d",
+			"Rev": "1e5ab3d857c146e0834c5a14857728d6c04c6f85"
 		},
 		{
 			"ImportPath": "github.com/blablacar/attributes-merger/attributes",
@@ -24,18 +24,22 @@
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/log",
-			"Comment": "44-4-g391f15a",
-			"Rev": "391f15a12d3723708f03fda1923732dfc60cce4a"
+			"Comment": "45-1-g7074012",
+			"Rev": "70740129b4c83de5a87c3d7eadf34271c4f1d7e4"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/spec",
-			"Comment": "44-4-g391f15a",
-			"Rev": "391f15a12d3723708f03fda1923732dfc60cce4a"
+			"Comment": "45-1-g7074012",
+			"Rev": "70740129b4c83de5a87c3d7eadf34271c4f1d7e4"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/utils",
-			"Comment": "44-4-g391f15a",
-			"Rev": "391f15a12d3723708f03fda1923732dfc60cce4a"
+			"Comment": "45-1-g7074012",
+			"Rev": "70740129b4c83de5a87c3d7eadf34271c4f1d7e4"
+		},
+		{
+			"ImportPath": "github.com/camlistore/camlistore/pkg/errorutil",
+			"Rev": "58958f44ee2eaa5139097dec3e02f47df0aba180"
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/client",

@@ -85,14 +85,14 @@ func (u Unit) IsLocalContentSameAsRemote() (bool, error) {
 func (u Unit) serviceLocalAndRemoteContent() (string, string, error) {
 	localContent, err := u.GetUnitContentAsFleeted()
 	if err != nil {
-		u.Log.WithError(err).Error("Cannot read unit file")
+		u.Log.WithError(err).Error("Cannot read local unit file")
 		return "", "", err
 	}
 
 	remoteContent, err := u.service.GetFleetUnitContent(u.Name)
 	if err != nil {
-		u.Log.WithError(err).Error("Cannot read unit file")
-		return "", "", err
+		u.Log.WithError(err).Error("Cannot read remote unit file")
+		return localContent, "", err
 	}
 	return localContent, remoteContent, nil
 }

@@ -149,14 +149,14 @@ units:
 			case ACTION_DIFF:
 				u.DisplayDiff()
 			case ACTION_QUIT:
-				u.Log.Info("User want to quit")
+				u.Log.Debug("User want to quit")
 				if i == 0 {
 					s.Unlock()
 					lock = false
 				}
 				return errors.New("User want to quit")
 			case ACTION_SKIP:
-				u.Log.Info("User skip this service")
+				u.Log.Debug("User skip this service")
 				continue units
 			case ACTION_YES:
 				break ask
