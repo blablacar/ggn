@@ -133,6 +133,39 @@ func (e Env) ListMachineNames() []string {
 	return names
 }
 
+const PATH_HOOKS = "/hooks"
+
+func (e Env) RunEarlyHook(service string, action string) {
+	e.runHook("/early", service, action)
+}
+
+func (e Env) RunLateHook(service string, action string) {
+	e.runHook("/late", service, action)
+}
+
+func (e Env) runHook(path string, service string, action string) {
+	e.log.WithField("path", path).Debug("Running hook")
+	files, err := ioutil.ReadDir(e.path + PATH_HOOKS + path)
+	if err != nil {
+		log.WithError(err).Debug("Cannot read hood directory")
+		return
+	}
+
+	os.Setenv("SERVICE", service)
+	hostname, _ := os.Hostname()
+	os.Setenv("WHO", os.Getenv("USER")+"@"+hostname)
+	os.Setenv("ACTION", action)
+	for _, f := range files {
+		if !f.IsDir() {
+			hookLog := log.WithField("name", f.Name())
+			hookLog.Debug("Running Hook")
+			if err := cntUtils.ExecCmd(e.path + PATH_HOOKS + path + "/" + f.Name()); err != nil {
+				hookLog.Fatal("Hook status is failed")
+			}
+		}
+	}
+}
+
 const FLEETCTL_ENDPOINT = "FLEETCTL_ENDPOINT"
 const FLEETCTL_SSH_USERNAME = "FLEETCTL_SSH_USERNAME"
 const FLEETCTL_STRICT_HOST_KEY_CHECKING = "FLEETCTL_STRICT_HOST_KEY_CHECKING"

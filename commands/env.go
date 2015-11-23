@@ -50,7 +50,7 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 				generateEnv(cmd, args, work, env)
 			},
 		}
-		envCmd.AddCommand(generateCmd, fleetctlCmd, checkCmd/*, statusCmd*/)
+		envCmd.AddCommand(generateCmd, fleetctlCmd, checkCmd, statusCmd)
 
 		rootCmd.AddCommand(envCmd)
 
@@ -75,6 +75,14 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 				Long:  `generate units using remote resolved or local pod/aci manifests`,
 				Run: func(cmd *cobra.Command, args []string) {
 					generateService(cmd, args, work, env, service)
+				},
+			}
+
+			var statusCmd = &cobra.Command{
+				Use:   "status [manifest...]",
+				Short: "status units for " + service + " on env " + env,
+				Run: func(cmd *cobra.Command, args []string) {
+					statusService(cmd, args, work, env, service)
 				},
 			}
 
@@ -106,7 +114,7 @@ func loadEnvCommands(rootCmd *cobra.Command) {
 			updateCmd.Flags().BoolVarP(&builder.BuildFlags.All, "all", "a", false, "process all units, even up to date")
 			updateCmd.Flags().BoolVarP(&builder.BuildFlags.Yes, "yes", "y", false, "process units without asking")
 
-			serviceCmd.AddCommand(generateCmd, checkCmd, lockCmd, unlockCmd, updateCmd)
+			serviceCmd.AddCommand(generateCmd, checkCmd, lockCmd, unlockCmd, updateCmd, statusCmd)
 
 			envCmd.AddCommand(serviceCmd)
 		}

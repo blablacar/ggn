@@ -6,6 +6,7 @@ import (
 	"github.com/blablacar/cnt/utils"
 	"github.com/blablacar/green-garden/spec"
 	"github.com/coreos/fleet/unit"
+	"github.com/juju/errors"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -35,7 +36,7 @@ func NewUnit(path string, name string, service spec.Service) *Unit {
 func (u Unit) Status() {
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
-		u.Log.WithError(err).Panic("Cannot read remote unit")
+		u.Log.Warn("Cannot read unit")
 	}
 	if !same {
 		u.Log.Warn("Unit is not up to date")
@@ -98,14 +99,12 @@ func (u Unit) IsLocalContentSameAsRemote() (bool, error) {
 func (u Unit) serviceLocalAndRemoteContent() (string, string, error) {
 	localContent, err := u.GetUnitContentAsFleeted()
 	if err != nil {
-		u.Log.WithError(err).Error("Cannot read local unit file")
-		return "", "", err
+		return "", "", errors.Annotate(err, "Cannot read local unit file")
 	}
 
 	remoteContent, err := u.service.GetFleetUnitContent(u.Name)
 	if err != nil {
-		u.Log.WithError(err).Error("Cannot read remote unit file")
-		return localContent, "", err
+		return localContent, "", errors.Annotate(err, "CanCannot read remote unit file")
 	}
 	return localContent, remoteContent, nil
 }

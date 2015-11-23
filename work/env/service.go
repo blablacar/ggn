@@ -75,7 +75,7 @@ func (s *Service) ListUnits() []string {
 
 func (s *Service) Check() {
 	s.log.Debug("Check")
-	s.GenerateUnits(nil)
+	s.Generate(nil)
 	unitNames := s.ListUnits()
 	for _, unitName := range unitNames {
 		s.LoadUnit(unitName).Check()
@@ -92,16 +92,19 @@ func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this
 
 func (s *Service) Unlock() {
 	s.log.Info("Unlocking")
+	s.env.RunEarlyHook(s.name, "unlock")
 
 	kapi := s.env.EtcdClient()
 	_, err := kapi.Delete(context.Background(), s.lockPath, nil)
 	if cerr, ok := err.(*client.ClusterError); ok {
 		s.log.WithError(cerr).Panic("Cannot unlock service")
 	}
+	s.env.RunLateHook(s.name, "unlock")
 }
 
 func (s *Service) Lock(ttl time.Duration, message string) {
 	s.log.WithField("ttl", ttl).WithField("message", message).Info("locking")
+	s.env.RunEarlyHook(s.name, "lock")
 
 	kapi := s.env.EtcdClient()
 	resp, err := kapi.Get(context.Background(), s.lockPath, nil)
@@ -117,11 +120,12 @@ func (s *Service) Lock(ttl time.Duration, message string) {
 			WithField("ttl", resp.Node.TTLDuration().String()).
 			Fatal("Service is already locked")
 	}
+	s.env.RunLateHook(s.name, "lock")
 }
 
 func (s *Service) Update() error {
 	s.log.Info("Updating service")
-	s.GenerateUnits(nil)
+	s.Generate(nil)
 
 	hostname, _ := os.Hostname()
 	s.Lock(time.Hour*1, "["+os.Getenv("USER")+"@"+hostname+"] Updating")

@@ -11,8 +11,6 @@ fi
 version=$1
 access_token=$2
 
-
-
 require_clean_work_tree () {
     # Update the index
     git update-index -q --ignore-submodules --refresh

@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func (s Service) GenerateUnits(sources []string) {
+func (s Service) Generate(sources []string) {
 	s.log.Debug("Generating units")
 
 	tmpl, err := s.loadUnitTemplate()
