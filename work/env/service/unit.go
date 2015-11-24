@@ -9,6 +9,7 @@ import (
 	"github.com/juju/errors"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -47,6 +48,20 @@ func (u Unit) Check() {
 	}
 	if !same {
 		u.Log.Warn("Unit is not up to date")
+	}
+}
+
+func (u Unit) Journal(follow bool, lines int) {
+	u.Log.Debug("journal")
+	args := []string{"journal", "-lines", strconv.Itoa(lines)}
+	if follow {
+		args = append(args, "-f")
+	}
+	args = append(args, u.Filename)
+
+	err := u.Service.GetEnv().RunFleetCmd(args...)
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to run status")
 	}
 }
 

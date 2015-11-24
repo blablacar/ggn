@@ -13,6 +13,7 @@ type Env interface {
 	GetAttributes() map[string]interface{}
 	ListMachineNames() []string
 	RunFleetCmdGetOutput(args ...string) (string, string, error)
+	RunFleetCmd(args ...string) error
 	EtcdClient() client.KeysAPI
 	RunEarlyHook(service string, action string)
 	RunLateHook(service string, action string)

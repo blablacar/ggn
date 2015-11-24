@@ -7,6 +7,9 @@ import (
 )
 
 func prepareUnitCommands(unit *service.Unit) *cobra.Command {
+	var follow bool
+	var lines int
+
 	unitCmd := &cobra.Command{
 		Use:   unit.Name,
 		Short: getShortDescription(unit, "Run command for"),
@@ -35,7 +38,6 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 			unit.Update(true)
 		},
 	}
-	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Force, "force", "f", false, "force update even if up to date")
 
 	destroyCmd := &cobra.Command{
 		Use:   "destroy",
@@ -50,6 +52,14 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Short: getShortDescription(unit, "Get status of"),
 		Run: func(cmd *cobra.Command, args []string) {
 			unit.Status()
+		},
+	}
+
+	journalCmd := &cobra.Command{
+		Use:   "journal",
+		Short: getShortDescription(unit, "Get journal of"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Journal(follow, lines)
 		},
 	}
 
@@ -77,7 +87,11 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		},
 	}
 
-	unitCmd.AddCommand(startCmd, stopCmd, updateCmd, destroyCmd, statusCmd, unloadCmd, diffCmd, checkCmd)
+	journalCmd.Flags().BoolVarP(&follow, "follow", "f", false, "follow")
+	journalCmd.Flags().IntVarP(&lines, "lines", "l", 10, "lines")
+	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Force, "force", "f", false, "force update even if up to date")
+
+	unitCmd.AddCommand(startCmd, stopCmd, updateCmd, destroyCmd, statusCmd, unloadCmd, diffCmd, checkCmd, journalCmd)
 	return unitCmd
 }
 
