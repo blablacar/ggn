@@ -108,6 +108,10 @@ func (s *Service) Unlock() {
 }
 
 func (s *Service) Lock(ttl time.Duration, message string) {
+	hostname, _ := os.Hostname()
+	who := "[" + os.Getenv("USER") + "@" + hostname + "] "
+	message = who + message
+
 	s.log.WithField("ttl", ttl).WithField("message", message).Info("locking")
 
 	kapi := s.env.EtcdClient()
@@ -115,6 +119,11 @@ func (s *Service) Lock(ttl time.Duration, message string) {
 	if cerr, ok := err.(*client.ClusterError); ok {
 		s.log.WithError(cerr).Fatal("Server error reading on fleet")
 	} else if err != nil {
+		_, err := kapi.Set(context.Background(), s.lockPath, message, &client.SetOptions{TTL: ttl})
+		if err != nil {
+			s.log.WithError(err).Fatal("Cannot write lock")
+		}
+	} else if strings.HasPrefix(resp.Node.Value, who) {
 		_, err := kapi.Set(context.Background(), s.lockPath, message, &client.SetOptions{TTL: ttl})
 		if err != nil {
 			s.log.WithError(err).Fatal("Cannot write lock")

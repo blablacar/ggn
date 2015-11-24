@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"github.com/blablacar/green-garden/builder"
 	"github.com/blablacar/green-garden/work/env/service"
 	"github.com/spf13/cobra"
 )
@@ -31,9 +32,10 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Use:   "update",
 		Short: getShortDescription(unit, "Update"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Update()
+			unit.Update(true)
 		},
 	}
+	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Force, "force", "f", false, "force update even if up to date")
 
 	destroyCmd := &cobra.Command{
 		Use:   "destroy",

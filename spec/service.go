@@ -3,6 +3,7 @@ package spec
 import (
 	"github.com/Sirupsen/logrus"
 	cntspec "github.com/blablacar/cnt/spec"
+	"time"
 )
 
 const PATH_SERVICE_MANIFEST = "/service-manifest.yml"
@@ -23,6 +24,8 @@ type ServiceManifest struct {
 }
 
 type Service interface {
+	Unlock()
+	Lock(ttl time.Duration, message string)
 	GetName() string
 	GetEnv() Env
 	GetLog() logrus.Entry

@@ -3,7 +3,6 @@ package env
 import (
 	"errors"
 	"github.com/blablacar/green-garden/builder"
-	"os"
 	"time"
 )
 
@@ -11,8 +10,7 @@ func (s *Service) Update() error {
 	s.log.Info("Updating service")
 	s.Generate(nil)
 
-	hostname, _ := os.Hostname()
-	s.Lock(time.Hour*1, "["+os.Getenv("USER")+"@"+hostname+"] Updating")
+	s.Lock(1*time.Hour, "Updating")
 	lock := true
 	defer func() {
 		if lock {
@@ -59,29 +57,9 @@ units:
 			}
 		}
 
-		u.Update()
+		builder.BuildFlags.Force = true
+		u.Update(false)
 		time.Sleep(time.Second * 2)
-
-		//		status, err2 := u.Status()
-		//		u.Log.WithField("status", status).Debug("Log status")
-		//		if err2 != nil {
-		//			log.WithError(err2).WithField("status", status).Panic("Unit failed just after start")
-		//			return err2
-		//		}
-		//		if status == "inactive" {
-		//			log.WithField("status", status).Panic("Unit failed just after start")
-		//			return errors.New("unit is inactive just after start")
-		//		}
-		//
-		//		s.checkServiceRunning()
-
-		// TODO ask deploy pod version ()
-		// TODO YES/NO
-		// TODO check running tmux
-		// TODO running as root ??
-		// TODO notify slack
-		// TODO store old version
-		// TODO !!!!! check that service is running well before going to next server !!!
 
 	}
 	s.Unlock()
