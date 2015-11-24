@@ -61,6 +61,14 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		},
 	}
 
+	checkCmd := &cobra.Command{
+		Use:   "check",
+		Short: getShortDescription(unit, "check"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Check()
+		},
+	}
+
 	unloadCmd := &cobra.Command{
 		Use:   "unload",
 		Short: getShortDescription(unit, "Unload"),
@@ -69,7 +77,7 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		},
 	}
 
-	unitCmd.AddCommand(startCmd, stopCmd, updateCmd, destroyCmd, statusCmd, unloadCmd, diffCmd)
+	unitCmd.AddCommand(startCmd, stopCmd, updateCmd, destroyCmd, statusCmd, unloadCmd, diffCmd, checkCmd)
 	return unitCmd
 }
 

@@ -7,6 +7,7 @@ import (
 )
 
 func (u Unit) Start() error {
+	u.Service.Generate(nil)
 	return u.runAction("start")
 }
 
@@ -23,6 +24,7 @@ func (u Unit) Destroy() error {
 }
 
 func (u Unit) Update(lock bool) error {
+	u.Service.Generate(nil)
 	u.Log.Debug("Update")
 
 	if lock {
@@ -46,7 +48,6 @@ func (u Unit) Update(lock bool) error {
 	_, _, err = u.Service.GetEnv().RunFleetCmdGetOutput("destroy", u.Filename)
 	if err != nil {
 		logrus.WithError(err).Warn("Cannot destroy unit")
-		return err
 	}
 
 	// start

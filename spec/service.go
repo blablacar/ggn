@@ -24,6 +24,7 @@ type ServiceManifest struct {
 }
 
 type Service interface {
+	Generate(sources []string)
 	Unlock()
 	Lock(ttl time.Duration, message string)
 	GetName() string

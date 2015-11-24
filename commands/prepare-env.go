@@ -12,18 +12,10 @@ func prepareEnvCommands(env *work.Env) *cobra.Command {
 	}
 
 	checkCmd := &cobra.Command{
-		Use:   env.GetName(),
-		Short: "Check local units with what is running on fleet on " + env.GetName(),
+		Use:   "check",
+		Short: "Check of " + env.GetName(),
 		Run: func(cmd *cobra.Command, args []string) {
 			env.Check()
-		},
-	}
-
-	statusCmd := &cobra.Command{
-		Use:   "status",
-		Short: "Status of " + env.GetName(),
-		Run: func(cmd *cobra.Command, args []string) {
-			env.Status()
 		},
 	}
 
@@ -42,7 +34,7 @@ func prepareEnvCommands(env *work.Env) *cobra.Command {
 			env.Generate()
 		},
 	}
-	envCmd.AddCommand(generateCmd, fleetctlCmd, checkCmd, statusCmd)
+	envCmd.AddCommand(generateCmd, fleetctlCmd, checkCmd)
 
 	for _, serviceName := range env.ListServices() {
 		service := env.LoadService(serviceName)

@@ -11,20 +11,14 @@ import (
 )
 
 func prepareServiceCommands(service *env.Service) *cobra.Command {
-	var serviceCmd = &cobra.Command{
+	var ttl string
+
+	serviceCmd := &cobra.Command{
 		Use:   service.Name,
 		Short: "run command for " + service.Name + " on env " + service.GetEnv().GetName(),
 	}
 
-	var checkCmd = &cobra.Command{
-		Use:   "check",
-		Short: "Check local units matches what is running on " + service.GetEnv().GetName() + " for " + service.GetName(),
-		Run: func(cmd *cobra.Command, args []string) {
-			service.Check()
-		},
-	}
-
-	var generateCmd = &cobra.Command{
+	generateCmd := &cobra.Command{
 		Use:   "generate [manifest...]",
 		Short: "generate units for " + service.Name + " on env " + service.GetEnv().GetName(),
 		Long:  `generate units using remote resolved or local pod/aci manifests`,
@@ -33,16 +27,23 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 		},
 	}
 
-	var statusCmd = &cobra.Command{
-		Use:   "status [manifest...]",
-		Short: "status units for " + service.Name + " on env " + service.GetEnv().GetName(),
+	checkCmd := &cobra.Command{
+		Use:   "check [manifest...]",
+		Short: "Check units for " + service.Name + " on env " + service.GetEnv().GetName(),
 		Run: func(cmd *cobra.Command, args []string) {
-			service.Status()
+			service.Check()
 		},
 	}
 
-	var ttl string
-	var lockCmd = &cobra.Command{
+	diffCmd := &cobra.Command{
+		Use:   "diff [manifest...]",
+		Short: "diff units for " + service.Name + " on env " + service.GetEnv().GetName(),
+		Run: func(cmd *cobra.Command, args []string) {
+			service.Diff()
+		},
+	}
+
+	lockCmd := &cobra.Command{
 		Use:   "lock [message...]",
 		Short: "lock " + service.Name + " on env " + service.GetEnv().GetName(),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -59,9 +60,8 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 			service.Lock(ttl, message)
 		},
 	}
-	lockCmd.Flags().StringVarP(&ttl, "duration", "t", "1h", "lock duration")
 
-	var unlockCmd = &cobra.Command{
+	unlockCmd := &cobra.Command{
 		Use:   "unlock",
 		Short: "unlock " + service.Name + " on env " + service.GetEnv().GetName(),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -69,7 +69,7 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 		},
 	}
 
-	var updateCmd = &cobra.Command{
+	updateCmd := &cobra.Command{
 		Use:   "update",
 		Short: "update " + service.Name + " on env " + service.GetEnv().GetName(),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -79,10 +79,12 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 			}
 		},
 	}
+
+	lockCmd.Flags().StringVarP(&ttl, "duration", "t", "1h", "lock duration")
 	updateCmd.Flags().BoolVarP(&builder.BuildFlags.All, "all", "a", false, "process all units, even up to date")
 	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Yes, "yes", "y", false, "process units without asking")
 
-	serviceCmd.AddCommand(generateCmd, checkCmd, lockCmd, unlockCmd, updateCmd, statusCmd)
+	serviceCmd.AddCommand(generateCmd /*checkCmd,*/, lockCmd, unlockCmd, updateCmd, checkCmd, diffCmd)
 
 	for _, unitName := range service.ListUnits() {
 		unit := service.LoadUnit(unitName)

@@ -4,8 +4,8 @@ import (
 	"strings"
 )
 
-func (s *Service) Status() {
-	s.log.Debug("Running status")
+func (s *Service) Check() {
+	s.log.Debug("Running check")
 
 	s.Generate(nil)
 
@@ -23,6 +23,7 @@ func (s *Service) Status() {
 			continue
 		}
 		split := strings.Split(unitInfo[2], ".")
-		s.LoadUnit(split[0]).Diff()
+
+		s.LoadUnit(split[0]).Check()
 	}
 }

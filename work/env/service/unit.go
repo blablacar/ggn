@@ -40,23 +40,22 @@ func NewUnit(path string, hostname string, service spec.Service) *Unit {
 	return unit
 }
 
-func (u Unit) Diff() {
+func (u Unit) Check() {
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
-		u.Log.Warn("Cannot read unit")
+		u.Log.Error("Cannot read unit")
 	}
 	if !same {
 		u.Log.Warn("Unit is not up to date")
 	}
 }
 
-func (u Unit) Check() {
+func (u Unit) Diff() {
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
-		u.Log.WithError(err).Warn("Cannot diff with remote")
+		u.Log.Warn("Cannot read unit")
 	}
 	if !same {
-		u.Log.Info("Unit is not up to date")
 		u.DisplayDiff()
 	}
 }

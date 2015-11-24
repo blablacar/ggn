@@ -61,6 +61,13 @@ func (s *Service) LoadUnit(hostname string) *service.Unit {
 	return unit
 }
 
+func (s *Service) Diff() {
+	for _, unitName := range s.ListUnits() {
+		unit := s.LoadUnit(unitName)
+		unit.Diff()
+	}
+}
+
 func (s *Service) ListUnits() []string {
 	res := []string{}
 	if len(s.manifest.Nodes) == 0 {
@@ -78,15 +85,6 @@ func (s *Service) ListUnits() []string {
 		}
 	}
 	return res
-}
-
-func (s *Service) Check() {
-	s.log.Debug("Check")
-	s.Generate(nil)
-	unitNames := s.ListUnits()
-	for _, unitName := range unitNames {
-		s.LoadUnit(unitName).Check()
-	}
 }
 
 func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this method should be in unit
