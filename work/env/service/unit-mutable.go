@@ -26,7 +26,7 @@ func (u Unit) Update(lock bool) error {
 	u.Log.Debug("Update")
 
 	if lock {
-		u.Service.Lock(1*time.Hour, "Update")
+		u.Service.Lock(1*time.Hour, "Update " + u.Name)
 		u.Service.Unlock()
 	}
 
@@ -83,7 +83,7 @@ func (u Unit) Update(lock bool) error {
 /////////////////////////////
 
 func (u Unit) runAction(action string) error {
-	u.Service.Lock(1*time.Hour, action)
+	u.Service.Lock(1*time.Hour, action + " " + u.Name)
 	u.Service.Unlock()
 	u.Log.Debug(action)
 	u.Service.GetEnv().RunEarlyHook(u.Name, action)
