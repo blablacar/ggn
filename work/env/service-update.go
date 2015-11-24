@@ -59,14 +59,9 @@ units:
 			}
 		}
 
-		u.Destroy()
+		u.Update()
 		time.Sleep(time.Second * 2)
-		err := u.Start()
-		if err != nil {
-			s.log.WithError(err).Error("Failed to start service. Keeping lock")
-			return err
-		}
-		time.Sleep(time.Second * 2)
+
 		//		status, err2 := u.Status()
 		//		u.Log.WithField("status", status).Debug("Log status")
 		//		if err2 != nil {

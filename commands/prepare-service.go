@@ -33,11 +33,11 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 		},
 	}
 
-	var statusCmd = &cobra.Command{
-		Use:   "status [manifest...]",
-		Short: "status units for " + service.Name + " on env " + service.GetEnv().GetName(),
+	var diffCmd = &cobra.Command{
+		Use:   "diff [manifest...]",
+		Short: "diff units for " + service.Name + " on env " + service.GetEnv().GetName(),
 		Run: func(cmd *cobra.Command, args []string) {
-			service.Status()
+			service.Diff()
 		},
 	}
 
@@ -82,7 +82,7 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 	updateCmd.Flags().BoolVarP(&builder.BuildFlags.All, "all", "a", false, "process all units, even up to date")
 	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Yes, "yes", "y", false, "process units without asking")
 
-	serviceCmd.AddCommand(generateCmd, checkCmd, lockCmd, unlockCmd, updateCmd, statusCmd)
+	serviceCmd.AddCommand(generateCmd, checkCmd, lockCmd, unlockCmd, updateCmd, diffCmd)
 
 	for _, unitName := range service.ListUnits() {
 		unit := service.LoadUnit(unitName)

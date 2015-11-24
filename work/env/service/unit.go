@@ -9,7 +9,6 @@ import (
 	"github.com/juju/errors"
 	"io/ioutil"
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -29,18 +28,19 @@ func NewUnit(path string, hostname string, service spec.Service) *Unit {
 	if len(unitInfo) != 3 {
 	}
 
+	filename := service.GetEnv().GetName() + "_" + service.GetName() + "_" + hostname + ".service"
 	unit := &Unit{
 		Log:      *l.WithField("unit", hostname),
 		Service:  service,
 		path:     path,
 		Name:     hostname,
-		Filename: service.GetEnv().GetName() + "_" + service.GetName() + "_" + hostname + ".service",
-		unitPath: path + "/" + hostname,
+		Filename: filename,
+		unitPath: path + "/" + filename,
 	}
 	return unit
 }
 
-func (u Unit) Status() {
+func (u Unit) Diff() {
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
 		u.Log.Warn("Cannot read unit")
@@ -74,6 +74,31 @@ func (u Unit) GetUnitContentAsFleeted() (string, error) {
 	return convertMultilineUnitToString([]byte(fleetunit.String())), nil
 }
 
+func (u Unit) Status() error {
+	u.Log.Debug("status")
+	content, _, err := u.Service.GetEnv().RunFleetCmdGetOutput("status", u.Filename)
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to run status")
+	}
+	os.Stdout.WriteString(content)
+	return nil
+	//	if err != nil {
+	//		return "", err
+	//	}
+	//
+	//	reg, err := regexp.Compile(`Active: (active|inactive|deactivating|activating)`)
+	//	if err != nil {
+	//		u.Log.Panic("Cannot compile regex")
+	//	}
+	//	matched := reg.FindStringSubmatch(content)
+	//
+	//	//	if !strings.Contains(content, "Active: %s ") { // Active: failed
+	//	//		return content, errors.New("unit is not in running state")
+	//	//	}
+	//
+	//	return matched[1], err
+}
+
 func (u Unit) DisplayDiff() error {
 	u.Log.Debug("Diff")
 
@@ -103,58 +128,6 @@ func (u Unit) IsLocalContentSameAsRemote() (bool, error) {
 	return local == remote, nil
 }
 
-func (u Unit) serviceLocalAndRemoteContent() (string, string, error) {
-	localContent, err := u.GetUnitContentAsFleeted()
-	if err != nil {
-		return "", "", errors.Annotate(err, "Cannot read local unit file")
-	}
-
-	remoteContent, err := u.Service.GetFleetUnitContent(u.Name)
-	if err != nil {
-		return localContent, "", errors.Annotate(err, "CanCannot read remote unit file")
-	}
-	return localContent, remoteContent, nil
-}
-
-func (u Unit) Start() error {
-	u.Log.Debug("Starting")
-	_, _, err := u.Service.GetEnv().RunFleetCmdGetOutput("start", u.unitPath)
-	if err != nil {
-		logrus.WithError(err).Error("Cannot start unit")
-		return err
-	}
-	return nil
-}
-
-func (u Unit) Destroy() error {
-	u.Log.Debug("Destroying") // todo check that service exists before destroy
-	_, _, err := u.Service.GetEnv().RunFleetCmdGetOutput("destroy", u.Name)
-	if err != nil {
-		logrus.WithError(err).Warn("Cannot destroy unit")
-		return err
-	}
-	return nil
-}
-
-func (u Unit) State() (string, error) {
-	content, _, err := u.Service.GetEnv().RunFleetCmdGetOutput("status", u.Name)
-	if err != nil {
-		return "", err
-	}
-
-	reg, err := regexp.Compile(`Active: (active|inactive|deactivating|activating)`)
-	if err != nil {
-		u.Log.Panic("Cannot compile regex")
-	}
-	matched := reg.FindStringSubmatch(content)
-
-	//	if !strings.Contains(content, "Active: %s ") { // Active: failed
-	//		return content, errors.New("unit is not in running state")
-	//	}
-
-	return matched[1], err
-}
-
 //func (u Unit) Stop() {
 //	u.service.GetEnv().RunFleetCmdGetOutput("stop", u.name)
 //}
@@ -165,6 +138,20 @@ func (u Unit) State() (string, error) {
 //}
 
 ///////////////////////////////////////////
+
+func (u Unit) serviceLocalAndRemoteContent() (string, string, error) {
+	localContent, err := u.GetUnitContentAsFleeted()
+	if err != nil {
+		u.Log.WithError(err).Debug("Cannot get local unit content")
+		return "", "", errors.Annotate(err, "Cannot read local unit file")
+	}
+
+	remoteContent, err := u.Service.GetFleetUnitContent(u.Filename)
+	if err != nil {
+		return localContent, "", errors.Annotate(err, "CanCannot read remote unit file")
+	}
+	return localContent, remoteContent, nil
+}
 
 func convertMultilineUnitToString(content []byte) string {
 	var lines []string

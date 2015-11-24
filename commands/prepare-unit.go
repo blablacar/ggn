@@ -6,20 +6,71 @@ import (
 )
 
 func prepareUnitCommands(unit *service.Unit) *cobra.Command {
-	var unitCmd = &cobra.Command{
+	unitCmd := &cobra.Command{
 		Use:   unit.Name,
-		Short: "run command for " + unit.Name + " on " + unit.Service.GetName() + " on env " + unit.Service.GetEnv().GetName(),
+		Short: getShortDescription(unit, "Run command for"),
 	}
 
-	var startCmd = &cobra.Command{
+	startCmd := &cobra.Command{
 		Use:   "start",
-		Short: "start " + unit.Name + " from " + unit.Service.GetName() + " on env " + unit.Service.GetEnv().GetName(),
+		Short: getShortDescription(unit, "Start"),
 		Run: func(cmd *cobra.Command, args []string) {
 			unit.Start()
 		},
 	}
 
-	unitCmd.AddCommand(startCmd)
+	stopCmd := &cobra.Command{
+		Use:   "stop",
+		Short: getShortDescription(unit, "Stop"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Stop()
+		},
+	}
 
+	updateCmd := &cobra.Command{
+		Use:   "update",
+		Short: getShortDescription(unit, "Update"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Update()
+		},
+	}
+
+	destroyCmd := &cobra.Command{
+		Use:   "destroy",
+		Short: getShortDescription(unit, "Destroy"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Destroy()
+		},
+	}
+
+	statusCmd := &cobra.Command{
+		Use:   "status",
+		Short: getShortDescription(unit, "Get status of"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Status()
+		},
+	}
+
+	diffCmd := &cobra.Command{
+		Use:   "diff",
+		Short: getShortDescription(unit, "Diff"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Diff()
+		},
+	}
+
+	unloadCmd := &cobra.Command{
+		Use:   "unload",
+		Short: getShortDescription(unit, "Unload"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Unload()
+		},
+	}
+
+	unitCmd.AddCommand(startCmd, stopCmd, updateCmd, destroyCmd, statusCmd, unloadCmd, diffCmd)
 	return unitCmd
+}
+
+func getShortDescription(unit *service.Unit, action string) string {
+	return action + " '" + unit.Name + "' from '" + unit.Service.GetName() + "' on env '" + unit.Service.GetEnv().GetName() + "'"
 }
