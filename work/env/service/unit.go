@@ -61,6 +61,15 @@ func (u Unit) Journal(follow bool, lines int) {
 
 	err := u.Service.GetEnv().RunFleetCmd(args...)
 	if err != nil {
+		logrus.WithError(err).Fatal("Failed to run journal")
+	}
+}
+
+func (u Unit) Ssh() {
+	u.Log.Debug("ssh")
+
+	err := u.Service.GetEnv().RunFleetCmd("ssh", u.Filename)
+	if err != nil {
 		logrus.WithError(err).Fatal("Failed to run status")
 	}
 }

@@ -15,6 +15,10 @@ func (u Unit) Unload() error {
 	return u.runAction("unload")
 }
 
+func (u Unit) Load() error {
+	return u.runAction("load")
+}
+
 func (u Unit) Stop() error {
 	return u.runAction("stop")
 }

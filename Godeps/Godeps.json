@@ -24,18 +24,18 @@
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/log",
-			"Comment": "45-2-g38f2d71",
-			"Rev": "38f2d711554c4ffd4558a8b85794eab215fd48e1"
+			"Comment": "45-5-g226d271",
+			"Rev": "226d271434d899ba1ff5502a36783f7ffcf48dc9"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/spec",
-			"Comment": "45-2-g38f2d71",
-			"Rev": "38f2d711554c4ffd4558a8b85794eab215fd48e1"
+			"Comment": "45-5-g226d271",
+			"Rev": "226d271434d899ba1ff5502a36783f7ffcf48dc9"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/utils",
-			"Comment": "45-2-g38f2d71",
-			"Rev": "38f2d711554c4ffd4558a8b85794eab215fd48e1"
+			"Comment": "45-5-g226d271",
+			"Rev": "226d271434d899ba1ff5502a36783f7ffcf48dc9"
 		},
 		{
 			"ImportPath": "github.com/camlistore/camlistore/pkg/errorutil",

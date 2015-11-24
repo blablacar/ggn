@@ -86,12 +86,28 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 			unit.Unload()
 		},
 	}
+	loadCmd := &cobra.Command{
+		Use:   "load",
+		Short: getShortDescription(unit, "load"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Load()
+		},
+	}
+
+	sshCmd := &cobra.Command{
+		Use:   "ssh",
+		Short: getShortDescription(unit, "ssh"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Ssh()
+		},
+	}
 
 	journalCmd.Flags().BoolVarP(&follow, "follow", "f", false, "follow")
 	journalCmd.Flags().IntVarP(&lines, "lines", "l", 10, "lines")
 	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Force, "force", "f", false, "force update even if up to date")
 
-	unitCmd.AddCommand(startCmd, stopCmd, updateCmd, destroyCmd, statusCmd, unloadCmd, diffCmd, checkCmd, journalCmd)
+	unitCmd.AddCommand(startCmd, stopCmd, updateCmd, destroyCmd, statusCmd, unloadCmd,
+		diffCmd, checkCmd, journalCmd, loadCmd, sshCmd)
 	return unitCmd
 }
 
