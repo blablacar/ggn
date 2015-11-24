@@ -6,7 +6,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
-	"github.com/blablacar/green-garden/builder"
 	"github.com/blablacar/green-garden/spec"
 	"github.com/blablacar/green-garden/utils"
 	"github.com/blablacar/green-garden/work/env/service"
@@ -24,7 +23,7 @@ import (
 type Service struct {
 	env        spec.Env
 	path       string
-	name       string
+	Name       string
 	manifest   spec.ServiceManifest
 	log        log.Entry
 	lockPath   string
@@ -36,13 +35,17 @@ func NewService(path string, name string, env spec.Env) *Service {
 	service := &Service{
 		log:      *l.WithField("service", name),
 		path:     path + "/" + name,
-		name:     name,
+		Name:     name,
 		env:      env,
 		lockPath: "/ggn-lock/" + name + "/lock",
 	}
 	service.loadManifest()
 	service.loadAttributes()
 	return service
+}
+
+func (s *Service) GetName() string {
+	return s.Name
 }
 
 func (s *Service) GetEnv() spec.Env {
@@ -53,21 +56,25 @@ func (s *Service) GetLog() logrus.Entry {
 	return s.log
 }
 
-func (s *Service) LoadUnit(name string) *service.Unit {
-	unit := service.NewUnit(s.path+"/units", name, s)
+func (s *Service) LoadUnit(hostname string) *service.Unit {
+	unit := service.NewUnit(s.path+"/units", hostname, s)
 	return unit
 }
 
 func (s *Service) ListUnits() []string {
 	res := []string{}
+	if len(s.manifest.Nodes) == 0 {
+		return res
+	}
+
 	if s.manifest.Nodes[0][spec.NODE_HOSTNAME].(string) == "*" {
 		machines := s.env.ListMachineNames()
 		for _, node := range machines {
-			res = append(res, s.UnitName(node))
+			res = append(res, node)
 		}
 	} else {
 		for _, node := range s.manifest.Nodes {
-			res = append(res, s.UnitName(node[spec.NODE_HOSTNAME].(string)))
+			res = append(res, node[spec.NODE_HOSTNAME].(string))
 		}
 	}
 	return res
@@ -92,19 +99,19 @@ func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this
 
 func (s *Service) Unlock() {
 	s.log.Info("Unlocking")
-	s.env.RunEarlyHook(s.name, "unlock")
+	s.env.RunEarlyHook(s.Name, "unlock")
 
 	kapi := s.env.EtcdClient()
 	_, err := kapi.Delete(context.Background(), s.lockPath, nil)
 	if cerr, ok := err.(*client.ClusterError); ok {
 		s.log.WithError(cerr).Panic("Cannot unlock service")
 	}
-	s.env.RunLateHook(s.name, "unlock")
+	s.env.RunLateHook(s.Name, "unlock")
 }
 
 func (s *Service) Lock(ttl time.Duration, message string) {
 	s.log.WithField("ttl", ttl).WithField("message", message).Info("locking")
-	s.env.RunEarlyHook(s.name, "lock")
+	s.env.RunEarlyHook(s.Name, "lock")
 
 	kapi := s.env.EtcdClient()
 	resp, err := kapi.Get(context.Background(), s.lockPath, nil)
@@ -120,94 +127,7 @@ func (s *Service) Lock(ttl time.Duration, message string) {
 			WithField("ttl", resp.Node.TTLDuration().String()).
 			Fatal("Service is already locked")
 	}
-	s.env.RunLateHook(s.name, "lock")
-}
-
-func (s *Service) Update() error {
-	s.log.Info("Updating service")
-	s.Generate(nil)
-
-	hostname, _ := os.Hostname()
-	s.Lock(time.Hour*1, "["+os.Getenv("USER")+"@"+hostname+"] Updating")
-	lock := true
-	defer func() {
-		if lock {
-			s.log.WithField("service", s.name).Warn("!! Leaving but Service is still lock !!")
-		}
-	}()
-units:
-	for i, unit := range s.ListUnits() {
-		u := s.LoadUnit(unit)
-
-	ask:
-		for {
-			same, err := u.IsLocalContentSameAsRemote()
-			if err != nil {
-				u.Log.WithError(err).Warn("Cannot compare local and remote service")
-			}
-			if same {
-				u.Log.Info("Remote service is already up to date")
-				if !builder.BuildFlags.All {
-					continue units
-				}
-			}
-			if builder.BuildFlags.Yes {
-				break ask
-			}
-			action := s.askToProcessService(i, u)
-			switch action {
-			case ACTION_DIFF:
-				u.DisplayDiff()
-			case ACTION_QUIT:
-				u.Log.Debug("User want to quit")
-				if i == 0 {
-					s.Unlock()
-					lock = false
-				}
-				return errors.New("User want to quit")
-			case ACTION_SKIP:
-				u.Log.Debug("User skip this service")
-				continue units
-			case ACTION_YES:
-				break ask
-			default:
-				u.Log.Fatal("Should not be here")
-			}
-		}
-
-		u.Destroy()
-		time.Sleep(time.Second * 2)
-		err := u.Start()
-		if err != nil {
-			log.WithError(err).Error("Failed to start service. Keeping lock")
-			return err
-		}
-		time.Sleep(time.Second * 2)
-		//		status, err2 := u.Status()
-		//		u.Log.WithField("status", status).Debug("Log status")
-		//		if err2 != nil {
-		//			log.WithError(err2).WithField("status", status).Panic("Unit failed just after start")
-		//			return err2
-		//		}
-		//		if status == "inactive" {
-		//			log.WithField("status", status).Panic("Unit failed just after start")
-		//			return errors.New("unit is inactive just after start")
-		//		}
-		//
-		//		s.checkServiceRunning()
-
-		// TODO ask deploy pod version ()
-		// TODO YES/NO
-		// TODO check running tmux
-		// TODO running as root ??
-		// TODO notify slack
-		// TODO store old version
-		// TODO !!!!! check that service is running well before going to next server !!!
-
-	}
-	s.Unlock()
-	lock = false
-	return nil
+	s.env.RunLateHook(s.Name, "lock")
 }
 
 /////////////////////////////////////////////////
@@ -244,10 +164,6 @@ func (s *Service) askToProcessService(index int, unit *service.Unit) Action {
 	return ACTION_QUIT
 }
 
-func (s *Service) checkServiceRunning() {
-
-}
-
 func (s *Service) loadAttributes() {
 	attr := utils.CopyMap(s.env.GetAttributes())
 	files, err := utils.AttributeFiles(s.path + spec.PATH_ATTRIBUTES)
@@ -259,13 +175,13 @@ func (s *Service) loadAttributes() {
 	s.log.WithField("attributes", s.attributes).Debug("Attributes loaded")
 }
 
-func (s *Service) loadUnitTemplate() (*Templating, error) {
+func (s *Service) loadUnitTemplate() (*utils.Templating, error) {
 	path := s.path + spec.PATH_UNIT_TEMPLATE
 	source, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, errors.Annotate(err, "Cannot read unit template file")
 	}
-	template := NewTemplating(s.name, string(source))
+	template := utils.NewTemplating(s.Name, string(source))
 	template.Parse()
 	return template, nil
 }

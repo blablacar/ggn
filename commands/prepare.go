@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/green-garden/config"
 	"github.com/blablacar/green-garden/work"
 	"github.com/spf13/cobra"
@@ -18,10 +19,12 @@ var generateCmd = &cobra.Command{
 	},
 }
 
-func generateService(cmd *cobra.Command, args []string, work *work.Work, env string, service string) {
-	work.LoadEnv(env).LoadService(service).Generate(args)
-}
+func loadEnvCommands(rootCmd *cobra.Command) {
+	logrus.WithField("path", config.GetConfig().WorkPath).Debug("Loading envs")
+	work := work.NewWork(config.GetConfig().WorkPath)
 
-func generateEnv(cmd *cobra.Command, args []string, work *work.Work, env string) {
-	work.LoadEnv(env).Generate()
+	for _, envNames := range work.ListEnvs() {
+		env := work.LoadEnv(envNames)
+		rootCmd.AddCommand(prepareEnvCommands(env))
+	}
 }

@@ -19,7 +19,7 @@ func (s *Service) Status() {
 		if len(unitInfo) != 3 {
 			continue
 		}
-		if unitInfo[1] != s.name {
+		if unitInfo[1] != s.Name {
 			continue
 		}
 		s.LoadUnit(unitName).Status()

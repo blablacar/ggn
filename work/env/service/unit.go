@@ -17,18 +17,25 @@ type Unit struct {
 	Log      logrus.Entry
 	path     string
 	Name     string
+	Filename string
 	unitPath string
-	service  spec.Service
+	Service  spec.Service
 }
 
-func NewUnit(path string, name string, service spec.Service) *Unit {
+func NewUnit(path string, hostname string, service spec.Service) *Unit {
 	l := service.GetLog()
+
+	unitInfo := strings.Split(hostname, "_")
+	if len(unitInfo) != 3 {
+	}
+
 	unit := &Unit{
-		Log:      *l.WithField("unit", name),
-		service:  service,
+		Log:      *l.WithField("unit", hostname),
+		Service:  service,
 		path:     path,
-		Name:     name,
-		unitPath: path + "/" + name,
+		Name:     hostname,
+		Filename: service.GetEnv().GetName() + "_" + service.GetName() + "_" + hostname + ".service",
+		unitPath: path + "/" + hostname,
 	}
 	return unit
 }
@@ -102,7 +109,7 @@ func (u Unit) serviceLocalAndRemoteContent() (string, string, error) {
 		return "", "", errors.Annotate(err, "Cannot read local unit file")
 	}
 
-	remoteContent, err := u.service.GetFleetUnitContent(u.Name)
+	remoteContent, err := u.Service.GetFleetUnitContent(u.Name)
 	if err != nil {
 		return localContent, "", errors.Annotate(err, "CanCannot read remote unit file")
 	}
@@ -111,7 +118,7 @@ func (u Unit) serviceLocalAndRemoteContent() (string, string, error) {
 
 func (u Unit) Start() error {
 	u.Log.Debug("Starting")
-	_, _, err := u.service.GetEnv().RunFleetCmdGetOutput("start", u.unitPath)
+	_, _, err := u.Service.GetEnv().RunFleetCmdGetOutput("start", u.unitPath)
 	if err != nil {
 		logrus.WithError(err).Error("Cannot start unit")
 		return err
@@ -121,7 +128,7 @@ func (u Unit) Start() error {
 
 func (u Unit) Destroy() error {
 	u.Log.Debug("Destroying") // todo check that service exists before destroy
-	_, _, err := u.service.GetEnv().RunFleetCmdGetOutput("destroy", u.Name)
+	_, _, err := u.Service.GetEnv().RunFleetCmdGetOutput("destroy", u.Name)
 	if err != nil {
 		logrus.WithError(err).Warn("Cannot destroy unit")
 		return err
@@ -130,7 +137,7 @@ func (u Unit) Destroy() error {
 }
 
 func (u Unit) State() (string, error) {
-	content, _, err := u.service.GetEnv().RunFleetCmdGetOutput("status", u.Name)
+	content, _, err := u.Service.GetEnv().RunFleetCmdGetOutput("status", u.Name)
 	if err != nil {
 		return "", err
 	}
