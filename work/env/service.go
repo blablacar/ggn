@@ -99,19 +99,16 @@ func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this
 
 func (s *Service) Unlock() {
 	s.log.Info("Unlocking")
-	s.env.RunEarlyHook(s.Name, "unlock")
 
 	kapi := s.env.EtcdClient()
 	_, err := kapi.Delete(context.Background(), s.lockPath, nil)
 	if cerr, ok := err.(*client.ClusterError); ok {
 		s.log.WithError(cerr).Panic("Cannot unlock service")
 	}
-	s.env.RunLateHook(s.Name, "unlock")
 }
 
 func (s *Service) Lock(ttl time.Duration, message string) {
 	s.log.WithField("ttl", ttl).WithField("message", message).Info("locking")
-	s.env.RunEarlyHook(s.Name, "lock")
 
 	kapi := s.env.EtcdClient()
 	resp, err := kapi.Get(context.Background(), s.lockPath, nil)
@@ -127,7 +124,6 @@ func (s *Service) Lock(ttl time.Duration, message string) {
 			WithField("ttl", resp.Node.TTLDuration().String()).
 			Fatal("Service is already locked")
 	}
-	s.env.RunLateHook(s.Name, "lock")
 }
 
 /////////////////////////////////////////////////
