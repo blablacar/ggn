@@ -18,6 +18,6 @@ func (e Env) Status() {
 			e.log.WithField("unit", unitName).Warn("Unknown unit format for GGN")
 			continue
 		}
-		e.LoadService(unitInfo[1]).LoadUnit(unitName).Status()
+		e.LoadService(unitInfo[1]).LoadUnit(unitName).Diff()
 	}
 }

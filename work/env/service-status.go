@@ -4,8 +4,8 @@ import (
 	"strings"
 )
 
-func (s *Service) Diff() {
-	s.log.Debug("Running diff")
+func (s *Service) Status() {
+	s.log.Debug("Running status")
 
 	s.Generate(nil)
 
