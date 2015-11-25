@@ -45,8 +45,8 @@ func (u Unit) Update(lock bool) error {
 		return nil
 	}
 
-	u.Service.GetEnv().RunEarlyHook(u.Name, "Update")
-	defer u.Service.GetEnv().RunLateHook(u.Name, "Update")
+	u.Service.GetEnv().RunEarlyHook(u.Name, "update")
+	defer u.Service.GetEnv().RunLateHook(u.Name, "update")
 
 	// destroy
 	_, _, err = u.Service.GetEnv().RunFleetCmdGetOutput("destroy", u.Filename)

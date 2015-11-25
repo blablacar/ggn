@@ -47,12 +47,32 @@ func (u Unit) Check() {
 	u.Service.GetEnv().RunEarlyHook(u.Name, "check")
 	defer u.Service.GetEnv().RunLateHook(u.Name, "check")
 
+	statuses := u.Service.GetEnv().ListUnits()
+	var status spec.UnitStatus
+	if _, ok := statuses[u.Filename]; !ok {
+		u.Log.Warn("cannot find unit on fleet")
+		return
+	}
+	status = statuses[u.Filename]
+	logrus.WithField("status", status).Debug("status")
+
+	if status.Active != spec.ACTIVE_ACTIVE {
+		u.Log.WithField("active", status.Active).Warn("unit status is not active")
+		return
+	}
+	if status.Sub != spec.SUB_RUNNING {
+		u.Log.WithField("sub", status.Sub).Warn("unit sub is not running")
+		return
+	}
+
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
 		u.Log.Error("Cannot read unit")
+		return
 	}
 	if !same {
 		u.Log.Warn("Unit is not up to date")
+		return
 	}
 }
 

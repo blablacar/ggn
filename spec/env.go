@@ -7,6 +7,16 @@ import (
 
 const PATH_ATTRIBUTES = "/attributes"
 
+const ACTIVE_ACTIVE = "active"
+const SUB_RUNNING = "running"
+
+type UnitStatus struct {
+	Unit    string
+	Machine string
+	Active  string
+	Sub     string
+}
+
 type Env interface {
 	GetName() string
 	GetLog() logrus.Entry
@@ -17,4 +27,5 @@ type Env interface {
 	EtcdClient() client.KeysAPI
 	RunEarlyHook(service string, action string)
 	RunLateHook(service string, action string)
+	ListUnits() map[string]UnitStatus
 }
