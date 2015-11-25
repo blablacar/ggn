@@ -25,7 +25,9 @@ type Env interface {
 	RunFleetCmdGetOutput(args ...string) (string, string, error)
 	RunFleetCmd(args ...string) error
 	EtcdClient() client.KeysAPI
-	RunEarlyHook(service string, action string)
-	RunLateHook(service string, action string)
+	RunEarlyHookUnit(unit Unit, action string)
+	RunLateHookUnit(unit Unit, action string)
+	RunEarlyHookService(service Service, action string)
+	RunLateHookService(service Service, action string)
 	ListUnits() map[string]UnitStatus
 }

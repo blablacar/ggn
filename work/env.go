@@ -140,12 +140,28 @@ func (e Env) ListMachineNames() []string {
 
 const PATH_HOOKS = "/hooks"
 
-func (e Env) RunEarlyHook(service string, action string) {
-	e.runHook("/early", service, action)
+func (e Env) RunEarlyHookEnv(action string) {
+	e.runHook("/early", "", action)
 }
 
-func (e Env) RunLateHook(service string, action string) {
-	e.runHook("/late", service, action)
+func (e Env) RunLateHookEnv(action string) {
+	e.runHook("/late", "", action)
+}
+
+func (e Env) RunEarlyHookUnit(unit spec.Unit, action string) {
+	e.runHook("/early", unit.GetService().GetName()+":"+unit.GetName(), action)
+}
+
+func (e Env) RunLateHookUnit(unit spec.Unit, action string) {
+	e.runHook("/late", unit.GetService().GetName()+":"+unit.GetName(), action)
+}
+
+func (e Env) RunEarlyHookService(service spec.Service, action string) {
+	e.runHook("/early", service.GetName(), action)
+}
+
+func (e Env) RunLateHookService(service spec.Service, action string) {
+	e.runHook("/late", service.GetName(), action)
 }
 
 func (e Env) runHook(path string, service string, action string) {

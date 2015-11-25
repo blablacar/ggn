@@ -41,11 +41,19 @@ func NewUnit(path string, hostname string, service spec.Service) *Unit {
 	return unit
 }
 
-func (u Unit) Check() {
+func (u *Unit) GetName() string {
+	return u.Name
+}
+
+func (u *Unit) GetService() spec.Service {
+	return u.Service
+}
+
+func (u *Unit) Check() {
 	u.Log.Debug("Check")
 
-	u.Service.GetEnv().RunEarlyHook(u.Name, "check")
-	defer u.Service.GetEnv().RunLateHook(u.Name, "check")
+	u.Service.GetEnv().RunEarlyHookUnit(u, "check")
+	defer u.Service.GetEnv().RunLateHookUnit(u, "check")
 
 	statuses := u.Service.GetEnv().ListUnits()
 	var status spec.UnitStatus
@@ -76,7 +84,7 @@ func (u Unit) Check() {
 	}
 }
 
-func (u Unit) Journal(follow bool, lines int) {
+func (u *Unit) Journal(follow bool, lines int) {
 	u.Log.Debug("journal")
 
 	args := []string{"journal", "-lines", strconv.Itoa(lines)}
@@ -91,7 +99,7 @@ func (u Unit) Journal(follow bool, lines int) {
 	}
 }
 
-func (u Unit) Ssh() {
+func (u *Unit) Ssh() {
 	u.Log.Debug("ssh")
 
 	err := u.Service.GetEnv().RunFleetCmd("ssh", u.Filename)
@@ -100,7 +108,7 @@ func (u Unit) Ssh() {
 	}
 }
 
-func (u Unit) Diff() {
+func (u *Unit) Diff() {
 	u.Log.Debug("diff")
 
 	same, err := u.IsLocalContentSameAsRemote()
@@ -112,7 +120,7 @@ func (u Unit) Diff() {
 	}
 }
 
-func (u Unit) GetUnitContentAsFleeted() (string, error) {
+func (u *Unit) GetUnitContentAsFleeted() (string, error) {
 	unitFileContent, err := ioutil.ReadFile(u.unitPath)
 	if err != nil {
 		return "", err
@@ -125,7 +133,7 @@ func (u Unit) GetUnitContentAsFleeted() (string, error) {
 	return convertMultilineUnitToString([]byte(fleetunit.String())), nil
 }
 
-func (u Unit) Status() error {
+func (u *Unit) Status() error {
 	u.Log.Debug("status")
 
 	content, _, err := u.Service.GetEnv().RunFleetCmdGetOutput("status", u.Filename)
@@ -151,7 +159,7 @@ func (u Unit) Status() error {
 	//	return matched[1], err
 }
 
-func (u Unit) DisplayDiff() error {
+func (u *Unit) DisplayDiff() error {
 	u.Log.Debug("Diff")
 
 	local, remote, err := u.serviceLocalAndRemoteContent()
@@ -169,7 +177,7 @@ func (u Unit) DisplayDiff() error {
 	return utils.ExecCmd("git", "diff", "--word-diff", remotePath, localPath)
 }
 
-func (u Unit) IsLocalContentSameAsRemote() (bool, error) {
+func (u *Unit) IsLocalContentSameAsRemote() (bool, error) {
 	local, remote, err := u.serviceLocalAndRemoteContent()
 	if local != "" && err != nil {
 		return false, nil
@@ -182,7 +190,7 @@ func (u Unit) IsLocalContentSameAsRemote() (bool, error) {
 
 ///////////////////////////////////////////
 
-func (u Unit) serviceLocalAndRemoteContent() (string, string, error) {
+func (u *Unit) serviceLocalAndRemoteContent() (string, string, error) {
 	localContent, err := u.GetUnitContentAsFleeted()
 	if err != nil {
 		u.Log.WithError(err).Debug("Cannot get local unit content")

@@ -6,28 +6,28 @@ import (
 	"time"
 )
 
-func (u Unit) Start() error {
+func (u *Unit) Start() error {
 	u.Service.Generate(nil)
 	return u.runAction("start")
 }
 
-func (u Unit) Unload() error {
+func (u *Unit) Unload() error {
 	return u.runAction("unload")
 }
 
-func (u Unit) Load() error {
+func (u *Unit) Load() error {
 	return u.runAction("load")
 }
 
-func (u Unit) Stop() error {
+func (u *Unit) Stop() error {
 	return u.runAction("stop")
 }
 
-func (u Unit) Destroy() error {
+func (u *Unit) Destroy() error {
 	return u.runAction("destroy")
 }
 
-func (u Unit) Update(lock bool) error {
+func (u *Unit) Update(lock bool) error {
 	u.Service.Generate(nil)
 	u.Log.Debug("Update")
 
@@ -45,8 +45,8 @@ func (u Unit) Update(lock bool) error {
 		return nil
 	}
 
-	u.Service.GetEnv().RunEarlyHook(u.Name, "update")
-	defer u.Service.GetEnv().RunLateHook(u.Name, "update")
+	u.Service.GetEnv().RunEarlyHookUnit(u, "update")
+	defer u.Service.GetEnv().RunLateHookUnit(u, "update")
 
 	// destroy
 	_, _, err = u.Service.GetEnv().RunFleetCmdGetOutput("destroy", u.Filename)
@@ -87,12 +87,12 @@ func (u Unit) Update(lock bool) error {
 
 /////////////////////////////
 
-func (u Unit) runAction(action string) error {
+func (u *Unit) runAction(action string) error {
 	u.Service.Lock(1*time.Hour, action+" "+u.Name)
 	u.Service.Unlock()
 	u.Log.Debug(action)
-	u.Service.GetEnv().RunEarlyHook(u.Name, action)
-	defer u.Service.GetEnv().RunLateHook(u.Name, action)
+	u.Service.GetEnv().RunEarlyHookUnit(u, action)
+	defer u.Service.GetEnv().RunLateHookUnit(u, action)
 
 	_, _, err := u.Service.GetEnv().RunFleetCmdGetOutput(action, u.unitPath)
 	if err != nil {

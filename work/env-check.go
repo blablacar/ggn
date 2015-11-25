@@ -5,8 +5,8 @@ import "strings"
 func (e Env) Check() {
 	e.log.Debug("Running check")
 
-	e.RunEarlyHook(e.name, "check")
-	defer e.RunLateHook(e.name, "check")
+	e.RunEarlyHookEnv("check")
+	defer e.RunLateHookEnv("check")
 
 	e.Generate()
 

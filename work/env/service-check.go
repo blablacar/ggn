@@ -7,8 +7,8 @@ import (
 func (s *Service) Check() {
 	s.log.Debug("Running check")
 
-	s.GetEnv().RunEarlyHook(s.Name, "check")
-	defer s.GetEnv().RunLateHook(s.Name, "check")
+	s.GetEnv().RunEarlyHookService(s, "check")
+	defer s.GetEnv().RunLateHookService(s, "check")
 
 	s.Generate(nil)
 
