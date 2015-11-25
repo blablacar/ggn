@@ -6,6 +6,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
 	cntUtils "github.com/blablacar/cnt/utils"
+	"github.com/blablacar/ggn/config"
 	"github.com/blablacar/ggn/spec"
 	"github.com/blablacar/ggn/utils"
 	"github.com/blablacar/ggn/work/env"
@@ -153,7 +154,11 @@ func (e Env) runHook(path string, service string, action string) {
 
 	os.Setenv("SERVICE", service)
 	hostname, _ := os.Hostname()
-	os.Setenv("WHO", os.Getenv("USER")+"@"+hostname)
+	user := os.Getenv("USER")
+	if config.GetConfig().User != "" {
+		user = config.GetConfig().User
+	}
+	os.Setenv("WHO", user+"@"+hostname)
 	os.Setenv("ACTION", action)
 	for _, f := range files {
 		if !f.IsDir() {

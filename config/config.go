@@ -7,29 +7,30 @@ import (
 	"io/ioutil"
 )
 
-var ggConfig GgConfig
+var ggnConfig GgnConfig
 
-type GgConfig struct {
+type GgnConfig struct {
 	Path     string
 	WorkPath string `yaml:"workPath,omitempty"`
+	User     string `yaml:"user,omitempty"`
 }
 
-func GetConfig() *GgConfig {
-	return &ggConfig
+func GetConfig() *GgnConfig {
+	return &ggnConfig
 }
 
-func (c *GgConfig) Load() {
+func (c *GgnConfig) Load() {
 }
 
 func init() {
-	ggConfig = GgConfig{Path: utils.UserHomeOrFatal() + "/.config/green-garden"}
+	ggnConfig = GgnConfig{Path: utils.UserHomeOrFatal() + "/.config/green-garden"}
 
-	if source, err := ioutil.ReadFile(ggConfig.Path + "/config.yml"); err == nil {
-		err = yaml.Unmarshal([]byte(source), &ggConfig)
+	if source, err := ioutil.ReadFile(ggnConfig.Path + "/config.yml"); err == nil {
+		err = yaml.Unmarshal([]byte(source), &ggnConfig)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	log.Debug("Home folder is " + ggConfig.Path)
+	log.Debug("Home folder is " + ggnConfig.Path)
 }

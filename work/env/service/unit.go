@@ -42,6 +42,11 @@ func NewUnit(path string, hostname string, service spec.Service) *Unit {
 }
 
 func (u Unit) Check() {
+	u.Log.Debug("Check")
+
+	u.Service.GetEnv().RunEarlyHook(u.Name, "check")
+	defer u.Service.GetEnv().RunLateHook(u.Name, "check")
+
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
 		u.Log.Error("Cannot read unit")
@@ -53,6 +58,7 @@ func (u Unit) Check() {
 
 func (u Unit) Journal(follow bool, lines int) {
 	u.Log.Debug("journal")
+
 	args := []string{"journal", "-lines", strconv.Itoa(lines)}
 	if follow {
 		args = append(args, "-f")
@@ -75,6 +81,8 @@ func (u Unit) Ssh() {
 }
 
 func (u Unit) Diff() {
+	u.Log.Debug("diff")
+
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
 		u.Log.Warn("Cannot read unit")
@@ -99,6 +107,7 @@ func (u Unit) GetUnitContentAsFleeted() (string, error) {
 
 func (u Unit) Status() error {
 	u.Log.Debug("status")
+
 	content, _, err := u.Service.GetEnv().RunFleetCmdGetOutput("status", u.Filename)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to run status")
@@ -150,15 +159,6 @@ func (u Unit) IsLocalContentSameAsRemote() (bool, error) {
 	}
 	return local == remote, nil
 }
-
-//func (u Unit) Stop() {
-//	u.service.GetEnv().RunFleetCmdGetOutput("stop", u.name)
-//}
-//
-//
-//func (u Unit) Cat() {
-//	u.service.GetEnv().RunFleetCmdGetOutput("cat ", u.name)
-//}
 
 ///////////////////////////////////////////
 
