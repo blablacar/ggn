@@ -13,6 +13,9 @@ ENVS="darwin\nlinux"
 # clean
 rm -Rf $dir/dist/*-amd64
 
+#save dep
+godep save ./...
+
 # format && test
 gofmt -w -s .
 godep go test -cover $dir/...
