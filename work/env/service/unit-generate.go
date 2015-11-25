@@ -3,7 +3,7 @@ package service
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/blablacar/green-garden/utils"
+	"github.com/blablacar/ggn/utils"
 	"github.com/peterbourgon/mergemap"
 	"io/ioutil"
 	"os"

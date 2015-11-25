@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/blablacar/green-garden/work"
+	"github.com/blablacar/ggn/work"
 	"github.com/spf13/cobra"
 )
 

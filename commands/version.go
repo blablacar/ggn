@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"github.com/blablacar/green-garden/application"
+	"github.com/blablacar/ggn/application"
 	"github.com/spf13/cobra"
 	"os"
 )

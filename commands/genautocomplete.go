@@ -2,7 +2,7 @@ package commands
 
 import (
 	"github.com/Sirupsen/logrus"
-	"github.com/blablacar/green-garden/config"
+	"github.com/blablacar/ggn/config"
 	"github.com/spf13/cobra"
 	"os"
 )

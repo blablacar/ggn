@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/utils"
-	"github.com/blablacar/green-garden/spec"
+	"github.com/blablacar/ggn/spec"
 	"github.com/coreos/fleet/unit"
 	"github.com/juju/errors"
 	"io/ioutil"

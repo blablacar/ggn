@@ -2,8 +2,8 @@ package commands
 
 import (
 	"github.com/Sirupsen/logrus"
-	"github.com/blablacar/green-garden/config"
-	"github.com/blablacar/green-garden/work"
+	"github.com/blablacar/ggn/config"
+	"github.com/blablacar/ggn/work"
 	"github.com/spf13/cobra"
 )
 

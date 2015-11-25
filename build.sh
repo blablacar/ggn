@@ -37,7 +37,6 @@ else
     done
 fi
 
-# install
 cp $dir/dist/linux-amd64/ggn $GOPATH/bin/ggn
 
 end=`date +%s`

@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/Sirupsen/logrus"
-	"github.com/blablacar/green-garden/builder"
+	"github.com/blablacar/ggn/builder"
 	"time"
 )
 

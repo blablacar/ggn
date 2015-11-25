@@ -5,7 +5,7 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/utils"
-	"github.com/blablacar/green-garden/config"
+	"github.com/blablacar/ggn/config"
 	"github.com/coreos/go-semver/semver"
 	"github.com/spf13/cobra"
 	"os"

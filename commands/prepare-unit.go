@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/blablacar/green-garden/builder"
-	"github.com/blablacar/green-garden/work/env/service"
+	"github.com/blablacar/ggn/builder"
+	"github.com/blablacar/ggn/work/env/service"
 	"github.com/spf13/cobra"
 )
 

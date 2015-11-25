@@ -2,7 +2,7 @@ package env
 
 import (
 	"errors"
-	"github.com/blablacar/green-garden/builder"
+	"github.com/blablacar/ggn/builder"
 	"time"
 )
 

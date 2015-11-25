@@ -2,7 +2,7 @@ package work
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/blablacar/green-garden/config"
+	"github.com/blablacar/ggn/config"
 	"io/ioutil"
 	"os"
 )
