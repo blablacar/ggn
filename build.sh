@@ -14,7 +14,7 @@ ENVS="darwin\nlinux"
 rm -Rf $dir/dist/*-amd64
 
 #save dep
-godep save ./...
+godep save ./... || true
 
 # format && test
 gofmt -w -s .
