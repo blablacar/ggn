@@ -5,6 +5,9 @@ import "strings"
 func (e Env) Check() {
 	e.log.Debug("Running check")
 
+	e.RunEarlyHook(e.name, "check")
+	defer e.RunLateHook(e.name, "check")
+
 	e.Generate()
 
 	units, _, err := e.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-unit-files", "-no-legend", "-fields", "unit")

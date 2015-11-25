@@ -108,6 +108,10 @@ func (e Env) ListServices() []string {
 		if !file.IsDir() {
 			continue
 		}
+		if _, err := os.Stat(path + "/" + file.Name() + spec.PATH_SERVICE_MANIFEST); os.IsNotExist(err) {
+			continue
+		}
+
 		services = append(services, file.Name())
 	}
 	return services

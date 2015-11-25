@@ -7,6 +7,9 @@ import (
 func (s *Service) Check() {
 	s.log.Debug("Running check")
 
+	s.GetEnv().RunEarlyHook(s.Name, "check")
+	defer s.GetEnv().RunLateHook(s.Name, "check")
+
 	s.Generate(nil)
 
 	units, _, err := s.env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-unit-files", "-no-legend", "-fields", "unit")
