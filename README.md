@@ -1,6 +1,6 @@
 # green-garden
 
-[![GoDoc](https://godoc.org/blablacar/green-garden?status.png)](https://godoc.org/blablacar/green-garden) [![Build Status](https://travis-ci.org/blablacar/green-garden.svg?branch=master)](https://travis-ci.org/blablacar/green-garden)
+[![GoDoc](https://godoc.org/blablacar/ggn?status.png)](https://godoc.org/blablacar/ggn) [![Build Status](https://travis-ci.org/blablacar/ggn.svg?branch=master)](https://travis-ci.org/blablacar/ggn)
 
 
 
