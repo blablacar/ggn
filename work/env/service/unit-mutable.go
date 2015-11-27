@@ -31,10 +31,8 @@ func (u *Unit) Update(lock bool) error {
 	u.Service.Generate(nil)
 	u.Log.Debug("Update")
 
-	if lock {
-		u.Service.Lock(1*time.Hour, "Update "+u.Name)
-		u.Service.Unlock()
-	}
+	u.Service.Lock(1*time.Hour, "Update "+u.Name)
+	defer u.Service.Unlock()
 
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
@@ -48,8 +46,14 @@ func (u *Unit) Update(lock bool) error {
 	u.Service.GetEnv().RunEarlyHookUnit(u, "update")
 	defer u.Service.GetEnv().RunLateHookUnit(u, "update")
 
+	u.UpdateInside()
+
+	return nil
+}
+
+func (u *Unit) UpdateInside() error {
 	// destroy
-	_, _, err = u.Service.GetEnv().RunFleetCmdGetOutput("destroy", u.Filename)
+	_, _, err := u.Service.GetEnv().RunFleetCmdGetOutput("destroy", u.Filename)
 	if err != nil {
 		logrus.WithError(err).Warn("Cannot destroy unit")
 	}
@@ -89,8 +93,10 @@ func (u *Unit) Update(lock bool) error {
 
 func (u *Unit) runAction(action string) error {
 	u.Service.Lock(1*time.Hour, action+" "+u.Name)
-	u.Service.Unlock()
+	defer u.Service.Unlock()
+
 	u.Log.Debug(action)
+
 	u.Service.GetEnv().RunEarlyHookUnit(u, action)
 	defer u.Service.GetEnv().RunLateHookUnit(u, action)
 

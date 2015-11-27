@@ -118,6 +118,7 @@ func (e Env) ListServices() []string {
 }
 
 func (e Env) ListMachineNames() []string {
+	e.log.Debug("list machines")
 	out, _, err := e.RunFleetCmdGetOutput("list-machines", "--fields=metadata", "--no-legend")
 	if err != nil {
 		e.log.WithError(err).Fatal("Cannot list-machines")
@@ -222,6 +223,7 @@ func (e Env) EtcdClient() client.KeysAPI {
 }
 
 func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, string, error) {
+	e.log.WithField("command", strings.Join(args, " ")).Debug("Running command on fleet")
 	if e.config.Fleet.Endpoint == "" {
 		return "", "", errors.New("Cannot find fleet.endpoint env config to call fleetctl")
 	}

@@ -84,7 +84,17 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 	updateCmd.Flags().BoolVarP(&builder.BuildFlags.All, "all", "a", false, "process all units, even up to date")
 	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Yes, "yes", "y", false, "process units without asking")
 
-	serviceCmd.AddCommand(generateCmd /*checkCmd,*/, lockCmd, unlockCmd, updateCmd, checkCmd, diffCmd)
+	serviceCmd.AddCommand(generateCmd, lockCmd, unlockCmd, updateCmd, checkCmd, diffCmd)
+
+	//	var units []string
+	//	hystrix.Go("list_units", func() error {
+	//		units = service.ListUnits()
+	//		return nil
+	//	}, func(err error) error {
+	//		entry := service.GetLog()
+	//		entry.WithError(err).Warn("Cannot list units. Some command may be missing")
+	//		return nil
+	//	})
 
 	for _, unitName := range service.ListUnits() {
 		unit := service.LoadUnit(unitName)

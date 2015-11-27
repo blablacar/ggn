@@ -17,6 +17,7 @@ func (s *Service) Update() error {
 			s.log.WithField("service", s.Name).Warn("!! Leaving but Service is still lock !!")
 		}
 	}()
+
 units:
 	for i, unit := range s.ListUnits() {
 		u := s.LoadUnit(unit)
@@ -57,8 +58,12 @@ units:
 			}
 		}
 
-		builder.BuildFlags.Force = true
-		u.Update(false)
+		if i == 0 {
+			s.GetEnv().RunEarlyHookService(s, "update")
+			defer s.GetEnv().RunLateHookService(s, "update")
+		}
+
+		u.UpdateInside()
 		time.Sleep(time.Second * 2)
 
 	}
