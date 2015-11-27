@@ -6,6 +6,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
+	"github.com/blablacar/ggn/application"
 	"github.com/blablacar/ggn/spec"
 	"github.com/blablacar/ggn/utils"
 	"github.com/blablacar/ggn/work/env/service"
@@ -106,9 +107,8 @@ func (s *Service) Unlock() {
 }
 
 func (s *Service) Lock(ttl time.Duration, message string) {
-	hostname, _ := os.Hostname()
-	who := "[" + os.Getenv("USER") + "@" + hostname + "] "
-	message = who + message
+	userAndHost := "[" + application.GetUserAndHost() + "] "
+	message = userAndHost + message
 
 	s.log.WithField("ttl", ttl).WithField("message", message).Info("locking")
 
@@ -121,7 +121,7 @@ func (s *Service) Lock(ttl time.Duration, message string) {
 		if err != nil {
 			s.log.WithError(err).Fatal("Cannot write lock")
 		}
-	} else if strings.HasPrefix(resp.Node.Value, who) {
+	} else if strings.HasPrefix(resp.Node.Value, userAndHost) {
 		_, err := kapi.Set(context.Background(), s.lockPath, message, &client.SetOptions{TTL: ttl})
 		if err != nil {
 			s.log.WithError(err).Fatal("Cannot write lock")
