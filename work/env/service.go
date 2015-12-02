@@ -63,6 +63,7 @@ func (s *Service) LoadUnit(hostname string) *service.Unit {
 }
 
 func (s *Service) Diff() {
+	s.Generate(nil)
 	for _, unitName := range s.ListUnits() {
 		unit := s.LoadUnit(unitName)
 		unit.Diff()

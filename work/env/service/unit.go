@@ -110,6 +110,7 @@ func (u *Unit) Ssh() {
 
 func (u *Unit) Diff() {
 	u.Log.Debug("diff")
+	u.Service.Generate(nil)
 
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
