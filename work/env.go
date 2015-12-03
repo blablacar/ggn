@@ -117,8 +117,13 @@ func (e Env) ListServices() []string {
 	return services
 }
 
+var inMemoryNames []string
+
 func (e Env) ListMachineNames() ([]string, error) {
 	e.log.Debug("list machines")
+	if inMemoryNames != nil {
+		return inMemoryNames, nil
+	}
 
 	data, modification := ggn.Home.LoadMachinesCacheWithDate(e.name)
 	if data == "" || modification.Add(12*time.Hour).Before(time.Now()) {
@@ -143,6 +148,7 @@ func (e Env) ListMachineNames() ([]string, error) {
 			}
 		}
 	}
+	inMemoryNames = names
 	return names, nil
 }
 
