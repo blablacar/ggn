@@ -6,7 +6,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
 	cntUtils "github.com/blablacar/cnt/utils"
-	"github.com/blablacar/ggn/application"
+	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/spec"
 	"github.com/blablacar/ggn/utils"
 	"github.com/blablacar/ggn/work/env"
@@ -117,11 +117,11 @@ func (e Env) ListServices() []string {
 	return services
 }
 
-func (e Env) ListMachineNames() []string {
+func (e Env) ListMachineNames() ([]string, error) {
 	e.log.Debug("list machines")
 	out, _, err := e.RunFleetCmdGetOutput("list-machines", "--fields=metadata", "--no-legend")
 	if err != nil {
-		e.log.WithError(err).Fatal("Cannot list-machines")
+		return nil, errors.Annotate(err, "Cannot list-machines")
 	}
 
 	var names []string
@@ -136,7 +136,7 @@ func (e Env) ListMachineNames() []string {
 			}
 		}
 	}
-	return names
+	return names, nil
 }
 
 const PATH_HOOKS = "/hooks"
@@ -174,7 +174,7 @@ func (e Env) runHook(path string, service string, action string) {
 	}
 
 	os.Setenv("SERVICE", service)
-	os.Setenv("WHO", application.GetUserAndHost())
+	os.Setenv("WHO", ggn.GetUserAndHost())
 	os.Setenv("ACTION", action)
 	for _, f := range files {
 		if !f.IsDir() {

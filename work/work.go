@@ -1,8 +1,8 @@
 package work
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/blablacar/ggn/config"
+	"github.com/Sirupsen/logrus"
+	"github.com/blablacar/ggn/ggn"
 	"io/ioutil"
 	"os"
 )
@@ -11,12 +11,14 @@ const PATH_ENV = "/env"
 
 type Work struct {
 	path string
+	log  logrus.Entry
 }
 
 func NewWork(path string) *Work {
-	work := new(Work)
-	work.path = path
-	return work
+	return &Work{
+		path: path,
+		log:  *logrus.WithField("path", path),
+	}
 }
 
 func (w Work) LoadEnv(name string) *Env {
@@ -24,15 +26,15 @@ func (w Work) LoadEnv(name string) *Env {
 }
 
 func (w Work) ListEnvs() []string {
-	path := config.GetConfig().WorkPath + PATH_ENV
+	path := ggn.Home.Config.WorkPath + PATH_ENV
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		log.Error("env directory not found in " + config.GetConfig().WorkPath)
+		w.log.Error("env directory not found" + ggn.Home.Config.WorkPath)
 		os.Exit(1)
 	}
 
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		log.Error("Cannot read env directory : "+path, err)
+		w.log.Error("Cannot read env directory : "+path, err)
 		os.Exit(1)
 	}
 

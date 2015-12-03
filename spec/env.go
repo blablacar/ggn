@@ -21,7 +21,7 @@ type Env interface {
 	GetName() string
 	GetLog() logrus.Entry
 	GetAttributes() map[string]interface{}
-	ListMachineNames() []string
+	ListMachineNames() ([]string, error)
 	RunFleetCmdGetOutput(args ...string) (string, string, error)
 	RunFleetCmd(args ...string) error
 	EtcdClient() client.KeysAPI

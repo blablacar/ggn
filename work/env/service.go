@@ -6,7 +6,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
-	"github.com/blablacar/ggn/application"
+	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/spec"
 	"github.com/blablacar/ggn/utils"
 	"github.com/blablacar/ggn/work/env/service"
@@ -64,20 +64,27 @@ func (s *Service) LoadUnit(hostname string) *service.Unit {
 
 func (s *Service) Diff() {
 	s.Generate(nil)
-	for _, unitName := range s.ListUnits() {
+	units, err := s.ListUnits()
+	if err != nil {
+		s.log.WithError(err).Fatal("Cannot list units to run diff")
+	}
+	for _, unitName := range units {
 		unit := s.LoadUnit(unitName)
 		unit.Diff()
 	}
 }
 
-func (s *Service) ListUnits() []string {
+func (s *Service) ListUnits() ([]string, error) {
 	res := []string{}
 	if len(s.manifest.Nodes) == 0 {
-		return res
+		return res, nil
 	}
 
 	if s.manifest.Nodes[0][spec.NODE_HOSTNAME].(string) == "*" {
-		machines := s.env.ListMachineNames()
+		machines, err := s.env.ListMachineNames()
+		if err != nil {
+			return nil, errors.Annotate(err, "Cannot generate unit list from list of machines")
+		}
 		for _, node := range machines {
 			res = append(res, node)
 		}
@@ -86,7 +93,7 @@ func (s *Service) ListUnits() []string {
 			res = append(res, node[spec.NODE_HOSTNAME].(string))
 		}
 	}
-	return res
+	return res, nil
 }
 
 func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this method should be in unit
@@ -108,7 +115,7 @@ func (s *Service) Unlock() {
 }
 
 func (s *Service) Lock(ttl time.Duration, message string) {
-	userAndHost := "[" + application.GetUserAndHost() + "] "
+	userAndHost := "[" + ggn.GetUserAndHost() + "] "
 	message = userAndHost + message
 
 	s.log.WithField("ttl", ttl).WithField("message", message).Info("locking")

@@ -2,7 +2,7 @@ package commands
 
 import (
 	"github.com/Sirupsen/logrus"
-	"github.com/blablacar/ggn/config"
+	"github.com/blablacar/ggn/ggn"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -40,6 +40,6 @@ or just source them in directly:
 }
 
 func init() {
-	genautocompleteCmd.PersistentFlags().StringVarP(&autocompleteTarget, "completionfile", "", config.GetConfig().Path+"/ggn_completion.sh", "Autocompletion file")
+	genautocompleteCmd.PersistentFlags().StringVarP(&autocompleteTarget, "completionfile", "", ggn.Home.Config.Path+"/ggn_completion.sh", "Autocompletion file")
 	genautocompleteCmd.PersistentFlags().StringVarP(&autocompleteType, "type", "", "bash", "Autocompletion type (currently only bash supported)")
 }

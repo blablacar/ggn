@@ -33,7 +33,10 @@ func (s Service) Generate(sources []string) {
 		}
 
 		newNodes := *new([]map[string]interface{})
-		machines := s.env.ListMachineNames()
+		machines, err := s.env.ListMachineNames()
+		if err != nil {
+			s.log.WithError(err).Fatal("Cannot list machines to generate units")
+		}
 		for _, machine := range machines {
 			node := utils.CopyMap(s.manifest.Nodes[0])
 			node[spec.NODE_HOSTNAME] = machine

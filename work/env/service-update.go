@@ -1,8 +1,8 @@
 package env
 
 import (
-	"errors"
 	"github.com/blablacar/ggn/builder"
+	"github.com/juju/errors"
 	"time"
 )
 
@@ -18,8 +18,12 @@ func (s *Service) Update() error {
 		}
 	}()
 
+	units, err := s.ListUnits()
+	if err != nil {
+		return errors.Annotate(err, "Cannot list units to update")
+	}
 units:
-	for i, unit := range s.ListUnits() {
+	for i, unit := range units {
 		u := s.LoadUnit(unit)
 
 	ask:

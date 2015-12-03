@@ -5,7 +5,7 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/utils"
-	"github.com/blablacar/ggn/config"
+	"github.com/blablacar/ggn/ggn"
 	"github.com/coreos/go-semver/semver"
 	"github.com/spf13/cobra"
 	"os"
@@ -15,24 +15,47 @@ import (
 const FLEET_SUPPORTED_VERSION = "0.11.5"
 
 func Execute() {
-	config.GetConfig().Load()
 	checkFleetVersion()
 
-	var logLevel string
-	var rootCmd = &cobra.Command{
-		Use: "ggn",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			level, err := log.ParseLevel(logLevel)
-			if err != nil {
-				fmt.Printf("Unknown log level : %s\n", logLevel)
-				os.Exit(1)
-			}
-			log.SetLevel(level)
-		},
+	homefolder := ggn.DefaultHomeRoot()
+	if argsHome := homeFolderFromArgs(); argsHome != "" {
+		homefolder = argsHome
+	} else {
+		_, err := os.Stat(homefolder + "/green-garden")
+		_, err2 := os.Stat(homefolder + "/ggn")
+		if os.IsNotExist(err2) && err == nil {
+			log.WithField("oldPath", homefolder+"/green-garden").
+				WithField("newPath", homefolder+"/ggn").
+				Warn("You are using the old home folder")
+			homefolder += "/green-garden"
+		} else {
+			homefolder += "/ggn"
+		}
 	}
+	ggn.Home = ggn.NewHome(homefolder)
+
+	rootCmd := &cobra.Command{
+		Use: "ggn",
+	}
+
+	var useless string
+	var logLevel string
+
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "loglevel", "L", "info", "Set log level")
+	rootCmd.PersistentFlags().StringVarP(&useless, "home-path", "H", ggn.DefaultHomeRoot(), "Set home folder")
 	rootCmd.AddCommand(versionCmd, generateCmd, genautocompleteCmd)
 
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+
+		// logs
+		level, err := log.ParseLevel(logLevel)
+		if err != nil {
+			fmt.Printf("Unknown log level : %s", logLevel)
+			os.Exit(1)
+		}
+		log.SetLevel(level)
+
+	}
 	loadEnvCommands(rootCmd)
 
 	err := rootCmd.Execute()
@@ -40,6 +63,21 @@ func Execute() {
 		os.Exit(1)
 	}
 	log.Debug("Victory !")
+}
+
+func homeFolderFromArgs() string {
+	for i, arg := range os.Args {
+		if arg == "--" {
+			return ""
+		}
+		if arg == "-H" {
+			return os.Args[i+1]
+		}
+		if strings.HasPrefix(arg, "--home-path=") {
+			return arg[12:]
+		}
+	}
+	return ""
 }
 
 func checkFleetVersion() {
