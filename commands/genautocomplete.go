@@ -25,10 +25,13 @@ or just source them in directly:
 	$ . /etc/bash_completion`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-
+		if autocompleteTarget == "" {
+			autocompleteTarget = ggn.Home.Path + "/ggn_completion.sh"
+		}
 		if autocompleteType != "bash" {
 			logrus.WithField("type", autocompleteType).Fatalln("Only Bash is supported for now")
 		}
+
 		err := cmd.Root().GenBashCompletionFile(autocompleteTarget)
 		if err != nil {
 			logrus.WithError(err).Fatalln("Failed to generate shell completion file")
@@ -40,6 +43,6 @@ or just source them in directly:
 }
 
 func init() {
-	genautocompleteCmd.PersistentFlags().StringVarP(&autocompleteTarget, "completionfile", "", ggn.Home.Config.Path+"/ggn_completion.sh", "Autocompletion file")
+	genautocompleteCmd.PersistentFlags().StringVarP(&autocompleteTarget, "completionfile", "", "", "Autocompletion file")
 	genautocompleteCmd.PersistentFlags().StringVarP(&autocompleteType, "type", "", "bash", "Autocompletion type (currently only bash supported)")
 }

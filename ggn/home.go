@@ -10,14 +10,13 @@ import (
 )
 
 type Config struct {
-	Path     string
 	WorkPath string `yaml:"workPath,omitempty"`
 	User     string `yaml:"user,omitempty"`
 }
 
 type HomeStruct struct {
 	log    logrus.Entry
-	path   string
+	Path   string
 	Config Config
 }
 
@@ -36,7 +35,7 @@ func NewHome(path string) HomeStruct {
 	}
 	return HomeStruct{
 		log:    *log,
-		path:   path,
+		Path:   path,
 		Config: config,
 	}
 }
@@ -45,11 +44,11 @@ const PATH_LIST_MACHINES_CACHE = "/list-machines.cache"
 
 func (h *HomeStruct) LoadMachinesCacheWithDate(env string) (string, time.Time) {
 	h.log.WithField("env", env).Debug("Loading list machines cache")
-	info, err := os.Stat(h.path + PATH_LIST_MACHINES_CACHE + "." + env)
+	info, err := os.Stat(h.Path + PATH_LIST_MACHINES_CACHE + "." + env)
 	if err != nil {
 		return "", time.Now()
 	}
-	content, err := ioutil.ReadFile(h.path + PATH_LIST_MACHINES_CACHE + "." + env)
+	content, err := ioutil.ReadFile(h.Path + PATH_LIST_MACHINES_CACHE + "." + env)
 	if err != nil {
 		return "", time.Now()
 	}
@@ -58,7 +57,7 @@ func (h *HomeStruct) LoadMachinesCacheWithDate(env string) (string, time.Time) {
 
 func (h *HomeStruct) SaveMachinesCache(env string, data string) {
 	h.log.WithField("env", env).Debug("save machines cache")
-	if err := ioutil.WriteFile(h.path+PATH_LIST_MACHINES_CACHE+"."+env, []byte(data), 0644); err != nil {
+	if err := ioutil.WriteFile(h.Path+PATH_LIST_MACHINES_CACHE+"."+env, []byte(data), 0644); err != nil {
 		logrus.WithError(err).Warn("Cannot persist list-machines cache")
 	}
 }
