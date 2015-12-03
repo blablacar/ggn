@@ -119,14 +119,21 @@ func (e Env) ListServices() []string {
 
 func (e Env) ListMachineNames() ([]string, error) {
 	e.log.Debug("list machines")
-	out, _, err := e.RunFleetCmdGetOutput("list-machines", "--fields=metadata", "--no-legend")
-	if err != nil {
-		return nil, errors.Annotate(err, "Cannot list-machines")
+
+	data, modification := ggn.Home.LoadMachinesCacheWithDate(e.name)
+	if data == "" || modification.Add(12*time.Hour).Before(time.Now()) {
+		e.log.Debug("reloading list machines cache")
+		datatmp, _, err := e.RunFleetCmdGetOutput("list-machines", "--fields=metadata", "--no-legend")
+		if err != nil {
+			return nil, errors.Annotate(err, "Cannot list-machines")
+		}
+		data = datatmp
+		ggn.Home.SaveMachinesCache(e.name, data)
 	}
 
 	var names []string
 
-	machines := strings.Split(out, "\n")
+	machines := strings.Split(data, "\n")
 	for _, machine := range machines {
 		metas := strings.Split(machine, ",")
 		for _, meta := range metas {
