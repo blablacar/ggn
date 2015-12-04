@@ -137,9 +137,9 @@ func (u *Unit) GetUnitContentAsFleeted() (string, error) {
 func (u *Unit) Status() error {
 	u.Log.Debug("status")
 
-	content, _, err := u.Service.GetEnv().RunFleetCmdGetOutput("status", u.Filename)
+	content, stderr, err := u.Service.GetEnv().RunFleetCmdGetOutput("status", u.Filename)
 	if err != nil {
-		logrus.WithError(err).Fatal("Failed to run status")
+		logrus.WithError(err).WithField("stderr", stderr).Fatal("Failed to run status")
 	}
 	os.Stdout.WriteString(content)
 	return nil
