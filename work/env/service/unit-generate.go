@@ -7,6 +7,7 @@ import (
 	"github.com/peterbourgon/mergemap"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -19,6 +20,8 @@ func (u Unit) Generate(tmpl *utils.Templating) {
 		u.Log.WithError(err).Panic("Cannot marshall attributes")
 	}
 	data["attributes"] = strings.Replace(string(out), "\\\"", "\\\\\\\"", -1)
+
+	u.prepareEnvironmentAttributes(data)
 
 	var b bytes.Buffer
 	err = tmpl.Execute(&b, data)
@@ -47,4 +50,29 @@ func (u Unit) GenerateAttributes() map[string]interface{} {
 	}
 
 	return data
+}
+
+func (u Unit) prepareEnvironmentAttributes(data map[string]interface{}) {
+	var envAttr bytes.Buffer
+	var envAttrVars bytes.Buffer
+	num := 0
+	for i, c := range data["attributes"].(string) {
+		if i%1950 == 0 {
+			if num != 0 {
+				envAttr.WriteString("'\n")
+			}
+			envAttr.WriteString("Environment='ATTR_")
+			envAttr.WriteString(strconv.Itoa(num))
+			envAttr.WriteString("=")
+			envAttrVars.WriteString("${ATTR_")
+			envAttrVars.WriteString(strconv.Itoa(num))
+			envAttrVars.WriteString("}")
+			num++
+		}
+		envAttr.WriteRune(c)
+	}
+	envAttr.WriteString("'\n")
+
+	data["environmentAttributes"] = envAttr.String()
+	data["environmentAttributesVars"] = envAttrVars.String()
 }
