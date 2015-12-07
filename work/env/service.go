@@ -109,8 +109,10 @@ func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this
 	return stdout, err
 }
 
-func (s *Service) Unlock() {
+func (s *Service) Unlock(command string) {
 	s.log.Info("Unlocking")
+	s.runHook(EARLY, command, "unlock")
+	defer s.runHook(LATE, command, "unlock")
 
 	kapi := s.env.EtcdClient()
 	_, err := kapi.Delete(context.Background(), s.lockPath, nil)
@@ -119,11 +121,13 @@ func (s *Service) Unlock() {
 	}
 }
 
-func (s *Service) Lock(ttl time.Duration, message string) {
+func (s *Service) Lock(command string, ttl time.Duration, message string) {
 	userAndHost := "[" + ggn.GetUserAndHost() + "] "
 	message = userAndHost + message
 
 	s.log.WithField("ttl", ttl).WithField("message", message).Info("locking")
+	s.runHook(EARLY, command, "lock")
+	defer s.runHook(LATE, command, "lock")
 
 	kapi := s.env.EtcdClient()
 	resp, err := kapi.Get(context.Background(), s.lockPath, nil)

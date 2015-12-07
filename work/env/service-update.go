@@ -10,7 +10,7 @@ func (s *Service) Update() error {
 	s.log.Info("Updating service")
 	s.Generate(nil)
 
-	s.Lock(1*time.Hour, "Updating")
+	s.Lock("service/update", 1*time.Hour, "Updating")
 	lock := true
 	defer func() {
 		if lock {
@@ -48,7 +48,7 @@ units:
 			case ACTION_QUIT:
 				u.Log.Debug("User want to quit")
 				if i == 0 {
-					s.Unlock()
+					s.Unlock("service/update")
 					lock = false
 				}
 				return errors.New("User want to quit")
@@ -71,7 +71,7 @@ units:
 		time.Sleep(time.Second * 2)
 
 	}
-	s.Unlock()
+	s.Unlock("service/update")
 	lock = false
 	return nil
 }

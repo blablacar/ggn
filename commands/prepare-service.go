@@ -59,7 +59,7 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 				logrus.WithError(err).Fatal("Wrong value for ttl")
 			}
 
-			service.Lock(ttl, message)
+			service.Lock("service/lock", ttl, message)
 		},
 	}
 
@@ -67,7 +67,7 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 		Use:   "unlock",
 		Short: "unlock " + service.Name + " on env " + service.GetEnv().GetName(),
 		Run: func(cmd *cobra.Command, args []string) {
-			service.Unlock()
+			service.Unlock("service/unlock")
 		},
 	}
 

@@ -28,8 +28,8 @@ type Service interface {
 	NodeAttributes(hostname string) map[string]interface{}
 	GetAttributes() map[string]interface{}
 	Generate(sources []string)
-	Unlock()
-	Lock(ttl time.Duration, message string)
+	Unlock(command string)
+	Lock(command string, ttl time.Duration, message string)
 	GetName() string
 	GetEnv() Env
 	GetLog() logrus.Entry

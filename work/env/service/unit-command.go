@@ -35,8 +35,8 @@ func (u *Unit) Update(command string) error {
 	u.runHook(EARLY, command, "update")
 	defer u.runHook(LATE, command, "update")
 
-	u.Service.Lock(1*time.Hour, "Update "+u.Name)
-	defer u.Service.Unlock()
+	u.Service.Lock(command, 1*time.Hour, "Update "+u.Name)
+	defer u.Service.Unlock(command)
 
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
@@ -111,8 +111,8 @@ func (u *Unit) Status(command string) {
 
 func (u *Unit) runAction(command string, action string) error {
 	if command == action {
-		u.Service.Lock(1*time.Hour, action+" "+u.Name)
-		defer u.Service.Unlock()
+		u.Service.Lock(command, 1*time.Hour, action+" "+u.Name)
+		defer u.Service.Unlock(command)
 	}
 
 	u.Log.Debug(action)
