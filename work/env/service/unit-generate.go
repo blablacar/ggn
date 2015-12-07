@@ -10,19 +10,9 @@ import (
 	"strings"
 )
 
-func (u Unit) Generate(node map[string]interface{}, tmpl *utils.Templating, acis string, attributes map[string]interface{}) {
+func (u Unit) Generate(tmpl *utils.Templating) {
 	u.Log.Debug("Generate")
-
-	data := make(map[string]interface{})
-
-	data["node"] = node
-	data["node"].(map[string]interface{})["acis"] = acis
-
-	data["attribute"] = utils.CopyMap(attributes)
-	if data["node"].(map[string]interface{})["attributes"] != nil {
-		source := utils.CopyMapInterface(data["node"].(map[string]interface{})["attributes"].(map[interface{}]interface{}))
-		data["attribute"] = mergemap.Merge(data["attribute"].(map[string]interface{}), source.(map[string]interface{}))
-	}
+	data := u.GenerateAttributes()
 
 	out, err := json.Marshal(data["attribute"])
 	if err != nil {
@@ -43,4 +33,18 @@ func (u Unit) Generate(node map[string]interface{}, tmpl *utils.Templating, acis
 	if err != nil {
 		u.Log.WithError(err).WithField("path", u.path+"/"+u.Filename).Error("Cannot writer unit")
 	}
+}
+
+func (u Unit) GenerateAttributes() map[string]interface{} {
+	data := make(map[string]interface{})
+	data["node"] = u.Service.NodeAttributes(u.Name)
+	data["node"].(map[string]interface{})["acis"] = u.Service.PrepareAciList(nil)
+	data["attribute"] = utils.CopyMap(u.Service.GetAttributes())
+	data["attribute"].(map[string]interface{})["hostname"] = data["node"].(map[string]interface{})["hostname"]
+	if data["node"].(map[string]interface{})["attributes"] != nil {
+		source := utils.CopyMapInterface(data["node"].(map[string]interface{})["attributes"].(map[interface{}]interface{}))
+		data["attribute"] = mergemap.Merge(data["attribute"].(map[string]interface{}), source.(map[string]interface{}))
+	}
+
+	return data
 }

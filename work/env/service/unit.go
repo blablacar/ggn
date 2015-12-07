@@ -2,6 +2,7 @@ package service
 
 import (
 	"bufio"
+	"encoding/json"
 	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/utils"
 	"github.com/blablacar/ggn/spec"
@@ -9,8 +10,8 @@ import (
 	"github.com/juju/errors"
 	"io/ioutil"
 	"os"
-	"strconv"
 	"strings"
+	"time"
 )
 
 type Unit struct {
@@ -49,11 +50,17 @@ func (u *Unit) GetService() spec.Service {
 	return u.Service
 }
 
-func (u *Unit) Check() {
+func (u *Unit) Check(command string) {
 	u.Log.Debug("Check")
 
-	u.Service.GetEnv().RunEarlyHookUnit(u, "check")
-	defer u.Service.GetEnv().RunLateHookUnit(u, "check")
+	info := spec.HookInfo{
+		Service: u.Service,
+		Unit:    u,
+		Action:  "check",
+		Command: command,
+	}
+	u.Service.GetEnv().RunEarlyHook(info)
+	defer u.Service.GetEnv().RunLateHook(info)
 
 	statuses := u.Service.GetEnv().ListUnits()
 	var status spec.UnitStatus
@@ -84,43 +91,6 @@ func (u *Unit) Check() {
 	}
 }
 
-func (u *Unit) Journal(follow bool, lines int) {
-	u.Log.Debug("journal")
-
-	args := []string{"journal", "-lines", strconv.Itoa(lines)}
-	if follow {
-		args = append(args, "-f")
-	}
-	args = append(args, u.Filename)
-
-	err := u.Service.GetEnv().RunFleetCmd(args...)
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to run journal")
-	}
-}
-
-func (u *Unit) Ssh() {
-	u.Log.Debug("ssh")
-
-	err := u.Service.GetEnv().RunFleetCmd("ssh", u.Filename)
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to run status")
-	}
-}
-
-func (u *Unit) Diff() {
-	u.Log.Debug("diff")
-	u.Service.Generate(nil)
-
-	same, err := u.IsLocalContentSameAsRemote()
-	if err != nil {
-		u.Log.Warn("Cannot read unit")
-	}
-	if !same {
-		u.DisplayDiff()
-	}
-}
-
 func (u *Unit) GetUnitContentAsFleeted() (string, error) {
 	unitFileContent, err := ioutil.ReadFile(u.unitPath)
 	if err != nil {
@@ -134,35 +104,13 @@ func (u *Unit) GetUnitContentAsFleeted() (string, error) {
 	return convertMultilineUnitToString([]byte(fleetunit.String())), nil
 }
 
-func (u *Unit) Status() error {
-	u.Log.Debug("status")
-
-	content, stderr, err := u.Service.GetEnv().RunFleetCmdGetOutput("status", u.Filename)
-	if err != nil {
-		logrus.WithError(err).WithField("stderr", stderr).Fatal("Failed to run status")
-	}
-	os.Stdout.WriteString(content)
-	return nil
-	//	if err != nil {
-	//		return "", err
-	//	}
-	//
-	//	reg, err := regexp.Compile(`Active: (active|inactive|deactivating|activating)`)
-	//	if err != nil {
-	//		u.Log.Panic("Cannot compile regex")
-	//	}
-	//	matched := reg.FindStringSubmatch(content)
-	//
-	//	//	if !strings.Contains(content, "Active: %s ") { // Active: failed
-	//	//		return content, errors.New("unit is not in running state")
-	//	//	}
-	//
-	//	return matched[1], err
+func (u *Unit) UpdateInside(command string) {
+	u.Destroy(command)
+	time.Sleep(time.Second * 2)
+	u.Start(command)
 }
 
 func (u *Unit) DisplayDiff() error {
-	u.Log.Debug("Diff")
-
 	local, remote, err := u.serviceLocalAndRemoteContent()
 	if err != nil {
 		return err
@@ -190,6 +138,30 @@ func (u *Unit) IsLocalContentSameAsRemote() (bool, error) {
 }
 
 ///////////////////////////////////////////
+
+const EARLY = true
+const LATE = false
+
+func (u *Unit) runHook(isEarly bool, command string, action string) {
+	out, err := json.Marshal(u.GenerateAttributes()["attribute"])
+	if err != nil {
+		u.Log.WithError(err).Panic("Cannot marshall attributes")
+	}
+
+	info := spec.HookInfo{
+		Service:    u.Service,
+		Unit:       u,
+		Action:     "unit/" + action,
+		Command:    command,
+		Attributes: string(out),
+	}
+	if isEarly {
+		u.Service.GetEnv().RunEarlyHook(info)
+	} else {
+		u.Service.GetEnv().RunLateHook(info)
+	}
+
+}
 
 func (u *Unit) serviceLocalAndRemoteContent() (string, string, error) {
 	localContent, err := u.GetUnitContentAsFleeted()

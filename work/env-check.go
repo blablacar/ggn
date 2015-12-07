@@ -1,12 +1,16 @@
 package work
 
-import "strings"
+import (
+	"github.com/blablacar/ggn/spec"
+	"strings"
+)
 
 func (e Env) Check() {
 	e.log.Debug("Running check")
 
-	e.RunEarlyHookEnv("check")
-	defer e.RunLateHookEnv("check")
+	info := spec.HookInfo{Command: "env/check", Action: "env/check"}
+	e.RunEarlyHook(info)
+	defer e.RunLateHook(info)
 
 	e.Generate()
 
@@ -22,7 +26,7 @@ func (e Env) Check() {
 			continue
 		}
 		split := strings.Split(unitInfo[2], ".")
-		e.LoadService(unitInfo[1]).LoadUnit(split[0]).Check()
+		e.LoadService(unitInfo[1]).LoadUnit(split[0]).Check("env/check")
 	}
 }
 

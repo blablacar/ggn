@@ -6,9 +6,8 @@ import (
 
 func (s *Service) Check() {
 	s.log.Debug("Running check")
-
-	s.GetEnv().RunEarlyHookService(s, "check")
-	defer s.GetEnv().RunLateHookService(s, "check")
+	s.runHook(EARLY, "service/check", "check")
+	defer s.runHook(LATE, "service/check", "check")
 
 	s.Generate(nil)
 
@@ -27,6 +26,6 @@ func (s *Service) Check() {
 		}
 		split := strings.Split(unitInfo[2], ".")
 
-		s.LoadUnit(split[0]).Check()
+		s.LoadUnit(split[0]).Check("service/check")
 	}
 }

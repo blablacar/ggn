@@ -154,31 +154,15 @@ func (e Env) ListMachineNames() ([]string, error) {
 
 const PATH_HOOKS = "/hooks"
 
-func (e Env) RunEarlyHookEnv(action string) {
-	e.runHook("/early", "", action)
+func (e Env) RunEarlyHook(info spec.HookInfo) {
+	e.runHook("/early", info)
 }
 
-func (e Env) RunLateHookEnv(action string) {
-	e.runHook("/late", "", action)
+func (e Env) RunLateHook(info spec.HookInfo) {
+	e.runHook("/late", info)
 }
 
-func (e Env) RunEarlyHookUnit(unit spec.Unit, action string) {
-	e.runHook("/early", unit.GetService().GetName()+":"+unit.GetName(), action)
-}
-
-func (e Env) RunLateHookUnit(unit spec.Unit, action string) {
-	e.runHook("/late", unit.GetService().GetName()+":"+unit.GetName(), action)
-}
-
-func (e Env) RunEarlyHookService(service spec.Service, action string) {
-	e.runHook("/early", service.GetName(), action)
-}
-
-func (e Env) RunLateHookService(service spec.Service, action string) {
-	e.runHook("/late", service.GetName(), action)
-}
-
-func (e Env) runHook(path string, service string, action string) {
+func (e Env) runHook(path string, info spec.HookInfo) {
 	e.log.WithField("path", path).Debug("Running hook")
 	files, err := ioutil.ReadDir(e.path + PATH_HOOKS + path)
 	if err != nil {
@@ -186,9 +170,15 @@ func (e Env) runHook(path string, service string, action string) {
 		return
 	}
 
-	os.Setenv("SERVICE", service)
+	os.Setenv("COMMAND", info.Command)
+	if info.Unit != nil {
+		os.Setenv("UNIT", info.Unit.GetName())
+	}
+	os.Setenv("SERVICE", info.Service.GetName())
 	os.Setenv("WHO", ggn.GetUserAndHost())
-	os.Setenv("ACTION", action)
+	os.Setenv("ACTION", info.Action)
+	os.Setenv("ATTRIBUTES", info.Attributes)
+
 	for _, f := range files {
 		if !f.IsDir() {
 			hookLog := log.WithField("name", f.Name())

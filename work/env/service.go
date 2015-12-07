@@ -2,6 +2,7 @@ package env
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
@@ -45,6 +46,10 @@ func NewService(path string, name string, env spec.Env) *Service {
 	return service
 }
 
+func (s *Service) GetAttributes() map[string]interface{} {
+	return s.attributes
+}
+
 func (s *Service) GetName() string {
 	return s.Name
 }
@@ -70,7 +75,7 @@ func (s *Service) Diff() {
 	}
 	for _, unitName := range units {
 		unit := s.LoadUnit(unitName)
-		unit.Diff()
+		unit.Diff("service/diff")
 	}
 }
 
@@ -173,6 +178,29 @@ func (s *Service) askToProcessService(index int, unit *service.Unit) Action {
 		continue
 	}
 	return ACTION_QUIT
+}
+
+const EARLY = true
+const LATE = false
+
+func (s *Service) runHook(isEarly bool, command string, action string) {
+	out, err := json.Marshal(s.attributes)
+	if err != nil {
+		s.log.WithError(err).Panic("Cannot marshall attributes")
+	}
+
+	info := spec.HookInfo{
+		Service:    s,
+		Action:     "service/" + action,
+		Command:    command,
+		Attributes: string(out),
+	}
+	if isEarly {
+		s.GetEnv().RunEarlyHook(info)
+	} else {
+		s.GetEnv().RunLateHook(info)
+	}
+
 }
 
 func (s *Service) loadAttributes() {

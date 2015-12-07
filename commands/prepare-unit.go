@@ -19,7 +19,7 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Use:   "start",
 		Short: getShortDescription(unit, "Start"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Start()
+			unit.Start("unit/start")
 		},
 	}
 
@@ -27,7 +27,7 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Use:   "stop",
 		Short: getShortDescription(unit, "Stop"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Stop()
+			unit.Stop("unit/stop")
 		},
 	}
 
@@ -35,7 +35,7 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Use:   "update",
 		Short: getShortDescription(unit, "Update"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Update(true)
+			unit.Update("unit/update")
 		},
 	}
 
@@ -43,7 +43,7 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Use:   "destroy",
 		Short: getShortDescription(unit, "Destroy"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Destroy()
+			unit.Destroy("unit/destroy")
 		},
 	}
 
@@ -51,7 +51,7 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Use:   "status",
 		Short: getShortDescription(unit, "Get status of"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Status()
+			unit.Status("unit/status")
 		},
 	}
 
@@ -59,7 +59,7 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Use:   "journal",
 		Short: getShortDescription(unit, "Get journal of"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Journal(follow, lines)
+			unit.Journal("unit/journal", follow, lines)
 		},
 	}
 
@@ -67,7 +67,7 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Use:   "diff",
 		Short: getShortDescription(unit, "Diff"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Diff()
+			unit.Diff("unit/diff")
 		},
 	}
 
@@ -75,7 +75,7 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Use:   "check",
 		Short: getShortDescription(unit, "check"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Check()
+			unit.Check("unit/check")
 		},
 	}
 
@@ -83,14 +83,14 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Use:   "unload",
 		Short: getShortDescription(unit, "Unload"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Unload()
+			unit.Unload("unit/unload")
 		},
 	}
 	loadCmd := &cobra.Command{
 		Use:   "load",
 		Short: getShortDescription(unit, "load"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Load()
+			unit.Load("unit/load")
 		},
 	}
 
@@ -98,7 +98,7 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		Use:   "ssh",
 		Short: getShortDescription(unit, "ssh"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Ssh()
+			unit.Ssh("unit/ssh")
 		},
 	}
 

@@ -17,6 +17,14 @@ type UnitStatus struct {
 	Sub     string
 }
 
+type HookInfo struct {
+	Command    string
+	Service    Service
+	Unit       Unit
+	Action     string
+	Attributes string
+}
+
 type Env interface {
 	GetName() string
 	GetLog() logrus.Entry
@@ -25,9 +33,7 @@ type Env interface {
 	RunFleetCmdGetOutput(args ...string) (string, string, error)
 	RunFleetCmd(args ...string) error
 	EtcdClient() client.KeysAPI
-	RunEarlyHookUnit(unit Unit, action string)
-	RunLateHookUnit(unit Unit, action string)
-	RunEarlyHookService(service Service, action string)
-	RunLateHookService(service Service, action string)
+	RunEarlyHook(info HookInfo)
+	RunLateHook(info HookInfo)
 	ListUnits() map[string]UnitStatus
 }

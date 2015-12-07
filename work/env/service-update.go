@@ -63,11 +63,11 @@ units:
 		}
 
 		if i == 0 {
-			s.GetEnv().RunEarlyHookService(s, "update")
-			defer s.GetEnv().RunLateHookService(s, "update")
+			s.runHook(EARLY, "service/update", "update")
+			defer s.runHook(LATE, "service/update", "update")
 		}
 
-		u.UpdateInside()
+		u.UpdateInside("service/update")
 		time.Sleep(time.Second * 2)
 
 	}

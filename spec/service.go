@@ -24,6 +24,9 @@ type ServiceManifest struct {
 }
 
 type Service interface {
+	PrepareAciList(sources []string) string
+	NodeAttributes(hostname string) map[string]interface{}
+	GetAttributes() map[string]interface{}
 	Generate(sources []string)
 	Unlock()
 	Lock(ttl time.Duration, message string)

@@ -1,6 +1,7 @@
 package env
 
 import (
+	"github.com/Sirupsen/logrus"
 	"github.com/appc/spec/discovery"
 	"github.com/appc/spec/schema"
 	cntspec "github.com/blablacar/cnt/spec"
@@ -25,11 +26,33 @@ func (s Service) Generate(sources []string) {
 		return
 	}
 
+	for i, node := range s.nodes() {
+		hostname := node[spec.NODE_HOSTNAME].(string)
+		if hostname == "" {
+			s.log.WithField("index", i).Error("hostname is mandatory in node informations")
+		}
+		unit := s.LoadUnit(hostname)
+		unit.Generate(tmpl)
+	}
+}
+
+func (s Service) NodeAttributes(hostname string) map[string]interface{} {
+	for _, node := range s.nodes() {
+		host := node[spec.NODE_HOSTNAME].(string)
+		if host == hostname {
+			return node
+		}
+	}
+	logrus.WithField("hostname", hostname).Panic("Cannot find host in service list")
+	return nil
+}
+
+func (s Service) nodes() []map[string]interface{} {
 	nodes := s.manifest.Nodes
 	if s.manifest.Nodes[0][spec.NODE_HOSTNAME].(string) == "*" {
 		if len(s.manifest.Nodes) > 1 {
 			s.log.Error("You cannot mix all nodes with single node. Yet ?")
-			return
+			return nil
 		}
 
 		newNodes := *new([]map[string]interface{})
@@ -45,21 +68,7 @@ func (s Service) Generate(sources []string) {
 
 		nodes = newNodes
 	}
-
-	acis, err := s.prepareAciList(sources)
-	if err != nil {
-		s.log.WithError(err).Error("Cannot prepare aci list")
-		return
-	}
-
-	for i, node := range nodes {
-		hostname := node[spec.NODE_HOSTNAME].(string)
-		if hostname == "" {
-			s.log.WithField("index", i).Error("hostname is mandatory in node informations")
-		}
-		unit := s.LoadUnit(hostname)
-		unit.Generate(node, tmpl, acis, s.attributes)
-	}
+	return nodes
 }
 
 func (s Service) podManifestToMap(result map[string][]cntspec.ACFullname, contents []byte) error {
@@ -169,9 +178,9 @@ func (s Service) discoverPod(name cntspec.ACFullname) []cntspec.ACFullname {
 	}
 }
 
-func (s Service) prepareAciList(sources []string) (string, error) {
+func (s Service) PrepareAciList(sources []string) string {
 	if len(s.manifest.Containers) == 0 {
-		return "", nil
+		return ""
 	}
 
 	override := s.sources(sources)
@@ -204,7 +213,7 @@ func (s Service) prepareAciList(sources []string) (string, error) {
 				taci = *aciTmp
 				if err != nil {
 					containerLog.Fatal("Cannot resolve aci")
-					return "", err
+					return ""
 				}
 			}
 			acis += taci.String() + " "
@@ -213,5 +222,5 @@ func (s Service) prepareAciList(sources []string) (string, error) {
 	if acis == "" {
 		s.log.Error("Aci list is empty after discovery")
 	}
-	return acis, nil
+	return acis
 }
