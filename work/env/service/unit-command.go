@@ -101,11 +101,10 @@ func (u *Unit) Status(command string) {
 	u.runHook(EARLY, command, "status")
 	defer u.runHook(LATE, command, "status")
 
-	content, stderr, err := u.Service.GetEnv().RunFleetCmdGetOutput("status", u.Filename)
+	err := u.Service.GetEnv().RunFleetCmd("status", u.Filename)
 	if err != nil {
-		logrus.WithError(err).WithField("stderr", stderr).Fatal("Failed to run status")
+		os.Exit(1)
 	}
-	os.Stdout.WriteString(content)
 }
 
 ////////////////////////////////////////////
