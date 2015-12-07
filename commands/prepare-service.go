@@ -46,6 +46,8 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 	lockCmd := &cobra.Command{
 		Use:   "lock [message...]",
 		Short: "lock " + service.Name + " on env " + service.GetEnv().GetName(),
+		Long: `Add a lock to the service in etcd to prevent somebody else to do modification actions on this service/units.` +
+			`lock is ignored if set by the current user`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				logrus.Fatal("Please add a message to describe lock")
