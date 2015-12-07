@@ -9,6 +9,7 @@ import (
 )
 
 func (u *Unit) Start(command string) error {
+	u.Service.Generate(nil)
 	return u.runAction(command, "start")
 }
 
