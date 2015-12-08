@@ -65,7 +65,8 @@ func (u *Unit) Journal(command string, follow bool, lines int) {
 	args = append(args, u.Filename)
 
 	err := u.Service.GetEnv().RunFleetCmd(args...)
-	if err != nil {
+
+	if err != nil && !follow {
 		logrus.WithError(err).Fatal("Failed to run journal")
 	}
 }
