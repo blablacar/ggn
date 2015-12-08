@@ -6,7 +6,6 @@ import (
 	"github.com/appc/spec/schema"
 	cntspec "github.com/blablacar/cnt/spec"
 	"github.com/blablacar/ggn/spec"
-	"github.com/blablacar/ggn/utils"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -21,13 +20,13 @@ func (s Service) Generate(sources []string) {
 		return
 	}
 
-	if len(s.manifest.Nodes) == 0 {
+	if len(s.nodesAsJsonMap) == 0 {
 		s.log.Error("No node to process in manifest")
 		return
 	}
 
-	for i, node := range s.nodes() {
-		hostname := node[spec.NODE_HOSTNAME].(string)
+	for i, node := range s.nodesAsJsonMap {
+		hostname := node.(map[string]interface{})[spec.NODE_HOSTNAME].(string)
 		if hostname == "" {
 			s.log.WithField("index", i).Error("hostname is mandatory in node informations")
 		}
@@ -37,38 +36,14 @@ func (s Service) Generate(sources []string) {
 }
 
 func (s Service) NodeAttributes(hostname string) map[string]interface{} {
-	for _, node := range s.nodes() {
-		host := node[spec.NODE_HOSTNAME].(string)
+	for _, node := range s.nodesAsJsonMap {
+		host := node.(map[string]interface{})[spec.NODE_HOSTNAME].(string)
 		if host == hostname {
-			return node
+			return node.(map[string]interface{})
 		}
 	}
 	logrus.WithField("hostname", hostname).Panic("Cannot find host in service list")
 	return nil
-}
-
-func (s Service) nodes() []map[string]interface{} {
-	nodes := s.manifest.Nodes
-	if s.manifest.Nodes[0][spec.NODE_HOSTNAME].(string) == "*" {
-		if len(s.manifest.Nodes) > 1 {
-			s.log.Error("You cannot mix all nodes with single node. Yet ?")
-			return nil
-		}
-
-		newNodes := *new([]map[string]interface{})
-		machines, err := s.env.ListMachineNames()
-		if err != nil {
-			s.log.WithError(err).Fatal("Cannot list machines to generate units")
-		}
-		for _, machine := range machines {
-			node := utils.CopyMap(s.manifest.Nodes[0])
-			node[spec.NODE_HOSTNAME] = machine
-			newNodes = append(newNodes, node)
-		}
-
-		nodes = newNodes
-	}
-	return nodes
 }
 
 func (s Service) podManifestToMap(result map[string][]cntspec.ACFullname, contents []byte) error {

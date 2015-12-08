@@ -23,13 +23,14 @@ import (
 )
 
 type Service struct {
-	env        spec.Env
-	path       string
-	Name       string
-	manifest   spec.ServiceManifest
-	log        log.Entry
-	lockPath   string
-	attributes map[string]interface{}
+	env            spec.Env
+	path           string
+	Name           string
+	manifest       spec.ServiceManifest
+	nodesAsJsonMap []interface{}
+	log            log.Entry
+	lockPath       string
+	attributes     map[string]interface{}
 }
 
 func NewService(path string, name string, env spec.Env) *Service {
@@ -43,7 +44,35 @@ func NewService(path string, name string, env spec.Env) *Service {
 	}
 	service.loadManifest()
 	service.loadAttributes()
+	service.prepareNodesAsJsonMap()
 	return service
+}
+
+func (s *Service) prepareNodesAsJsonMap() {
+	tmpRes, err := utils.TransformYamlToJson(s.manifest.Nodes)
+	var res []interface{} = tmpRes.([]interface{})
+	if err != nil {
+		s.log.WithError(err).Fatal("Cannot transform yaml to json")
+	}
+
+	if res[0].(map[string]interface{})[spec.NODE_HOSTNAME].(string) == "*" {
+		if len(res) > 1 {
+			s.log.Fatal("You cannot mix all nodes with single node. Yet ?")
+		}
+
+		newNodes := *new([]interface{})
+		machines, err := s.env.ListMachineNames()
+		if err != nil {
+			s.log.WithError(err).Fatal("Cannot list machines to generate units")
+		}
+		for _, machine := range machines {
+			node := utils.CopyMap(res[0].(map[string]interface{}))
+			node[spec.NODE_HOSTNAME] = machine
+			newNodes = append(newNodes, node)
+		}
+		res = newNodes
+	}
+	s.nodesAsJsonMap = res
 }
 
 func (s *Service) GetAttributes() map[string]interface{} {
@@ -81,11 +110,11 @@ func (s *Service) Diff() {
 
 func (s *Service) ListUnits() ([]string, error) {
 	res := []string{}
-	if len(s.manifest.Nodes) == 0 {
+	if len(s.nodesAsJsonMap) == 0 {
 		return res, nil
 	}
 
-	if s.manifest.Nodes[0][spec.NODE_HOSTNAME].(string) == "*" {
+	if s.nodesAsJsonMap[0].(map[string]interface{})[spec.NODE_HOSTNAME].(string) == "*" {
 		machines, err := s.env.ListMachineNames()
 		if err != nil {
 			return nil, errors.Annotate(err, "Cannot generate unit list from list of machines")
@@ -94,8 +123,8 @@ func (s *Service) ListUnits() ([]string, error) {
 			res = append(res, node)
 		}
 	} else {
-		for _, node := range s.manifest.Nodes {
-			res = append(res, node[spec.NODE_HOSTNAME].(string))
+		for _, node := range s.nodesAsJsonMap {
+			res = append(res, node.(map[string]interface{})[spec.NODE_HOSTNAME].(string))
 		}
 	}
 	return res, nil

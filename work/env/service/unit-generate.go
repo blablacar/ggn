@@ -14,8 +14,7 @@ import (
 func (u Unit) Generate(tmpl *utils.Templating) {
 	u.Log.Debug("Generate")
 	data := u.GenerateAttributes()
-
-	out, err := json.Marshal(data["attribute"])
+	out, err := json.Marshal(data)
 	if err != nil {
 		u.Log.WithError(err).Panic("Cannot marshall attributes")
 	}
@@ -39,16 +38,12 @@ func (u Unit) Generate(tmpl *utils.Templating) {
 }
 
 func (u Unit) GenerateAttributes() map[string]interface{} {
-	data := make(map[string]interface{})
-	data["node"] = u.Service.NodeAttributes(u.Name)
-	data["node"].(map[string]interface{})["acis"] = u.Service.PrepareAciList(nil)
-	data["attribute"] = utils.CopyMap(u.Service.GetAttributes())
-	data["attribute"].(map[string]interface{})["hostname"] = data["node"].(map[string]interface{})["hostname"]
-	if data["node"].(map[string]interface{})["attributes"] != nil {
-		source := utils.CopyMapInterface(data["node"].(map[string]interface{})["attributes"].(map[interface{}]interface{}))
-		data["attribute"] = mergemap.Merge(data["attribute"].(map[string]interface{}), source.(map[string]interface{}))
+	data := utils.CopyMap(u.Service.GetAttributes())
+	data["acis"] = u.Service.PrepareAciList(nil)
+	data = mergemap.Merge(data, u.Service.NodeAttributes(u.Name))
+	if data["attributes"] != nil {
+		data = mergemap.Merge(data, data["attributes"].(map[string]interface{})) // TODO this should be remove in the future
 	}
-
 	return data
 }
 
