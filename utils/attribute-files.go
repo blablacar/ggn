@@ -3,6 +3,7 @@ package utils
 import (
 	"github.com/blablacar/attributes-merger/attributes"
 	"github.com/google/cadvisor/utils"
+	"strings"
 )
 
 func AttributeFiles(path string) ([]string, error) {
@@ -19,7 +20,9 @@ func AttributeFiles(path string) ([]string, error) {
 	}
 
 	for _, file := range in.Files {
-		res = append(res, in.Directory+file)
+		if strings.HasSuffix(file, ".yml") || strings.HasSuffix(file, ".yaml") {
+			res = append(res, in.Directory+file)
+		}
 	}
 	return res, nil
 }
