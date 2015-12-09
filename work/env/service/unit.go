@@ -143,7 +143,7 @@ const EARLY = true
 const LATE = false
 
 func (u *Unit) runHook(isEarly bool, command string, action string) {
-	out, err := json.Marshal(u.GenerateAttributes()["attribute"])
+	out, err := json.Marshal(u.GenerateAttributes())
 	if err != nil {
 		u.Log.WithError(err).Panic("Cannot marshall attributes")
 	}

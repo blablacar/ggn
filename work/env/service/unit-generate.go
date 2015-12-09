@@ -41,9 +41,6 @@ func (u Unit) GenerateAttributes() map[string]interface{} {
 	data := utils.CopyMap(u.Service.GetAttributes())
 	data["acis"] = u.Service.PrepareAciList(nil)
 	data = mergemap.Merge(data, u.Service.NodeAttributes(u.Name))
-	if data["attributes"] != nil {
-		data = mergemap.Merge(data, data["attributes"].(map[string]interface{})) // TODO this should be remove in the future
-	}
 	return data
 }
 
