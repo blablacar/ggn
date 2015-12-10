@@ -1,9 +1,7 @@
 package env
 
 import (
-	"bufio"
 	"encoding/json"
-	"fmt"
 	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
@@ -13,11 +11,9 @@ import (
 	"github.com/blablacar/ggn/work/env/service"
 	"github.com/coreos/etcd/client"
 	"github.com/juju/errors"
-	"github.com/mgutz/ansi"
 	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"os"
 	"strings"
 	"time"
 )
@@ -190,29 +186,6 @@ const (
 	ACTION_QUIT
 )
 
-func (s *Service) askToProcessService(index int, unit *service.Unit) Action {
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Print("Update unit " + ansi.LightGreen + unit.Name + ansi.Reset + " ? : (yes,skip,diff,quit) ")
-		text, _ := reader.ReadString('\n')
-		t := strings.ToLower(strings.Trim(text, " \n"))
-		if t == "o" || t == "y" || t == "ok" || t == "yes" {
-			return ACTION_YES
-		}
-		if t == "s" || t == "skip" {
-			return ACTION_SKIP
-		}
-		if t == "d" || t == "diff" {
-			return ACTION_DIFF
-		}
-		if t == "q" || t == "quit" {
-			return ACTION_QUIT
-		}
-		continue
-	}
-	return ACTION_QUIT
-}
-
 const EARLY = true
 const LATE = false
 
@@ -273,5 +246,11 @@ func (s *Service) loadManifest() {
 	if err != nil {
 		s.log.WithError(err).Fatal("Cannot Read service manifest")
 	}
+
+	if manifest.ConcurrentUpdater == 0 {
+		manifest.ConcurrentUpdater = 1
+	}
+
+	s.log.WithField("manifest", manifest).Debug("Manifest loaded")
 	s.manifest = manifest
 }

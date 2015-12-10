@@ -35,32 +35,34 @@ func Execute() {
 	}
 	ggn.Home = ggn.NewHome(homefolder)
 
+	// logs
+	lvl := logLevelFromArgs()
+	if lvl == "" {
+		lvl = "info"
+	}
+
+	level, err := log.ParseLevel(lvl)
+	if err != nil {
+		fmt.Printf("Unknown log level : %s", lvl)
+		os.Exit(1)
+	}
+	log.SetLevel(level)
+
 	rootCmd := &cobra.Command{
 		Use: "ggn",
 	}
 
 	var useless string
-	var logLevel string
+	var useless2 string
 
-	rootCmd.PersistentFlags().StringVarP(&logLevel, "loglevel", "L", "info", "Set log level")
+	rootCmd.PersistentFlags().StringVarP(&useless2, "log-level", "L", "info", "Set log level")
 	rootCmd.PersistentFlags().StringVarP(&useless, "home-path", "H", ggn.DefaultHomeRoot(), "Set home folder")
 	rootCmd.PersistentFlags().StringSliceVarP(&builder.BuildFlags.GenerateManifests, "generate-manifest", "M", []string{}, "Manifests used to generate. comma separated")
 	rootCmd.AddCommand(versionCmd, generateCmd, genautocompleteCmd)
 
-	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-
-		// logs
-		level, err := log.ParseLevel(logLevel)
-		if err != nil {
-			fmt.Printf("Unknown log level : %s", logLevel)
-			os.Exit(1)
-		}
-		log.SetLevel(level)
-
-	}
 	loadEnvCommands(rootCmd)
 
-	err := rootCmd.Execute()
+	err = rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
@@ -76,6 +78,21 @@ func homeFolderFromArgs() string {
 			return os.Args[i+1]
 		}
 		if strings.HasPrefix(arg, "--home-path=") {
+			return arg[12:]
+		}
+	}
+	return ""
+}
+
+func logLevelFromArgs() string {
+	for i, arg := range os.Args {
+		if arg == "--" {
+			return ""
+		}
+		if arg == "-L" {
+			return os.Args[i+1]
+		}
+		if strings.HasPrefix(arg, "--log-level=") {
 			return arg[12:]
 		}
 	}
