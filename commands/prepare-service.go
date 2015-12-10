@@ -19,11 +19,11 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 	}
 
 	generateCmd := &cobra.Command{
-		Use:   "generate [manifest...]",
+		Use:   "generate",
 		Short: "generate units for " + service.Name + " on env " + service.GetEnv().GetName(),
 		Long:  `generate units using remote resolved or local pod/aci manifests`,
 		Run: func(cmd *cobra.Command, args []string) {
-			service.Generate(args)
+			service.Generate()
 		},
 	}
 

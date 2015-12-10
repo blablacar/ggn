@@ -9,7 +9,7 @@ func (s *Service) Check() {
 	s.runHook(EARLY, "service/check", "check")
 	defer s.runHook(LATE, "service/check", "check")
 
-	s.Generate(nil)
+	s.Generate()
 
 	units, _, err := s.env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-unit-files", "-no-legend", "-fields", "unit")
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 
 func (s *Service) Update() error {
 	s.log.Info("Updating service")
-	s.Generate(nil)
+	s.Generate()
 
 	s.Lock("service/update", 1*time.Hour, "Updating")
 	lock := true

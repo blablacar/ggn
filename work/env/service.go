@@ -97,7 +97,7 @@ func (s *Service) LoadUnit(hostname string) *service.Unit {
 }
 
 func (s *Service) Diff() {
-	s.Generate(nil)
+	s.Generate()
 	units, err := s.ListUnits()
 	if err != nil {
 		s.log.WithError(err).Fatal("Cannot list units to run diff")

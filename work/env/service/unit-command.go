@@ -15,7 +15,7 @@ func (u *Unit) Start(command string) error {
 	}
 	if !u.isLoaded() {
 		u.Log.Debug("unit is not loaded yet")
-		u.Service.Generate(nil)
+		u.Service.Generate()
 		u.Load(command)
 	} else {
 		u.Log.Debug("unit is already loaded")
@@ -28,7 +28,7 @@ func (u *Unit) Unload(command string) error {
 }
 
 func (u *Unit) Load(command string) error {
-	u.Service.Generate(nil)
+	u.Service.Generate()
 	return u.runAction(command, "load")
 }
 
@@ -56,7 +56,7 @@ func (u *Unit) Restart(command string) error {
 }
 
 func (u *Unit) Update(command string) error {
-	u.Service.Generate(nil)
+	u.Service.Generate()
 	u.Log.Debug("Update")
 	u.runHook(EARLY, command, "update")
 	defer u.runHook(LATE, command, "update")
@@ -109,7 +109,7 @@ func (u *Unit) Ssh(command string) {
 
 func (u *Unit) Diff(command string) {
 	u.Log.Debug("diff")
-	u.Service.Generate(nil)
+	u.Service.Generate()
 	u.runHook(EARLY, command, "diff")
 	defer u.runHook(LATE, command, "diff")
 

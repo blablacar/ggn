@@ -5,6 +5,7 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/utils"
+	"github.com/blablacar/ggn/builder"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/coreos/go-semver/semver"
 	"github.com/spf13/cobra"
@@ -43,6 +44,7 @@ func Execute() {
 
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "loglevel", "L", "info", "Set log level")
 	rootCmd.PersistentFlags().StringVarP(&useless, "home-path", "H", ggn.DefaultHomeRoot(), "Set home folder")
+	rootCmd.PersistentFlags().StringSliceVarP(&builder.BuildFlags.GenerateManifests, "generate-manifest", "M", []string{}, "Manifests used to generate. comma separated")
 	rootCmd.AddCommand(versionCmd, generateCmd, genautocompleteCmd)
 
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {

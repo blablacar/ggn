@@ -6,6 +6,6 @@ func (e Env) Generate() {
 
 	for _, service := range services {
 		service := e.LoadService(service)
-		service.Generate(nil)
+		service.Generate()
 	}
 }

@@ -5,13 +5,14 @@ import (
 	"github.com/appc/spec/discovery"
 	"github.com/appc/spec/schema"
 	cntspec "github.com/blablacar/cnt/spec"
+	"github.com/blablacar/ggn/builder"
 	"github.com/blablacar/ggn/spec"
 	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
-func (s Service) Generate(sources []string) {
+func (s Service) Generate() {
 	s.log.Debug("Generating units")
 
 	tmpl, err := s.loadUnitTemplate()
@@ -153,12 +154,12 @@ func (s Service) discoverPod(name cntspec.ACFullname) []cntspec.ACFullname {
 	}
 }
 
-func (s Service) PrepareAciList(sources []string) string {
+func (s Service) PrepareAciList() string {
 	if len(s.manifest.Containers) == 0 {
 		return ""
 	}
 
-	override := s.sources(sources)
+	override := s.sources(builder.BuildFlags.GenerateManifests)
 	s.log.WithField("data", override).Debug("Local resolved sources")
 
 	var acis string

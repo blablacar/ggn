@@ -14,6 +14,8 @@ import (
 func (u Unit) Generate(tmpl *utils.Templating) {
 	u.Log.Debug("Generate")
 	data := u.GenerateAttributes()
+	data["acis"] = u.Service.PrepareAciList()
+
 	out, err := json.Marshal(data)
 	if err != nil {
 		u.Log.WithError(err).Panic("Cannot marshall attributes")
@@ -39,7 +41,6 @@ func (u Unit) Generate(tmpl *utils.Templating) {
 
 func (u Unit) GenerateAttributes() map[string]interface{} {
 	data := utils.CopyMap(u.Service.GetAttributes())
-	data["acis"] = u.Service.PrepareAciList(nil)
 	data = mergemap.Merge(data, u.Service.NodeAttributes(u.Name))
 	return data
 }
