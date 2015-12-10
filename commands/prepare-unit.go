@@ -39,6 +39,14 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		},
 	}
 
+	restartCmd := &cobra.Command{
+		Use:   "restart",
+		Short: getShortDescription(unit, "Restart"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Restart("unit/restart")
+		},
+	}
+
 	destroyCmd := &cobra.Command{
 		Use:   "destroy",
 		Short: getShortDescription(unit, "Destroy"),
@@ -107,7 +115,7 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Force, "force", "f", false, "force update even if up to date")
 
 	unitCmd.AddCommand(startCmd, stopCmd, updateCmd, destroyCmd, statusCmd, unloadCmd,
-		diffCmd, checkCmd, journalCmd, loadCmd, sshCmd)
+		diffCmd, checkCmd, journalCmd, loadCmd, sshCmd, restartCmd)
 	return unitCmd
 }
 

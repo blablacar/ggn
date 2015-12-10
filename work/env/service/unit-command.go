@@ -9,7 +9,17 @@ import (
 )
 
 func (u *Unit) Start(command string) error {
-	u.Service.Generate(nil)
+	if u.isRunning() {
+		u.Log.Info("Service is already running")
+		return nil
+	}
+	if !u.isLoaded() {
+		u.Log.Debug("unit is not loaded yet")
+		u.Service.Generate(nil)
+		u.Load(command)
+	} else {
+		u.Log.Debug("unit is already loaded")
+	}
 	return u.runAction(command, "start")
 }
 
@@ -28,6 +38,21 @@ func (u *Unit) Stop(command string) error {
 
 func (u *Unit) Destroy(command string) error {
 	return u.runAction(command, "destroy")
+}
+
+func (u *Unit) Restart(command string) error {
+	u.Log.Debug("restart")
+	u.runHook(EARLY, command, "restart")
+	defer u.runHook(LATE, command, "restart")
+
+	u.Service.Lock(command, 1*time.Hour, "Restart "+u.Name)
+	defer u.Service.Unlock(command)
+
+	u.Stop(command)
+	time.Sleep(time.Second * 2)
+	u.Start(command)
+
+	return nil
 }
 
 func (u *Unit) Update(command string) error {
