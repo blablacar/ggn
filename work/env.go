@@ -163,13 +163,14 @@ func (e Env) RunLateHook(info spec.HookInfo) {
 }
 
 func (e Env) runHook(path string, info spec.HookInfo) {
-	e.log.WithField("path", path).Debug("Running hook")
+	e.log.WithField("path", path).WithField("info", info).Debug("Running hook")
 	files, err := ioutil.ReadDir(e.path + PATH_HOOKS + path)
 	if err != nil {
 		log.WithError(err).Debug("Cannot read hood directory")
 		return
 	}
 
+	os.Setenv("ENV", e.name)
 	os.Setenv("COMMAND", info.Command)
 	if info.Unit != nil {
 		os.Setenv("UNIT", info.Unit.GetName())
