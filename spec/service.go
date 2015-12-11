@@ -25,6 +25,7 @@ type ServiceManifest struct {
 }
 
 type Service interface {
+	HasTimer() bool
 	PrepareAciList() string
 	NodeAttributes(hostname string) map[string]interface{}
 	GetAttributes() map[string]interface{}

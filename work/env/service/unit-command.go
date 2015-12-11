@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/ggn/builder"
+	"github.com/blablacar/ggn/spec"
 	"os"
 	"strconv"
 	"time"
@@ -42,6 +43,10 @@ func (u *Unit) Destroy(command string) error {
 
 func (u *Unit) Restart(command string) error {
 	u.Log.Debug("restart")
+	if u.Type == spec.TYPE_SERVICE && u.Service.HasTimer() {
+		u.Log.Fatal("You cannot restart a service associated to a time")
+	}
+
 	u.runHook(EARLY, command, "restart")
 	defer u.runHook(LATE, command, "restart")
 

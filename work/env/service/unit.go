@@ -116,7 +116,11 @@ func (u *Unit) GetUnitContentAsFleeted() (string, error) {
 func (u *Unit) UpdateInside(command string) {
 	u.Destroy(command)
 	time.Sleep(time.Second * 2)
-	u.Start(command)
+	if u.Type == spec.TYPE_SERVICE && u.Service.HasTimer() {
+		u.Load(command)
+	} else {
+		u.Start(command)
+	}
 }
 
 func (u *Unit) DisplayDiff() error {

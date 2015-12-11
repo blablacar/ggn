@@ -81,6 +81,10 @@ func (s *Service) prepareNodesAsJsonMap() {
 	s.nodesAsJsonMap = res
 }
 
+func (s *Service) HasTimer() bool {
+	return s.hasTimer
+}
+
 func (s *Service) GetAttributes() map[string]interface{} {
 	return s.attributes
 }
