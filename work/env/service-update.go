@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/blablacar/ggn/builder"
 	"github.com/blablacar/ggn/work/env/service"
-	"github.com/juju/errors"
 	"github.com/mgutz/ansi"
 	"os"
 	"strings"
@@ -21,16 +20,11 @@ func (s *Service) Update() error {
 	s.Lock("service/update", 1*time.Hour, "Updating")
 	defer s.Unlock("service/update")
 
-	units, err := s.ListUnits()
-	if err != nil {
-		return errors.Annotate(err, "Cannot list units to update")
-	}
-
 	if s.manifest.ConcurrentUpdater > 1 && !builder.BuildFlags.Yes {
 		s.log.Fatal("Update concurrently require -y")
 	}
 
-	s.concurrentUpdater(units)
+	s.concurrentUpdater(s.ListUnits())
 	return nil
 }
 

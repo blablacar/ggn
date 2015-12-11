@@ -7,6 +7,7 @@ import (
 	cntspec "github.com/blablacar/cnt/spec"
 	"github.com/blablacar/ggn/builder"
 	"github.com/blablacar/ggn/spec"
+	"github.com/blablacar/ggn/utils"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -15,24 +16,33 @@ import (
 func (s Service) Generate() {
 	s.log.Debug("Generating units")
 
-	tmpl, err := s.loadUnitTemplate()
+	serviceTmpl, err := s.loadUnitTemplate(spec.PATH_UNIT_SERVICE_TEMPLATE)
 	if err != nil {
-		s.log.WithError(err).Error("Cannot load units template")
-		return
+		s.log.WithError(err).Fatal("Cannot load service template")
+	}
+
+	var timerTmpl *utils.Templating
+	if s.hasTimer {
+		timerTmpl, err = s.loadUnitTemplate(spec.PATH_UNIT_TIMER_TEMPLATE)
+		if err != nil {
+			s.log.WithError(err).Fatal("Cannot load timer template")
+		}
 	}
 
 	if len(s.nodesAsJsonMap) == 0 {
-		s.log.Error("No node to process in manifest")
+		s.log.Fatal("No node to process in manifest")
 		return
 	}
 
-	for i, node := range s.nodesAsJsonMap {
-		hostname := node.(map[string]interface{})[spec.NODE_HOSTNAME].(string)
-		if hostname == "" {
-			s.log.WithField("index", i).Error("hostname is mandatory in node informations")
+	for _, unitName := range s.ListUnits() {
+		unit := s.LoadUnit(unitName)
+		if unit.GetType() == spec.TYPE_SERVICE {
+			unit.Generate(serviceTmpl)
+		} else if unit.GetType() == spec.TYPE_TIMER {
+			unit.Generate(timerTmpl)
+		} else {
+			unit.Log.WithField("type", unit.GetType()).Fatal("Unknown unit type")
 		}
-		unit := s.LoadUnit(hostname)
-		unit.Generate(tmpl)
 	}
 }
 

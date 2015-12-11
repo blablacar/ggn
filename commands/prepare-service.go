@@ -98,11 +98,7 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 	//		return nil
 	//	})
 
-	units, err := service.ListUnits()
-	if err != nil {
-		logrus.WithError(err).Fatal("Cannot list units to generate arguments")
-	}
-	for _, unitName := range units {
+	for _, unitName := range service.ListUnits() {
 		unit := service.LoadUnit(unitName)
 		serviceCmd.AddCommand(prepareUnitCommands(unit))
 	}

@@ -14,6 +14,7 @@ import (
 	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 )
@@ -22,6 +23,7 @@ type Service struct {
 	env            spec.Env
 	path           string
 	Name           string
+	hasTimer       bool
 	manifest       spec.ServiceManifest
 	nodesAsJsonMap []interface{}
 	log            log.Entry
@@ -31,13 +33,21 @@ type Service struct {
 
 func NewService(path string, name string, env spec.Env) *Service {
 	l := env.GetLog()
+
+	hasTimer := false
+	if _, err := os.Stat(path + "/" + name + spec.PATH_UNIT_TIMER_TEMPLATE); err == nil {
+		hasTimer = true
+	}
+
 	service := &Service{
+		hasTimer: hasTimer,
 		log:      *l.WithField("service", name),
 		path:     path + "/" + name,
 		Name:     name,
 		env:      env,
 		lockPath: "/ggn-lock/" + name + "/lock",
 	}
+
 	service.loadManifest()
 	service.loadAttributes()
 	service.prepareNodesAsJsonMap()
@@ -87,43 +97,30 @@ func (s *Service) GetLog() logrus.Entry {
 	return s.log
 }
 
-func (s *Service) LoadUnit(hostname string) *service.Unit {
-	unit := service.NewUnit(s.path+"/units", hostname, s)
-	return unit
+func (s *Service) LoadUnit(name string) *service.Unit {
+	if strings.HasSuffix(name, spec.TYPE_TIMER.String()) {
+		return service.NewUnit(s.path+"/units", name[:len(name)-len(spec.TYPE_TIMER.String())], spec.TYPE_TIMER, s)
+	}
+	return service.NewUnit(s.path+"/units", name, spec.TYPE_SERVICE, s)
 }
 
 func (s *Service) Diff() {
 	s.Generate()
-	units, err := s.ListUnits()
-	if err != nil {
-		s.log.WithError(err).Fatal("Cannot list units to run diff")
-	}
-	for _, unitName := range units {
+	for _, unitName := range s.ListUnits() {
 		unit := s.LoadUnit(unitName)
 		unit.Diff("service/diff")
 	}
 }
 
-func (s *Service) ListUnits() ([]string, error) {
+func (s *Service) ListUnits() []string {
 	res := []string{}
-	if len(s.nodesAsJsonMap) == 0 {
-		return res, nil
-	}
-
-	if s.nodesAsJsonMap[0].(map[string]interface{})[spec.NODE_HOSTNAME].(string) == "*" {
-		machines, err := s.env.ListMachineNames()
-		if err != nil {
-			return nil, errors.Annotate(err, "Cannot generate unit list from list of machines")
-		}
-		for _, node := range machines {
-			res = append(res, node)
-		}
-	} else {
-		for _, node := range s.nodesAsJsonMap {
-			res = append(res, node.(map[string]interface{})[spec.NODE_HOSTNAME].(string))
+	for _, node := range s.nodesAsJsonMap {
+		res = append(res, node.(map[string]interface{})[spec.NODE_HOSTNAME].(string))
+		if s.hasTimer {
+			res = append(res, node.(map[string]interface{})[spec.NODE_HOSTNAME].(string)+".timer")
 		}
 	}
-	return res, nil
+	return res
 }
 
 func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this method should be in unit
@@ -220,15 +217,14 @@ func (s *Service) loadAttributes() {
 	s.log.WithField("attributes", s.attributes).Debug("Attributes loaded")
 }
 
-func (s *Service) loadUnitTemplate() (*utils.Templating, error) {
-	path := s.path + spec.PATH_UNIT_TEMPLATE
+func (s *Service) loadUnitTemplate(filename string) (*utils.Templating, error) {
+	path := s.path + filename
 	source, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, errors.Annotate(err, "Cannot read unit template file")
 	}
 	template := utils.NewTemplating(s.Name, string(source))
-	template.Parse()
-	return template, nil
+	return template, template.Parse()
 }
 
 func (s *Service) manifestPath() string {

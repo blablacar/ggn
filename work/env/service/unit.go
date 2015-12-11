@@ -16,30 +16,39 @@ import (
 
 type Unit struct {
 	Log      logrus.Entry
+	Type     spec.UnitType
 	path     string
 	Name     string
+	hostname string
 	Filename string
 	unitPath string
 	Service  spec.Service
 }
 
-func NewUnit(path string, hostname string, service spec.Service) *Unit {
+func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Service) *Unit {
 	l := service.GetLog()
 
-	unitInfo := strings.Split(hostname, "_")
-	if len(unitInfo) != 3 {
-	}
+	filename := service.GetEnv().GetName() + "_" + service.GetName() + "_" + hostname + utype.String()
 
-	filename := service.GetEnv().GetName() + "_" + service.GetName() + "_" + hostname + ".service"
+	name := hostname
+	if utype != spec.TYPE_SERVICE {
+		name += utype.String()
+	}
 	unit := &Unit{
+		Type:     utype,
 		Log:      *l.WithField("unit", hostname),
 		Service:  service,
 		path:     path,
-		Name:     hostname,
+		hostname: hostname,
+		Name:     name,
 		Filename: filename,
 		unitPath: path + "/" + filename,
 	}
 	return unit
+}
+
+func (u *Unit) GetType() spec.UnitType {
+	return u.Type
 }
 
 func (u *Unit) GetName() string {

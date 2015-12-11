@@ -41,7 +41,7 @@ func (u Unit) Generate(tmpl *utils.Templating) {
 
 func (u Unit) GenerateAttributes() map[string]interface{} {
 	data := utils.CopyMap(u.Service.GetAttributes())
-	data = mergemap.Merge(data, u.Service.NodeAttributes(u.Name))
+	data = mergemap.Merge(data, u.Service.NodeAttributes(u.hostname))
 	return data
 }
 
