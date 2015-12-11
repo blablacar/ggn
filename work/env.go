@@ -175,7 +175,9 @@ func (e Env) runHook(path string, info spec.HookInfo) {
 	if info.Unit != nil {
 		os.Setenv("UNIT", info.Unit.GetName())
 	}
-	os.Setenv("SERVICE", info.Service.GetName())
+	if info.Service != nil {
+		os.Setenv("SERVICE", info.Service.GetName())
+	}
 	os.Setenv("WHO", ggn.GetUserAndHost())
 	os.Setenv("ACTION", info.Action)
 	os.Setenv("ATTRIBUTES", info.Attributes)
