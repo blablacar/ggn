@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -37,6 +38,7 @@ type Env struct {
 	log        logrus.Entry
 	attributes map[string]interface{}
 	config     Config
+	services   map[string]*env.Service
 }
 
 func NewEnvironment(root string, name string) *Env {
@@ -48,10 +50,11 @@ func NewEnvironment(root string, name string) *Env {
 	}
 
 	env := &Env{
-		path:   path,
-		name:   name,
-		log:    log,
-		config: Config{},
+		services: map[string]*env.Service{},
+		path:     path,
+		name:     name,
+		log:      log,
+		config:   Config{},
 	}
 	env.loadAttributes()
 	env.loadConfig()
@@ -71,7 +74,17 @@ func (e Env) GetAttributes() map[string]interface{} {
 }
 
 func (e Env) LoadService(name string) *env.Service {
-	return env.NewService(e.path+"/services", name, e)
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if val, ok := e.services[name]; ok {
+		return val
+	}
+
+	service := env.NewService(e.path+"/services", name, e)
+	e.services[name] = service
+	return service
 }
 
 func (e Env) attributesDir() string {

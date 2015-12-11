@@ -15,14 +15,15 @@ import (
 )
 
 type Unit struct {
-	Log      logrus.Entry
-	Type     spec.UnitType
-	path     string
-	Name     string
-	hostname string
-	Filename string
-	unitPath string
-	Service  spec.Service
+	Log       logrus.Entry
+	Type      spec.UnitType
+	path      string
+	Name      string
+	hostname  string
+	Filename  string
+	unitPath  string
+	Service   spec.Service
+	generated bool
 }
 
 func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Service) *Unit {
@@ -44,6 +45,8 @@ func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Ser
 		Filename: filename,
 		unitPath: path + "/" + filename,
 	}
+	unit.Log.Debug("New unit")
+
 	return unit
 }
 

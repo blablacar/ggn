@@ -11,9 +11,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 )
 
-func (s Service) Generate() {
+func (s *Service) Generate() {
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if s.generated {
+		return
+	}
+
 	s.log.Debug("Generating units")
 
 	serviceTmpl, err := s.loadUnitTemplate(spec.PATH_UNIT_SERVICE_TEMPLATE)
@@ -44,6 +53,7 @@ func (s Service) Generate() {
 			unit.Log.WithField("type", unit.GetType()).Fatal("Unknown unit type")
 		}
 	}
+	s.generated = true
 }
 
 func (s Service) NodeAttributes(hostname string) map[string]interface{} {
@@ -164,9 +174,18 @@ func (s Service) discoverPod(name cntspec.ACFullname) []cntspec.ACFullname {
 	}
 }
 
-func (s Service) PrepareAciList() string {
+func (s *Service) PrepareAciList() string {
+
 	if len(s.manifest.Containers) == 0 {
 		return ""
+	}
+
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if s.aciList != "" {
+		return s.aciList
 	}
 
 	override := s.sources(builder.BuildFlags.GenerateManifests)
@@ -208,5 +227,6 @@ func (s Service) PrepareAciList() string {
 	if acis == "" {
 		s.log.Error("Aci list is empty after discovery")
 	}
+	s.aciList = acis
 	return acis
 }

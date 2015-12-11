@@ -9,9 +9,18 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
-func (u Unit) Generate(tmpl *utils.Templating) {
+func (u *Unit) Generate(tmpl *utils.Templating) {
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if u.generated {
+		return
+	}
+
 	u.Log.Debug("Generate")
 	data := u.GenerateAttributes()
 	data["acis"] = u.Service.PrepareAciList()
@@ -37,6 +46,8 @@ func (u Unit) Generate(tmpl *utils.Templating) {
 	if err != nil {
 		u.Log.WithError(err).WithField("path", u.path+"/"+u.Filename).Error("Cannot writer unit")
 	}
+
+	u.generated = true
 }
 
 func (u Unit) GenerateAttributes() map[string]interface{} {

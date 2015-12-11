@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -29,6 +30,9 @@ type Service struct {
 	log            log.Entry
 	lockPath       string
 	attributes     map[string]interface{}
+	generated      bool
+	units          map[string]*service.Unit
+	aciList        string
 }
 
 func NewService(path string, name string, env spec.Env) *Service {
@@ -40,6 +44,7 @@ func NewService(path string, name string, env spec.Env) *Service {
 	}
 
 	service := &Service{
+		units:    map[string]*service.Unit{},
 		hasTimer: hasTimer,
 		log:      *l.WithField("service", name),
 		path:     path + "/" + name,
@@ -47,6 +52,8 @@ func NewService(path string, name string, env spec.Env) *Service {
 		env:      env,
 		lockPath: "/ggn-lock/" + name + "/lock",
 	}
+
+	service.log.Debug("New Service")
 
 	service.loadManifest()
 	service.loadAttributes()
@@ -102,10 +109,20 @@ func (s *Service) GetLog() logrus.Entry {
 }
 
 func (s *Service) LoadUnit(name string) *service.Unit {
-	if strings.HasSuffix(name, spec.TYPE_TIMER.String()) {
-		return service.NewUnit(s.path+"/units", name[:len(name)-len(spec.TYPE_TIMER.String())], spec.TYPE_TIMER, s)
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if val, ok := s.units[name]; ok {
+		return val
 	}
-	return service.NewUnit(s.path+"/units", name, spec.TYPE_SERVICE, s)
+	var unit *service.Unit
+	if strings.HasSuffix(name, spec.TYPE_TIMER.String()) {
+		unit = service.NewUnit(s.path+"/units", name[:len(name)-len(spec.TYPE_TIMER.String())], spec.TYPE_TIMER, s)
+	}
+	unit = service.NewUnit(s.path+"/units", name, spec.TYPE_SERVICE, s)
+	s.units[name] = unit
+	return unit
 }
 
 func (s *Service) Diff() {
