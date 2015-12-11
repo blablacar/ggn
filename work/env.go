@@ -33,12 +33,13 @@ type Config struct {
 }
 
 type Env struct {
-	path       string
-	name       string
-	log        logrus.Entry
-	attributes map[string]interface{}
-	config     Config
-	services   map[string]*env.Service
+	path          string
+	name          string
+	log           logrus.Entry
+	attributes    map[string]interface{}
+	config        Config
+	services      map[string]*env.Service
+	servicesMutex *sync.Mutex
 }
 
 func NewEnvironment(root string, name string) *Env {
@@ -50,11 +51,12 @@ func NewEnvironment(root string, name string) *Env {
 	}
 
 	env := &Env{
-		services: map[string]*env.Service{},
-		path:     path,
-		name:     name,
-		log:      log,
-		config:   Config{},
+		services:      map[string]*env.Service{},
+		servicesMutex: &sync.Mutex{},
+		path:          path,
+		name:          name,
+		log:           log,
+		config:        Config{},
 	}
 	env.loadAttributes()
 	env.loadConfig()
@@ -74,9 +76,8 @@ func (e Env) GetAttributes() map[string]interface{} {
 }
 
 func (e Env) LoadService(name string) *env.Service {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
+	e.servicesMutex.Lock()
+	defer e.servicesMutex.Unlock()
 
 	if val, ok := e.services[name]; ok {
 		return val

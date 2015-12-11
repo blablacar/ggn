@@ -11,13 +11,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"sync"
 )
 
 func (s *Service) Generate() {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
+	s.generatedMutex.Lock()
+	defer s.generatedMutex.Unlock()
 
 	if s.generated {
 		return
@@ -180,9 +178,8 @@ func (s *Service) PrepareAciList() string {
 		return ""
 	}
 
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
+	s.aciListMutex.Lock()
+	defer s.aciListMutex.Unlock()
 
 	if s.aciList != "" {
 		return s.aciList

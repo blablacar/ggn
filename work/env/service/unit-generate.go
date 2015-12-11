@@ -9,13 +9,11 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 func (u *Unit) Generate(tmpl *utils.Templating) {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
+	u.generatedMutex.Lock()
+	defer u.generatedMutex.Unlock()
 
 	if u.generated {
 		return

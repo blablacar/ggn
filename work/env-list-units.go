@@ -4,11 +4,16 @@ import (
 	"bufio"
 	"github.com/blablacar/ggn/spec"
 	"strings"
+	"sync"
 )
 
 var statusCache map[string]spec.UnitStatus
+var mutex = &sync.Mutex{}
 
 func (e Env) ListUnits() map[string]spec.UnitStatus {
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	if statusCache != nil {
 		return statusCache
 	}

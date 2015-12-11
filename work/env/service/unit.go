@@ -11,19 +11,21 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
 type Unit struct {
-	Log       logrus.Entry
-	Type      spec.UnitType
-	path      string
-	Name      string
-	hostname  string
-	Filename  string
-	unitPath  string
-	Service   spec.Service
-	generated bool
+	Log            logrus.Entry
+	Type           spec.UnitType
+	path           string
+	Name           string
+	hostname       string
+	Filename       string
+	unitPath       string
+	Service        spec.Service
+	generated      bool
+	generatedMutex *sync.Mutex
 }
 
 func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Service) *Unit {
@@ -36,14 +38,15 @@ func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Ser
 		name += utype.String()
 	}
 	unit := &Unit{
-		Type:     utype,
-		Log:      *l.WithField("unit", hostname),
-		Service:  service,
-		path:     path,
-		hostname: hostname,
-		Name:     name,
-		Filename: filename,
-		unitPath: path + "/" + filename,
+		generatedMutex: &sync.Mutex{},
+		Type:           utype,
+		Log:            *l.WithField("unit", hostname),
+		Service:        service,
+		path:           path,
+		hostname:       hostname,
+		Name:           name,
+		Filename:       filename,
+		unitPath:       path + "/" + filename,
 	}
 	unit.Log.Debug("New unit")
 

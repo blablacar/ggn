@@ -31,8 +31,11 @@ type Service struct {
 	lockPath       string
 	attributes     map[string]interface{}
 	generated      bool
+	generatedMutex *sync.Mutex
 	units          map[string]*service.Unit
+	unitsMutex     *sync.Mutex
 	aciList        string
+	aciListMutex   *sync.Mutex
 }
 
 func NewService(path string, name string, env spec.Env) *Service {
@@ -44,13 +47,16 @@ func NewService(path string, name string, env spec.Env) *Service {
 	}
 
 	service := &Service{
-		units:    map[string]*service.Unit{},
-		hasTimer: hasTimer,
-		log:      *l.WithField("service", name),
-		path:     path + "/" + name,
-		Name:     name,
-		env:      env,
-		lockPath: "/ggn-lock/" + name + "/lock",
+		units:          map[string]*service.Unit{},
+		unitsMutex:     &sync.Mutex{},
+		aciListMutex:   &sync.Mutex{},
+		generatedMutex: &sync.Mutex{},
+		hasTimer:       hasTimer,
+		log:            *l.WithField("service", name),
+		path:           path + "/" + name,
+		Name:           name,
+		env:            env,
+		lockPath:       "/ggn-lock/" + name + "/lock",
 	}
 
 	service.log.Debug("New Service")
@@ -109,9 +115,8 @@ func (s *Service) GetLog() logrus.Entry {
 }
 
 func (s *Service) LoadUnit(name string) *service.Unit {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
+	s.unitsMutex.Lock()
+	defer s.unitsMutex.Unlock()
 
 	if val, ok := s.units[name]; ok {
 		return val
