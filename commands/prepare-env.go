@@ -27,6 +27,14 @@ func prepareEnvCommands(env *work.Env) *cobra.Command {
 		},
 	}
 
+	listUnitsCmd := &cobra.Command{
+		Use:   "list-units",
+		Short: "Run list-units command on " + env.GetName(),
+		Run: func(cmd *cobra.Command, args []string) {
+			env.FleetctlListUnits()
+		},
+	}
+
 	generateCmd := &cobra.Command{
 		Use:   "generate",
 		Short: "Generate units for " + env.GetName(),
@@ -34,7 +42,7 @@ func prepareEnvCommands(env *work.Env) *cobra.Command {
 			env.Generate()
 		},
 	}
-	envCmd.AddCommand(generateCmd, fleetctlCmd, checkCmd)
+	envCmd.AddCommand(generateCmd, fleetctlCmd, checkCmd, listUnitsCmd)
 
 	for _, serviceName := range env.ListServices() {
 		service := env.LoadService(serviceName)

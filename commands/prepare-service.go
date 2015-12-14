@@ -71,6 +71,14 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 		},
 	}
 
+	listCmd := &cobra.Command{
+		Use:   "list-units",
+		Short: "list-units on " + service.Name + " on env " + service.GetEnv().GetName(),
+		Run: func(cmd *cobra.Command, args []string) {
+			service.FleetListUnits("service/unlock")
+		},
+	}
+
 	updateCmd := &cobra.Command{
 		Use:   "update",
 		Short: "update " + service.Name + " on env " + service.GetEnv().GetName(),
@@ -86,7 +94,7 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 	updateCmd.Flags().BoolVarP(&builder.BuildFlags.All, "all", "a", false, "process all units, even up to date")
 	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Yes, "yes", "y", false, "process units without asking")
 
-	serviceCmd.AddCommand(generateCmd, lockCmd, unlockCmd, updateCmd, checkCmd, diffCmd)
+	serviceCmd.AddCommand(generateCmd, lockCmd, unlockCmd, updateCmd, checkCmd, diffCmd, listCmd)
 
 	//	var units []string
 	//	hystrix.Go("list_units", func() error {

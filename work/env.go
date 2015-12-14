@@ -75,6 +75,18 @@ func (e Env) GetAttributes() map[string]interface{} {
 	return e.attributes
 }
 
+func (e Env) FleetctlListUnits() {
+	stdout, _, err := e.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-units", "--full", "--no-legend")
+	if err != nil {
+		e.log.WithError(err).Fatal("Failed to list-units")
+	}
+
+	unitStatuses := strings.Split(stdout, "\n")
+	for _, unitStatus := range unitStatuses {
+		fmt.Println(unitStatus)
+	}
+}
+
 func (e Env) LoadService(name string) *env.Service {
 	e.servicesMutex.Lock()
 	defer e.servicesMutex.Unlock()

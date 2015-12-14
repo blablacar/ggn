@@ -2,6 +2,7 @@ package env
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
@@ -155,6 +156,21 @@ func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this
 		return "", nil
 	}
 	return stdout, err
+}
+
+func (s *Service) FleetListUnits(command string) {
+	stdout, _, err := s.env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-units", "--full", "--no-legend")
+	if err != nil {
+		s.log.WithError(err).Fatal("Failed to list-units")
+	}
+
+	unitStatuses := strings.Split(stdout, "\n")
+	prefix := s.env.GetName() + "_" + s.Name + "_"
+	for _, unitStatus := range unitStatuses {
+		if strings.HasPrefix(unitStatus, prefix) {
+			fmt.Println(unitStatus)
+		}
+	}
 }
 
 func (s *Service) Unlock(command string) {
