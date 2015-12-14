@@ -8,28 +8,29 @@ GGN uses a tree structure to describe envs and services in envs. It will generat
 # directory structure
 
 ```
-dev
-|-- attributes
-|   `-- dns.yml                      # Attributes of this env (dns suffix, dns servers IPs, zookeeper IPs, ...)
-|-- services                         # list of services in this env
-|   |-- loadbalancer                 
-|   |   |-- attributes               # loadbalancer attributes in this env
-|   |   |   `-- nginx.yml            # any structure configuration
-|   |   |-- unit.tmpl                # template uses to generate the systemd's units for loadbalancer
-|   |   `-- service-manifest.yml     # manifest for this service
-|   |-- cassandra
-|   |   |-- attributes
-|   |   |   |-- cassandra.yml        # cassandra configuration for this env (DC name, seeds nodes, cluster name)
-|   |   |   `-- datastax-agent.yml   # another configuration file that will be merged with the other one
-|   |   `-- service-manifest.yml    
+env
+|-- development
+|   |-- attributes
+|   |   `-- dns.yml                      # Attributes of this env (dns suffix, dns servers IPs, zookeeper IPs, ...)
+|   |-- services                         # list of services in this env
+|   |   |-- loadbalancer                 
+|   |   |   |-- attributes               # loadbalancer attributes in this env
+|   |   |   |   `-- nginx.yml            # any structure configuration
+|   |   |   |-- unit.tmpl                # template uses to generate the systemd's units for loadbalancer
+|   |   |   `-- service-manifest.yml     # manifest for this service
+|   |   |-- cassandra
+|   |   |   |-- attributes
+|   |   |   |   |-- cassandra.yml        # cassandra configuration for this env (DC name, seeds nodes, cluster name)
+|   |   |   |   `-- datastax-agent.yml   # another configuration file that will be merged with the other one
+|   |   |   `-- service-manifest.yml    
+|   |   ...
+|   `-- config.yml                       # configuration of this env (fleet)
+|-- prod-DC1
 |   ...
-|-- config.yml                       # configuration of this env (fleet)
-prod-DC1
-...
-prod-DC2
-...
-preprod
-...
+|-- prod-DC2
+|   ...
+|-- preprod
+|   ...
 ```
 
 # commands
@@ -37,7 +38,7 @@ preprod
 Some command example : 
 
 ```bash
-ggn dev redis srv1 start           start redis server1
+ggn dev redis srv1 start           start redis server1 unit
 ggn preprod check                  check that all units of all services in prepod are running and are up to date
 ggn prod cassandra cass1 journal   see journal of cass1 systemd unit 
 ggn prod lb lb1 stop               stop lb1 unit in prod
@@ -80,12 +81,12 @@ Units commands:
 ```
 
 
-# configuration file
+# global configuration file
 
 The configuration file is located at ~/.config/green-garden/config.yml
 
 ```
-workPath: /home/myuser/build-tools
+workPath: /home/myuser/build-tools           # root directory of environments. all envs have to be in an env/ directory in it
 ```
 
 # env directory structure
