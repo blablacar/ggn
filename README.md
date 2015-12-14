@@ -7,6 +7,7 @@ GGN uses a tree structure to describe envs and services in envs. It will generat
 
 # directory structure
 
+```
 dev
 |-- attributes
 |   `-- dns.yml                      # Attributes of this env (dns suffix, dns servers IPs, zookeeper IPs, ...)
@@ -14,7 +15,7 @@ dev
 |   |-- loadbalancer                 
 |   |   |-- attributes               # loadbalancer attributes in this env
 |   |   |   `-- nginx.yml            # any structure configuration
-|   |   |-- unit.tmpl                # template to generate the systemd's unit
+|   |   |-- unit.tmpl                # template uses to generate the systemd's units for loadbalancer
 |   |   `-- service-manifest.yml     # manifest for this service
 |   |-- cassandra
 |   |   |-- attributes
@@ -29,6 +30,7 @@ prod-DC2
 ...
 preprod
 ...
+```
 
 # commands
 
