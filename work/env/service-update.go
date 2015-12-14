@@ -72,6 +72,7 @@ ask:
 		atomic.AddUint32(&globalUpdater, 1)
 	}
 
+	u.Log.Info("Updating unit")
 	u.UpdateInside("service/update")
 	time.Sleep(time.Second * 2)
 
