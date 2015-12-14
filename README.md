@@ -33,6 +33,10 @@ env
 |   ...
 ```
 
+Attributes from envs will be merged with attributes from each service and be available in unit template as object tree and also as a json string to embbed it in the start command line.
+
+configuration of where the unit will be started can be done in the attribute+template system to generate a `[X-Fleet]` unit part (example below).
+
 # commands
 
 Some command example : 
