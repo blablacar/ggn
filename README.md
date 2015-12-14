@@ -3,14 +3,80 @@
 [![GoDoc](https://godoc.org/blablacar/ggn?status.png)](https://godoc.org/github.com/blablacar/ggn) [![Build Status](https://travis-ci.org/blablacar/ggn.svg?branch=master)](https://travis-ci.org/blablacar/ggn)
 
 
+GGN uses a tree structure to describe envs and services in envs. It will generate systemd units based on information taken in the directories and send them to the environment using fleet.
+
+# directory structure
+
+dev
+|-- attributes
+|   `-- dns.yml                      # Attributes of this env (dns suffix, dns servers IPs, zookeeper IPs, ...)
+|-- services                         # list of services in this env
+|   |-- loadbalancer                 
+|   |   |-- attributes               # loadbalancer attributes in this env
+|   |   |   `-- nginx.yml            # any structure configuration
+|   |   |-- unit.tmpl                # template to generate the systemd's unit
+|   |   `-- service-manifest.yml     # manifest for this service
+|   |-- cassandra
+|   |   |-- attributes
+|   |   |   |-- cassandra.yml        # cassandra configuration for this env (DC name, seeds nodes, cluster name)
+|   |   |   `-- datastax-agent.yml   # another configuration file that will be merged with the other one
+|   |   `-- service-manifest.yml    
+|   ...
+|-- config.yml                       # configuration of this env (fleet)
+prod-DC1
+...
+prod-DC2
+...
+preprod
+...
 
 # commands
+
+Some command example : 
+
 ```bash
-ggn generate                        generate all units for all envs
-ggn prod-XXX                        compare local units with what is running in this env
-ggn prod-XXX run list-units         run fleetctl command on this env
-ggn prod-XXX generate               generate units for this env
+ggn dev redis srv1 start           start redis server1
+ggn preprod check                  check that all units of all services in prepod are running and are up to date
+ggn prod cassandra cass1 journal   see journal of cass1 systemd unit 
+ggn prod lb lb1 stop               stop lb1 unit in prod
+ggn prod cassandra update          rolling update of cassandra servers in prod
 ```
+
+Envs commands :
+```
+- check                            check that all units are up to date and running in this env
+- fleetctl                         run custom fleetctl command
+- list-units                       list all units in this env
+- generate                         generate all units in this env
+```
+
+Services commands:
+```
+- generate                         generate units of this service
+- check                            check that all units of this service are up to date and running
+- diff                             display diff of units between when is generated and what is running in this env
+- lock                             lock this service. nobody will be able to run mutable actions
+- unlock                           unlock the service
+- list-units                       list-units of this service in fleet
+- update                           run a update of all units for this service
+```
+
+Units commands:
+```
+- start                            start the service
+- stop                             stop the service
+- update                           update the service
+- restart                          restart the service
+- destroy                          destroy the service
+- status                           display fleet status of the unit
+- journal                          display unit's journal
+- diff                             display the diff between genetated and what is running
+- check                            check that the service is running and is up to date
+- unload                           unload the unit
+- load                             load the unit
+- ssh                              ssh on the server's running this unit
+```
+
 
 # configuration file
 
