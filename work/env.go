@@ -196,23 +196,30 @@ func (e Env) runHook(path string, info spec.HookInfo) {
 		return
 	}
 
-	os.Setenv("ENV", e.name)
-	os.Setenv("COMMAND", info.Command)
+	envs := map[string]string{}
+	envs["ENV"] = e.name
+	envs["COMMAND"] = info.Command
 	if info.Unit != nil {
-		os.Setenv("UNIT", info.Unit.GetName())
+		envs["UNIT"] = info.Unit.GetName()
 	}
 	if info.Service != nil {
-		os.Setenv("SERVICE", info.Service.GetName())
+		envs["SERVICE"] = info.Service.GetName()
 	}
-	os.Setenv("WHO", ggn.GetUserAndHost())
-	os.Setenv("ACTION", info.Action)
-	os.Setenv("ATTRIBUTES", info.Attributes)
+	envs["WHO"] = ggn.GetUserAndHost()
+	envs["ACTION"] = info.Action
+	envs["ATTRIBUTES"] = info.Attributes
 
 	for _, f := range files {
 		if !f.IsDir() {
 			hookLog := log.WithField("name", f.Name())
+
+			args := []string{e.path + PATH_HOOKS + path + "/" + f.Name()}
+			for key, val := range envs {
+				args = append([]string{key + "=" + val}, args...)
+			}
+
 			hookLog.Debug("Running Hook")
-			if err := cntUtils.ExecCmd(e.path + PATH_HOOKS + path + "/" + f.Name()); err != nil {
+			if err := cntUtils.ExecCmd("bash", "-c", strings.Join(args, " ")); err != nil {
 				hookLog.Fatal("Hook status is failed")
 			}
 		}
@@ -225,12 +232,12 @@ const FLEETCTL_STRICT_HOST_KEY_CHECKING = "FLEETCTL_STRICT_HOST_KEY_CHECKING"
 const FLEETCTL_SUDO = "FLEETCTL_SUDO"
 
 func (e Env) RunFleetCmd(args ...string) error {
-	_, _, err := e.runFleetCmdInternal(false, args...)
+	_, _, err := e.runFleetCmdInternal(false, args)
 	return err
 }
 
 func (e Env) RunFleetCmdGetOutput(args ...string) (string, string, error) {
-	return e.runFleetCmdInternal(true, args...)
+	return e.runFleetCmdInternal(true, args)
 }
 
 func (e Env) EtcdClient() client.KeysAPI {
@@ -249,31 +256,32 @@ func (e Env) EtcdClient() client.KeysAPI {
 	return kapi
 }
 
-func (e Env) runFleetCmdInternal(getOutput bool, args ...string) (string, string, error) {
+func (e Env) runFleetCmdInternal(getOutput bool, args []string) (string, string, error) {
 	e.log.WithField("command", strings.Join(args, " ")).Debug("Running command on fleet")
 	if e.config.Fleet.Endpoint == "" {
 		return "", "", errors.New("Cannot find fleet.endpoint env config to call fleetctl")
 	}
-	endpoint := e.config.Fleet.Endpoint
-	os.Setenv(FLEETCTL_ENDPOINT, endpoint)
+
+	envs := map[string]string{}
+	envs[FLEETCTL_ENDPOINT] = e.config.Fleet.Endpoint
 	if e.config.Fleet.Username != "" {
-		os.Setenv(FLEETCTL_SSH_USERNAME, e.config.Fleet.Username)
+		envs[FLEETCTL_SSH_USERNAME] = e.config.Fleet.Username
 	}
-	os.Setenv(FLEETCTL_STRICT_HOST_KEY_CHECKING, fmt.Sprintf("%t", e.config.Fleet.Strict_host_key_checking))
-	os.Setenv(FLEETCTL_SUDO, fmt.Sprintf("%t", e.config.Fleet.Sudo))
+	envs[FLEETCTL_STRICT_HOST_KEY_CHECKING] = fmt.Sprintf("%t", e.config.Fleet.Strict_host_key_checking)
+	envs[FLEETCTL_SUDO] = fmt.Sprintf("%t", e.config.Fleet.Sudo)
+
+	args = append([]string{"fleetctl"}, args...)
+	for key, val := range envs {
+		args = append([]string{key + "=" + val}, args...)
+	}
 
 	var stdout string
 	var stderr string
 	var err error
 	if getOutput {
-		stdout, stderr, err = cntUtils.ExecCmdGetStdoutAndStderr("fleetctl", args...)
+		stdout, stderr, err = cntUtils.ExecCmdGetStdoutAndStderr("bash", "-c", strings.Join(args, " "))
 	} else {
-		err = cntUtils.ExecCmd("fleetctl", args...)
+		err = cntUtils.ExecCmd("bash", "-c", strings.Join(args, " "))
 	}
-
-	os.Setenv(FLEETCTL_ENDPOINT, "")
-	os.Setenv(FLEETCTL_SSH_USERNAME, "")
-	os.Setenv(FLEETCTL_STRICT_HOST_KEY_CHECKING, "")
-	os.Setenv(FLEETCTL_SUDO, "")
 	return stdout, stderr, err
 }
