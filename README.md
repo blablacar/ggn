@@ -93,6 +93,7 @@ workPath: /home/myuser/build-tools           # root directory of environments. a
 # service manifest structure
 
 ```yaml
+concurrentUpdater: 2                            # concurrent run when updating the service
 containers:
   - aci.example.com/pod-cassandra               # list of aci or pod
 
