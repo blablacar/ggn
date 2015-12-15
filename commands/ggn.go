@@ -56,7 +56,7 @@ func Execute() {
 	var useless2 string
 
 	rootCmd.PersistentFlags().StringVarP(&useless2, "log-level", "L", "info", "Set log level")
-	rootCmd.PersistentFlags().StringVarP(&useless, "home-path", "H", ggn.DefaultHomeRoot(), "Set home folder")
+	rootCmd.PersistentFlags().StringVarP(&useless, "home-path", "H", ggn.DefaultHomeRoot()+"/ggn", "Set home folder")
 	rootCmd.PersistentFlags().StringSliceVarP(&builder.BuildFlags.GenerateManifests, "generate-manifest", "M", []string{}, "Manifests used to generate. comma separated")
 	rootCmd.AddCommand(versionCmd, generateCmd, genautocompleteCmd)
 
