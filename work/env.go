@@ -215,7 +215,7 @@ func (e Env) runHook(path string, info spec.HookInfo) {
 
 			args := []string{e.path + PATH_HOOKS + path + "/" + f.Name()}
 			for key, val := range envs {
-				args = append([]string{key + "=" + val}, args...)
+				args = append([]string{key + "='" + val + "'"}, args...)
 			}
 
 			hookLog.Debug("Running Hook")
@@ -272,7 +272,7 @@ func (e Env) runFleetCmdInternal(getOutput bool, args []string) (string, string,
 
 	args = append([]string{"fleetctl"}, args...)
 	for key, val := range envs {
-		args = append([]string{key + "=" + val}, args...)
+		args = append([]string{key + "='" + val + "'"}, args...)
 	}
 
 	var stdout string
