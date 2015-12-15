@@ -216,15 +216,15 @@ func convertMultilineUnitToString(content []byte) string {
 	return strings.Join(lines, "\n")
 }
 
-func (u *Unit) isRunning() bool {
+func (u *Unit) IsRunning() bool {
 	content, _, _ := u.Service.GetEnv().RunFleetCmdGetOutput("status", u.Filename)
-	if strings.Contains(content, "Active: active (running)") {
+	if strings.Contains(content, "Active: active (") {
 		return true
 	}
 	return false
 }
 
-func (u *Unit) isLoaded() bool {
+func (u *Unit) IsLoaded() bool {
 	content, _, _ := u.Service.GetEnv().RunFleetCmdGetOutput("status", u.Filename)
 	if strings.Contains(content, "Loaded: loaded") {
 		return true

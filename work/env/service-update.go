@@ -37,10 +37,13 @@ ask:
 		}
 		if same {
 			u.Log.Info("Remote service is already up to date")
-			if !builder.BuildFlags.All {
+			if !u.IsRunning() {
+				u.Log.Info("But service is not running")
+			} else if !builder.BuildFlags.All {
 				return
 			}
 		}
+
 		if builder.BuildFlags.Yes {
 			break ask
 		}

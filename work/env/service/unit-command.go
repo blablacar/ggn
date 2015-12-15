@@ -10,11 +10,11 @@ import (
 )
 
 func (u *Unit) Start(command string) error {
-	if u.isRunning() {
+	if u.IsRunning() {
 		u.Log.Info("Service is already running")
 		return nil
 	}
-	if !u.isLoaded() {
+	if !u.IsLoaded() {
 		u.Log.Debug("unit is not loaded yet")
 		u.Service.Generate()
 		u.Load(command)
@@ -73,9 +73,13 @@ func (u *Unit) Update(command string) error {
 	if err != nil {
 		u.Log.WithError(err).Warn("Cannot compare local and remote service")
 	}
-	if same && !builder.BuildFlags.Force {
-		u.Log.Info("Remote service is already up to date, not updating")
-		return nil
+	if same {
+		u.Log.Info("Remote service is already up to date")
+		if !u.IsRunning() {
+			u.Log.Info("But service is not running")
+		} else if !builder.BuildFlags.Force {
+			return nil
+		}
 	}
 
 	u.UpdateInside(command)
