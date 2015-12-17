@@ -215,7 +215,7 @@ func (e Env) runHook(path string, info spec.HookInfo) {
 
 			args := []string{e.path + PATH_HOOKS + path + "/" + f.Name()}
 			for key, val := range envs {
-				args = append([]string{key + "=\"" + strings.Replace(val, "\"", "\\\"", -1) + "\""}, args...)
+				args = append([]string{key + "='" + strings.Replace(val, "'", "'\"'\"'", -1) + "'"}, args...)
 			}
 
 			hookLog.Debug("Running Hook")

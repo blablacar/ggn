@@ -27,7 +27,9 @@ func (u *Unit) Generate(tmpl *utils.Templating) {
 	if err != nil {
 		u.Log.WithError(err).Panic("Cannot marshall attributes")
 	}
-	data["attributes"] = strings.Replace(string(out), "\\\"", "\\\\\\\"", -1)
+	res := strings.Replace(string(out), "\\\"", "\\\\\\\"", -1)
+	res = strings.Replace(res, "'", "\\'", -1)
+	data["attributes"] = res
 
 	u.prepareEnvironmentAttributes(data)
 
