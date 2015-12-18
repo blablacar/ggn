@@ -208,6 +208,7 @@ func (e Env) runHook(path string, info spec.HookInfo) {
 	envs["WHO"] = ggn.GetUserAndHost()
 	envs["ACTION"] = info.Action
 	envs["ATTRIBUTES"] = info.Attributes
+	envs["GGN_HOME_PATH"] = ggn.Home.Path
 
 	for _, f := range files {
 		if !f.IsDir() {
