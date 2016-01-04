@@ -125,8 +125,9 @@ func (s *Service) LoadUnit(name string) *service.Unit {
 	var unit *service.Unit
 	if strings.HasSuffix(name, spec.TYPE_TIMER.String()) {
 		unit = service.NewUnit(s.path+"/units", name[:len(name)-len(spec.TYPE_TIMER.String())], spec.TYPE_TIMER, s)
+	} else {
+		unit = service.NewUnit(s.path+"/units", name, spec.TYPE_SERVICE, s)
 	}
-	unit = service.NewUnit(s.path+"/units", name, spec.TYPE_SERVICE, s)
 	s.units[name] = unit
 	return unit
 }

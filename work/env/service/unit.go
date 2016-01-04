@@ -40,7 +40,7 @@ func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Ser
 	unit := &Unit{
 		generatedMutex: &sync.Mutex{},
 		Type:           utype,
-		Log:            *l.WithField("unit", hostname),
+		Log:            *l.WithField("unit", name),
 		Service:        service,
 		path:           path,
 		hostname:       hostname,
@@ -48,7 +48,7 @@ func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Ser
 		Filename:       filename,
 		unitPath:       path + "/" + filename,
 	}
-	unit.Log.Debug("New unit")
+	unit.Log.WithField("hostname", hostname).Debug("New unit")
 
 	return unit
 }
