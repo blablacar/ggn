@@ -36,7 +36,7 @@ or just source them in directly:
 		work := work.NewWork(ggn.Home.Config.WorkPath)
 
 		for _, command := range cmd.Root().Commands() {
-			if command.Use != "genautocomplete" && command.Use != "version" {
+			if command.Use != "genautocomplete" && command.Use != "version" && command.Use != "help [command]" { // TODO sux
 				command.AddCommand(prepareEnvCommands(work.LoadEnv(command.Use)))
 			}
 		}
