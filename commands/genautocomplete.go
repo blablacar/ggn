@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/ggn/ggn"
+	"github.com/blablacar/ggn/work"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -32,6 +33,13 @@ or just source them in directly:
 			logrus.WithField("type", autocompleteType).Fatalln("Only Bash is supported for now")
 		}
 
+		work := work.NewWork(ggn.Home.Config.WorkPath)
+
+		for _, command := range cmd.Root().Commands() {
+			if command.Use != "genautocomplete" && command.Use != "version" {
+				command.AddCommand(prepareEnvCommands(work.LoadEnv(command.Use)))
+			}
+		}
 		err := cmd.Root().GenBashCompletionFile(autocompleteTarget)
 		if err != nil {
 			logrus.WithError(err).Fatalln("Failed to generate shell completion file")

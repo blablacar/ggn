@@ -9,6 +9,7 @@ import (
 	"github.com/blablacar/ggn/ggn"
 	"github.com/coreos/go-semver/semver"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"os"
 	"strings"
 )
@@ -18,6 +19,72 @@ const FLEET_SUPPORTED_VERSION = "0.11.5"
 func Execute() {
 	checkFleetVersion()
 
+	ggn.Home = discoverHome()
+	prepareLogs()
+	builder.BuildFlags.GenerateManifests = GenerateManifestPathFromArgs()
+
+	rootCmd := &cobra.Command{
+		Use: "ggn",
+	}
+
+	var useless string
+	var useless2 []string
+	rootCmd.PersistentFlags().StringVarP(&useless, "log-level", "L", "info", "Set log level")
+	rootCmd.PersistentFlags().StringVarP(&useless, "home-path", "H", ggn.DefaultHomeRoot()+"/ggn", "Set home folder")
+	rootCmd.PersistentFlags().StringSliceVarP(&useless2, "generate-manifest", "M", []string{}, "Manifests used to generate. comma separated")
+	rootCmd.AddCommand(versionCmd, genautocompleteCmd)
+
+	newRoot := loadEnvCommandsReturnNewRoot(os.Args, rootCmd)
+	rootCmd.PersistentFlags().VisitAll(func(flag *pflag.Flag) {
+		newRoot.PersistentFlags().AddFlag(flag)
+	})
+	rootCmd.SetArgs([]string{findEnv()})
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
+
+	log.Debug("Victory !")
+}
+
+func findEnv() string { //TODO this is fucking dirty
+	for i := 1; i < len(os.Args); i++ {
+		if os.Args[i] == "--" {
+			return os.Args[i+1]
+		}
+		if os.Args[i] == "-h" || os.Args[i] == "--help" {
+			return os.Args[i]
+		}
+		if os.Args[i] == "-M" || strings.HasPrefix(os.Args[i], "--generate-manifest=") ||
+			os.Args[i] == "-L" || strings.HasPrefix(os.Args[i], "--log-level=") ||
+			os.Args[i] == "-H" || strings.HasPrefix(os.Args[i], "--home-path=") {
+			i++
+			continue
+		}
+		if strings.HasPrefix(os.Args[i], "-") {
+			continue
+		}
+		return os.Args[i]
+	}
+	return ""
+}
+
+func prepareLogs() {
+	// logs
+	lvl := logLevelFromArgs()
+	if lvl == "" {
+		lvl = "info"
+	}
+
+	level, err := log.ParseLevel(lvl)
+	if err != nil {
+		fmt.Printf("Unknown log level : %s", lvl)
+		os.Exit(1)
+	}
+	log.SetLevel(level)
+}
+
+func discoverHome() ggn.HomeStruct {
 	homefolder := ggn.DefaultHomeRoot()
 	if argsHome := homeFolderFromArgs(); argsHome != "" {
 		homefolder = argsHome
@@ -33,40 +100,22 @@ func Execute() {
 			homefolder += "/ggn"
 		}
 	}
-	ggn.Home = ggn.NewHome(homefolder)
+	return ggn.NewHome(homefolder)
+}
 
-	// logs
-	lvl := logLevelFromArgs()
-	if lvl == "" {
-		lvl = "info"
+func GenerateManifestPathFromArgs() []string {
+	for i, arg := range os.Args {
+		if arg == "--" {
+			return []string{}
+		}
+		if arg == "-M" {
+			return strings.Split(os.Args[i+1], ",")
+		}
+		if strings.HasPrefix(arg, "--generate-manifest=") {
+			return strings.Split(arg[20:], ",")
+		}
 	}
-
-	level, err := log.ParseLevel(lvl)
-	if err != nil {
-		fmt.Printf("Unknown log level : %s", lvl)
-		os.Exit(1)
-	}
-	log.SetLevel(level)
-
-	rootCmd := &cobra.Command{
-		Use: "ggn",
-	}
-
-	var useless string
-	var useless2 string
-
-	rootCmd.PersistentFlags().StringVarP(&useless2, "log-level", "L", "info", "Set log level")
-	rootCmd.PersistentFlags().StringVarP(&useless, "home-path", "H", ggn.DefaultHomeRoot()+"/ggn", "Set home folder")
-	rootCmd.PersistentFlags().StringSliceVarP(&builder.BuildFlags.GenerateManifests, "generate-manifest", "M", []string{}, "Manifests used to generate. comma separated")
-	rootCmd.AddCommand(versionCmd, genautocompleteCmd)
-
-	loadEnvCommands(rootCmd)
-
-	err = rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
-	}
-	log.Debug("Victory !")
+	return []string{}
 }
 
 func homeFolderFromArgs() string {
