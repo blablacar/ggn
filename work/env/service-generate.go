@@ -192,7 +192,7 @@ func (s *Service) PrepareAciList() string {
 	for _, aci := range s.manifest.Containers {
 		containerLog := s.log.WithField("container", aci.String())
 		containerLog.Debug("Processing container")
-		if strings.HasPrefix(aci.ShortName(), "pod-") {
+		if strings.HasPrefix(aci.ShortName(), "pod-") && !strings.Contains(aci.ShortName(), "_") { // TODO this is CNT specific
 			var podAcis []cntspec.ACFullname
 			if override[aci.Name()] != nil {
 				containerLog.Debug("Using local source to resolve")
