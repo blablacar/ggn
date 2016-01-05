@@ -7,18 +7,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var generateCmd = &cobra.Command{
-	Use:   "generate",
-	Short: "generate units for all envs",
-	Run: func(cmd *cobra.Command, args []string) {
-		work := work.NewWork(ggn.Home.Config.WorkPath)
-		for _, envName := range work.ListEnvs() {
-			env := work.LoadEnv(envName)
-			env.Generate()
-		}
-	},
-}
-
 func loadEnvCommands(rootCmd *cobra.Command) {
 	logrus.WithField("path", ggn.Home.Config.WorkPath).Debug("Loading envs")
 	work := work.NewWork(ggn.Home.Config.WorkPath)
