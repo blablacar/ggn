@@ -110,12 +110,20 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 		},
 	}
 
+	generateCmd := &cobra.Command{
+		Use:   "generate",
+		Short: getShortDescription(unit, "generate"),
+		Run: func(cmd *cobra.Command, args []string) {
+			unit.Service.Generate()
+		},
+	}
+
 	journalCmd.Flags().BoolVarP(&follow, "follow", "f", false, "follow")
 	journalCmd.Flags().IntVarP(&lines, "lines", "l", 10, "lines")
 	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Force, "force", "f", false, "force update even if up to date")
 
 	unitCmd.AddCommand(startCmd, stopCmd, updateCmd, destroyCmd, statusCmd, unloadCmd,
-		diffCmd, checkCmd, journalCmd, loadCmd, sshCmd, restartCmd)
+		diffCmd, checkCmd, journalCmd, loadCmd, sshCmd, restartCmd, generateCmd)
 	return unitCmd
 }
 
