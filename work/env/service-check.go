@@ -1,11 +1,12 @@
 package env
 
 import (
+	"github.com/n0rad/go-erlog/logs"
 	"sync"
 )
 
 func (s *Service) Check() {
-	s.log.Debug("Running check")
+	logs.WithFields(s.fields).Debug("Running check")
 	s.runHook(EARLY, "service/check", "check")
 	defer s.runHook(LATE, "service/check", "check")
 

@@ -1,14 +1,14 @@
 package commands
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/work"
+	"github.com/n0rad/go-erlog/logs"
 	"github.com/spf13/cobra"
 )
 
 func loadEnvCommandsReturnNewRoot(osArgs []string, rootCmd *cobra.Command) *cobra.Command {
-	logrus.WithField("path", ggn.Home.Config.WorkPath).Debug("Loading envs")
+	logs.WithField("path", ggn.Home.Config.WorkPath).Debug("Loading envs")
 	work := work.NewWork(ggn.Home.Config.WorkPath)
 
 	newRootCmd := &cobra.Command{

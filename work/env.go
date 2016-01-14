@@ -2,8 +2,6 @@ package work
 
 import (
 	"fmt"
-	"github.com/Sirupsen/logrus"
-	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
 	cntUtils "github.com/blablacar/cnt/utils"
 	"github.com/blablacar/ggn/ggn"
@@ -12,6 +10,8 @@ import (
 	"github.com/blablacar/ggn/work/env"
 	"github.com/coreos/etcd/client"
 	"github.com/juju/errors"
+	"github.com/n0rad/go-erlog/data"
+	"github.com/n0rad/go-erlog/logs"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -35,7 +35,7 @@ type Config struct {
 type Env struct {
 	path          string
 	name          string
-	log           logrus.Entry
+	fields        data.Fields
 	attributes    map[string]interface{}
 	config        Config
 	services      map[string]*env.Service
@@ -43,11 +43,11 @@ type Env struct {
 }
 
 func NewEnvironment(root string, name string) *Env {
-	log := *log.WithField("env", name)
+	fields := data.WithField("env", name)
 	path := root + "/" + name
 	_, err := ioutil.ReadDir(path)
 	if err != nil {
-		log.WithError(err).Error("Cannot read env directory")
+		logs.WithEF(err, fields).Fatal("Cannot read env directory")
 	}
 
 	env := &Env{
@@ -55,7 +55,7 @@ func NewEnvironment(root string, name string) *Env {
 		servicesMutex: &sync.Mutex{},
 		path:          path,
 		name:          name,
-		log:           log,
+		fields:        fields,
 		config:        Config{},
 	}
 	env.loadAttributes()
@@ -67,8 +67,8 @@ func (e Env) GetName() string {
 	return e.name
 }
 
-func (e Env) GetLog() logrus.Entry {
-	return e.log
+func (e Env) GetFields() data.Fields {
+	return e.fields
 }
 
 func (e Env) GetAttributes() map[string]interface{} {
@@ -78,7 +78,7 @@ func (e Env) GetAttributes() map[string]interface{} {
 func (e Env) FleetctlListUnits() {
 	stdout, _, err := e.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-units", "--full", "--no-legend")
 	if err != nil {
-		e.log.WithError(err).Fatal("Failed to list-units")
+		logs.WithEF(err, e.fields).Fatal("Failed to list-units")
 	}
 
 	unitStatuses := strings.Split(stdout, "\n")
@@ -116,10 +116,10 @@ func (e *Env) loadConfig() {
 func (e *Env) loadAttributes() {
 	files, err := utils.AttributeFiles(e.path + spec.PATH_ATTRIBUTES)
 	if err != nil {
-		e.log.WithError(err).WithField("path", e.path+spec.PATH_ATTRIBUTES).Panic("Cannot load Attributes files")
+		logs.WithEF(err, e.fields).WithField("path", e.path+spec.PATH_ATTRIBUTES).Fatal("Cannot load attribute files")
 	}
 	e.attributes = attributes.MergeAttributesFiles(files)
-	e.log.WithField("attributes", e.attributes).Debug("Attributes loaded")
+	logs.WithFields(e.fields).WithField("attributes", e.attributes).Debug("Attributes loaded")
 }
 
 func (e Env) ListServices() []string {
@@ -146,14 +146,14 @@ func (e Env) ListServices() []string {
 var inMemoryNames []string
 
 func (e Env) ListMachineNames() ([]string, error) {
-	e.log.Debug("list machines")
+	logs.WithFields(e.fields).Debug("list machines")
 	if inMemoryNames != nil {
 		return inMemoryNames, nil
 	}
 
 	data, modification := ggn.Home.LoadMachinesCacheWithDate(e.name)
 	if data == "" || modification.Add(12*time.Hour).Before(time.Now()) {
-		e.log.Debug("reloading list machines cache")
+		logs.WithFields(e.fields).Debug("reloading list machines cache")
 		datatmp, _, err := e.RunFleetCmdGetOutput("list-machines", "--fields=metadata", "--no-legend")
 		if err != nil {
 			return nil, errors.Annotate(err, "Cannot list-machines")
@@ -189,10 +189,10 @@ func (e Env) RunLateHook(info spec.HookInfo) {
 }
 
 func (e Env) runHook(path string, info spec.HookInfo) {
-	e.log.WithField("path", path).WithField("info", info).Debug("Running hook")
+	logs.WithFields(e.fields).WithField("path", path).WithField("info", info).Debug("Running hook")
 	files, err := ioutil.ReadDir(e.path + PATH_HOOKS + path)
 	if err != nil {
-		log.WithError(err).Debug("Cannot read hood directory")
+		logs.WithEF(err, e.fields).Debug("Cannot read hood directory")
 		return
 	}
 
@@ -212,16 +212,16 @@ func (e Env) runHook(path string, info spec.HookInfo) {
 
 	for _, f := range files {
 		if !f.IsDir() {
-			hookLog := log.WithField("name", f.Name())
+			hookFields := data.WithField("name", f.Name())
 
 			args := []string{e.path + PATH_HOOKS + path + "/" + f.Name()}
 			for key, val := range envs {
 				args = append([]string{key + "='" + strings.Replace(val, "'", "'\"'\"'", -1) + "'"}, args...)
 			}
 
-			hookLog.Debug("Running Hook")
+			logs.WithFields(hookFields).Debug("Running Hook")
 			if err := cntUtils.ExecCmd("bash", "-c", strings.Join(args, " ")); err != nil {
-				hookLog.Fatal("Hook status is failed")
+				logs.WithFields(hookFields).Fatal("Hook status is failed")
 			}
 		}
 	}
@@ -251,14 +251,14 @@ func (e Env) EtcdClient() client.KeysAPI {
 	}
 	c, err := client.New(cfg)
 	if err != nil {
-		e.log.WithError(err).Fatal("Failed to create etcd client")
+		logs.WithEF(err, e.fields).Fatal("Failed to create etcd client")
 	}
 	kapi := client.NewKeysAPI(c)
 	return kapi
 }
 
 func (e Env) runFleetCmdInternal(getOutput bool, args []string) (string, string, error) {
-	e.log.WithField("command", strings.Join(args, " ")).Debug("Running command on fleet")
+	logs.WithF(e.fields).WithField("command", strings.Join(args, " ")).Debug("Running command on fleet")
 	if e.config.Fleet.Endpoint == "" {
 		return "", "", errors.New("Cannot find fleet.endpoint env config to call fleetctl")
 	}

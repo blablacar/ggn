@@ -1,9 +1,9 @@
 package service
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/ggn/builder"
 	"github.com/blablacar/ggn/spec"
+	"github.com/n0rad/go-erlog/logs"
 	"os"
 	"strconv"
 	"time"
@@ -11,15 +11,15 @@ import (
 
 func (u *Unit) Start(command string) error {
 	if u.IsRunning() {
-		u.Log.Info("Service is already running")
+		logs.WithFields(u.Fields).Info("Service is already running")
 		return nil
 	}
 	if !u.IsLoaded() {
-		u.Log.Debug("unit is not loaded yet")
+		logs.WithFields(u.Fields).Debug("unit is not loaded yet")
 		u.Service.Generate()
 		u.Load(command)
 	} else {
-		u.Log.Debug("unit is already loaded")
+		logs.WithFields(u.Fields).Debug("unit is already loaded")
 	}
 	return u.runAction(command, "start")
 }
@@ -42,9 +42,9 @@ func (u *Unit) Destroy(command string) error {
 }
 
 func (u *Unit) Restart(command string) error {
-	u.Log.Debug("restart")
+	logs.WithFields(u.Fields).Debug("restart")
 	if u.Type == spec.TYPE_SERVICE && u.Service.HasTimer() {
-		u.Log.Fatal("You cannot restart a service associated to a time")
+		logs.WithFields(u.Fields).Fatal("You cannot restart a service associated to a time")
 	}
 
 	u.runHook(EARLY, command, "restart")
@@ -62,7 +62,7 @@ func (u *Unit) Restart(command string) error {
 
 func (u *Unit) Update(command string) error {
 	u.Service.Generate()
-	u.Log.Debug("Update")
+	logs.WithFields(u.Fields).Debug("Update")
 	u.runHook(EARLY, command, "update")
 	defer u.runHook(LATE, command, "update")
 
@@ -71,12 +71,12 @@ func (u *Unit) Update(command string) error {
 
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
-		u.Log.WithError(err).Warn("Cannot compare local and remote service")
+		logs.WithEF(err, u.Fields).Warn("Cannot compare local and remote service")
 	}
 	if same {
-		u.Log.Info("Remote service is already up to date")
+		logs.WithFields(u.Fields).Info("Remote service is already up to date")
 		if !u.IsRunning() {
-			u.Log.Info("But service is not running")
+			logs.WithFields(u.Fields).Info("But service is not running")
 		} else if !builder.BuildFlags.Force {
 			return nil
 		}
@@ -88,7 +88,7 @@ func (u *Unit) Update(command string) error {
 }
 
 func (u *Unit) Journal(command string, follow bool, lines int) {
-	u.Log.Debug("journal")
+	logs.WithFields(u.Fields).Debug("journal")
 	u.runHook(EARLY, command, "journal")
 	defer u.runHook(LATE, command, "journal")
 
@@ -101,30 +101,30 @@ func (u *Unit) Journal(command string, follow bool, lines int) {
 	err := u.Service.GetEnv().RunFleetCmd(args...)
 
 	if err != nil && !follow {
-		logrus.WithError(err).Fatal("Failed to run journal")
+		logs.WithEF(err, u.Fields).Fatal("Failed to run journal")
 	}
 }
 
 func (u *Unit) Ssh(command string) {
-	u.Log.Debug("ssh")
+	logs.WithFields(u.Fields).Debug("ssh")
 	u.runHook(EARLY, command, "ssh")
 	defer u.runHook(LATE, command, "ssh")
 
 	err := u.Service.GetEnv().RunFleetCmd("ssh", u.Filename)
 	if err != nil {
-		logrus.WithError(err).Fatal("Failed to run status")
+		logs.WithEF(err, u.Fields).Fatal("Failed to run status")
 	}
 }
 
 func (u *Unit) Diff(command string) {
-	u.Log.Debug("diff")
+	logs.WithFields(u.Fields).Debug("diff")
 	u.Service.Generate()
 	u.runHook(EARLY, command, "diff")
 	defer u.runHook(LATE, command, "diff")
 
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
-		u.Log.Warn("Cannot read unit")
+		logs.WithFields(u.Fields).Warn("Cannot read unit")
 	}
 	if !same {
 		u.DisplayDiff()
@@ -132,7 +132,7 @@ func (u *Unit) Diff(command string) {
 }
 
 func (u *Unit) Status(command string) {
-	u.Log.Debug("status")
+	logs.WithFields(u.Fields).Debug("status")
 	u.runHook(EARLY, command, "status")
 	defer u.runHook(LATE, command, "status")
 
@@ -150,13 +150,13 @@ func (u *Unit) runAction(command string, action string) error {
 		defer u.Service.Unlock(command)
 	}
 
-	u.Log.Debug(action)
+	logs.WithFields(u.Fields).Debug(action)
 	u.runHook(EARLY, command, action)
 	defer u.runHook(LATE, command, action)
 
 	_, _, err := u.Service.GetEnv().RunFleetCmdGetOutput(action, u.unitPath)
 	if err != nil {
-		logrus.WithError(err).Error("Cannot " + action + " unit")
+		logs.WithEF(err, u.Fields).Error("Cannot " + action + " unit")
 		return err
 	}
 	return nil

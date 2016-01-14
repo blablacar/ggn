@@ -1,15 +1,10 @@
 {
 	"ImportPath": "github.com/blablacar/ggn",
-	"GoVersion": "go1.5.2",
+	"GoVersion": "go1.5.3",
 	"Packages": [
 		"./..."
 	],
 	"Deps": [
-		{
-			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.8.7",
-			"Rev": "418b41d23a1bf978c06faea5313ba194650ac088"
-		},
 		{
 			"ImportPath": "github.com/appc/spec/aci",
 			"Comment": "v0.7.1-30-g1e5ab3d",
@@ -39,11 +34,6 @@
 			"ImportPath": "github.com/blablacar/attributes-merger/attributes",
 			"Comment": "0.1-6-g431a372",
 			"Rev": "431a37282b0ef85175c8c30eb79f3918c378c7d1"
-		},
-		{
-			"ImportPath": "github.com/blablacar/cnt/log",
-			"Comment": "45-5-g226d271",
-			"Rev": "226d271434d899ba1ff5502a36783f7ffcf48dc9"
 		},
 		{
 			"ImportPath": "github.com/blablacar/cnt/spec",
@@ -130,6 +120,10 @@
 		{
 			"ImportPath": "github.com/mitchellh/go-homedir",
 			"Rev": "1f6da4a72e57d4e7edd4a7295a585e0a3999a2d4"
+		},
+		{
+			"ImportPath": "github.com/n0rad/go-erlog",
+			"Rev": "d91d1cac32e6fa5843dcef5818e10e83a4a7c1bf"
 		},
 		{
 			"ImportPath": "github.com/peterbourgon/mergemap",

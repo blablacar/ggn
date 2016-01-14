@@ -3,11 +3,12 @@ package service
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/utils"
 	"github.com/blablacar/ggn/spec"
 	"github.com/coreos/fleet/unit"
 	"github.com/juju/errors"
+	"github.com/n0rad/go-erlog/data"
+	"github.com/n0rad/go-erlog/logs"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -16,7 +17,7 @@ import (
 )
 
 type Unit struct {
-	Log            logrus.Entry
+	Fields         data.Fields
 	Type           spec.UnitType
 	path           string
 	Name           string
@@ -29,7 +30,7 @@ type Unit struct {
 }
 
 func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Service) *Unit {
-	l := service.GetLog()
+	l := service.GetFields()
 
 	filename := service.GetEnv().GetName() + "_" + service.GetName() + "_" + hostname + utype.String()
 
@@ -40,7 +41,7 @@ func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Ser
 	unit := &Unit{
 		generatedMutex: &sync.Mutex{},
 		Type:           utype,
-		Log:            *l.WithField("unit", name),
+		Fields:         l.WithField("unit", name),
 		Service:        service,
 		path:           path,
 		hostname:       hostname,
@@ -48,7 +49,7 @@ func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Ser
 		Filename:       filename,
 		unitPath:       path + "/" + filename,
 	}
-	unit.Log.WithField("hostname", hostname).Debug("New unit")
+	logs.WithFields(unit.Fields).WithField("hostname", hostname).Debug("New unit")
 
 	return unit
 }
@@ -66,7 +67,7 @@ func (u *Unit) GetService() spec.Service {
 }
 
 func (u *Unit) Check(command string) {
-	u.Log.Debug("Check")
+	logs.WithFields(u.Fields).Debug("Check")
 
 	info := spec.HookInfo{
 		Service: u.Service,
@@ -80,28 +81,28 @@ func (u *Unit) Check(command string) {
 	statuses := u.Service.GetEnv().ListUnits()
 	var status spec.UnitStatus
 	if _, ok := statuses[u.Filename]; !ok {
-		u.Log.Warn("cannot find unit on fleet")
+		logs.WithFields(u.Fields).Warn("cannot find unit on fleet")
 		return
 	}
 	status = statuses[u.Filename]
-	logrus.WithField("status", status).Debug("status")
+	logs.WithField("status", status).Debug("status")
 
 	if status.Active != spec.ACTIVE_ACTIVE {
-		u.Log.WithField("active", status.Active).Warn("unit status is not active")
+		logs.WithFields(u.Fields).WithField("active", status.Active).Warn("unit status is not active")
 		return
 	}
 	if status.Sub != spec.SUB_RUNNING {
-		u.Log.WithField("sub", status.Sub).Warn("unit sub is not running")
+		logs.WithFields(u.Fields).WithField("sub", status.Sub).Warn("unit sub is not running")
 		return
 	}
 
 	same, err := u.IsLocalContentSameAsRemote()
 	if err != nil {
-		u.Log.Error("Cannot read unit")
+		logs.WithFields(u.Fields).Error("Cannot read unit")
 		return
 	}
 	if !same {
-		u.Log.Warn("Unit is not up to date")
+		logs.WithFields(u.Fields).Warn("Unit is not up to date")
 		return
 	}
 }
@@ -164,7 +165,7 @@ const LATE = false
 func (u *Unit) runHook(isEarly bool, command string, action string) {
 	out, err := json.Marshal(u.GenerateAttributes())
 	if err != nil {
-		u.Log.WithError(err).Panic("Cannot marshall attributes")
+		logs.WithEF(err, u.Fields).Fatal("Cannot marshall attributes")
 	}
 
 	info := spec.HookInfo{
@@ -185,7 +186,7 @@ func (u *Unit) runHook(isEarly bool, command string, action string) {
 func (u *Unit) serviceLocalAndRemoteContent() (string, string, error) {
 	localContent, err := u.GetUnitContentAsFleeted()
 	if err != nil {
-		u.Log.WithError(err).Debug("Cannot get local unit content")
+		logs.WithEF(err, u.Fields).Debug("Cannot get local unit content")
 		return "", "", errors.Annotate(err, "Cannot read local unit file")
 	}
 

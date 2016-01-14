@@ -1,9 +1,11 @@
 package work
 
+import "github.com/n0rad/go-erlog/logs"
+
 func (e Env) Fleetctl(args []string) {
-	e.log.Debug("Running fleetctl")
+	logs.WithFields(e.fields).Debug("Running fleetctl")
 	err := e.RunFleetCmd(args...)
 	if err != nil {
-		e.log.WithError(err).Error("Fleetctl command failed")
+		logs.WithEF(err, e.fields).Error("Fleetctl command failed")
 	}
 }

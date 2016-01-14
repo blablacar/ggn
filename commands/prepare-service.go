@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/ggn/builder"
 	"github.com/blablacar/ggn/work/env"
+	"github.com/n0rad/go-erlog/logs"
 	"github.com/spf13/cobra"
 	"os"
 	"strings"
@@ -50,13 +50,13 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 			`lock is ignored if set by the current user`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				logrus.Fatal("Please add a message to describe lock")
+				logs.Fatal("Please add a message to describe lock")
 			}
 
 			message := strings.Join(args, " ")
 			ttl, err := time.ParseDuration(ttl)
 			if err != nil {
-				logrus.WithError(err).Fatal("Wrong value for ttl")
+				logs.WithError(err).Fatal("Wrong value for ttl")
 			}
 
 			service.Lock("service/lock", ttl, message)

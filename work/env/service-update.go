@@ -6,6 +6,7 @@ import (
 	"github.com/blablacar/ggn/builder"
 	"github.com/blablacar/ggn/work/env/service"
 	"github.com/mgutz/ansi"
+	"github.com/n0rad/go-erlog/logs"
 	"os"
 	"strings"
 	"sync"
@@ -14,14 +15,14 @@ import (
 )
 
 func (s *Service) Update() error {
-	s.log.Info("Updating service")
+	logs.WithFields(s.fields).Info("Updating service")
 	s.Generate()
 
 	s.Lock("service/update", 1*time.Hour, "Updating")
 	defer s.Unlock("service/update")
 
 	if s.manifest.ConcurrentUpdater > 1 && !builder.BuildFlags.Yes {
-		s.log.Fatal("Update concurrently require -y")
+		logs.WithFields(s.fields).Fatal("Update concurrently require -y")
 	}
 
 	s.concurrentUpdater(s.ListUnits())
@@ -33,12 +34,12 @@ ask:
 	for {
 		same, err := u.IsLocalContentSameAsRemote()
 		if err != nil {
-			u.Log.WithError(err).Warn("Cannot compare local and remote service")
+			logs.WithEF(err, s.fields).Warn("Cannot compare local and remote service")
 		}
 		if same {
-			u.Log.Info("Remote service is already up to date")
+			logs.WithFields(s.fields).Info("Remote service is already up to date")
 			if !u.IsRunning() {
-				u.Log.Info("But service is not running")
+				logs.WithFields(s.fields).Info("But service is not running")
 			} else if !builder.BuildFlags.All {
 				return
 			}
@@ -52,18 +53,18 @@ ask:
 		case ACTION_DIFF:
 			u.DisplayDiff()
 		case ACTION_QUIT:
-			u.Log.Debug("User want to quit")
+			logs.WithFields(s.fields).Debug("User want to quit")
 			if globalUpdater == 0 {
 				s.Unlock("service/update")
 			}
 			os.Exit(1)
 		case ACTION_SKIP:
-			u.Log.Debug("User skip this service")
+			logs.WithFields(s.fields).Debug("User skip this service")
 			return
 		case ACTION_YES:
 			break ask
 		default:
-			u.Log.Fatal("Should not be here")
+			logs.WithFields(s.fields).Fatal("Should not be here")
 		}
 	}
 
@@ -75,7 +76,7 @@ ask:
 		atomic.AddUint32(&globalUpdater, 1)
 	}
 
-	u.Log.Info("Updating unit")
+	logs.WithFields(s.fields).Info("Updating unit")
 	u.UpdateInside("service/update")
 	time.Sleep(time.Second * 2)
 

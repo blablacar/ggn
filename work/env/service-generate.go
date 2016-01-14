@@ -1,13 +1,13 @@
 package env
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/appc/spec/discovery"
 	"github.com/appc/spec/schema"
 	cntspec "github.com/blablacar/cnt/spec"
 	"github.com/blablacar/ggn/builder"
 	"github.com/blablacar/ggn/spec"
 	"github.com/blablacar/ggn/utils"
+	"github.com/n0rad/go-erlog/logs"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -21,23 +21,23 @@ func (s *Service) Generate() {
 		return
 	}
 
-	s.log.Debug("Generating units")
+	logs.WithFields(s.fields).Debug("Generating units")
 
 	serviceTmpl, err := s.loadUnitTemplate(spec.PATH_UNIT_SERVICE_TEMPLATE)
 	if err != nil {
-		s.log.WithError(err).Fatal("Cannot load service template")
+		logs.WithEF(err, s.fields).Fatal("Cannot load service template")
 	}
 
 	var timerTmpl *utils.Templating
 	if s.hasTimer {
 		timerTmpl, err = s.loadUnitTemplate(spec.PATH_UNIT_TIMER_TEMPLATE)
 		if err != nil {
-			s.log.WithError(err).Fatal("Cannot load timer template")
+			logs.WithEF(err, s.fields).Fatal("Cannot load timer template")
 		}
 	}
 
 	if len(s.nodesAsJsonMap) == 0 {
-		s.log.Fatal("No node to process in manifest")
+		logs.WithFields(s.fields).Fatal("No node to process in manifest")
 		return
 	}
 
@@ -48,7 +48,7 @@ func (s *Service) Generate() {
 		} else if unit.GetType() == spec.TYPE_TIMER {
 			unit.Generate(timerTmpl)
 		} else {
-			unit.Log.WithField("type", unit.GetType()).Fatal("Unknown unit type")
+			logs.WithFields(s.fields).WithField("type", unit.GetType()).Fatal("Unknown unit type")
 		}
 	}
 	s.generated = true
@@ -61,7 +61,7 @@ func (s Service) NodeAttributes(hostname string) map[string]interface{} {
 			return node.(map[string]interface{})
 		}
 	}
-	logrus.WithField("hostname", hostname).Panic("Cannot find host in service list")
+	logs.WithFields(s.fields).WithField("hostname", hostname).Fatal("Cannot find host in service list")
 	return nil
 }
 
@@ -84,7 +84,7 @@ func (s Service) podManifestToMap(result map[string][]cntspec.ACFullname, conten
 
 		//		resolved, err := fullname.FullyResolved() // TODO should not be resolved for local test ??
 		//		if err != nil {
-		//			logrus.WithError(err).Fatal("Cannot fully resolve ACI")
+		//			logs.WithEF(err, s.fields).Fatal("Cannot fully resolve ACI")
 		//		}
 		acis = append(acis, *fullname)
 	}
@@ -111,12 +111,12 @@ func (s Service) sources(sources []string) map[string][]cntspec.ACFullname {
 	for _, source := range sources {
 		content, err := ioutil.ReadFile(source)
 		if err != nil {
-			s.log.WithError(err).Warn("Cannot read source file")
+			logs.WithEF(err, s.fields).Warn("Cannot read source file")
 			continue
 		}
 		if err := s.aciManifestToMap(res, content); err != nil {
 			if err2 := s.podManifestToMap(res, content); err2 != nil {
-				s.log.WithError(err).WithField("error2", err2).Error("Cannot read manifest file as aci nor pod")
+				logs.WithEF(err, s.fields).WithField("error2", err2).Error("Cannot read manifest file as aci nor pod")
 			}
 		}
 	}
@@ -124,7 +124,7 @@ func (s Service) sources(sources []string) map[string][]cntspec.ACFullname {
 }
 
 func (s Service) discoverPod(name cntspec.ACFullname) []cntspec.ACFullname {
-	logAci := s.log.WithField("pod", name)
+	podFields := s.fields.WithField("pod", name)
 
 	app, err := discovery.NewAppFromString(name.String())
 	if app.Labels["os"] == "" {
@@ -136,37 +136,38 @@ func (s Service) discoverPod(name cntspec.ACFullname) []cntspec.ACFullname {
 
 	endpoint, _, err := discovery.DiscoverEndpoints(*app, nil, false)
 	if err != nil {
-		logAci.WithError(err).Fatal("pod discovery failed")
+		logs.WithEF(err, podFields).Fatal("pod discovery failed")
 	}
 
 	if len(endpoint.ACIEndpoints) == 0 {
-		s.log.Panic("Discovery does not contain a url")
+		logs.WithF(podFields).Fatal("Discovery does not contain a url")
 	}
 	url := endpoint.ACIEndpoints[0].ACI
 	url = strings.Replace(url, "=aci", "=pod", 1) // TODO this is nexus specific
 
-	logUrl := logAci.WithField("url", url)
+	logUrl := podFields.WithField("url", url)
 	response, err := http.Get(url)
 	if err != nil {
-		logUrl.WithError(err).Fatal("Cannot get pod manifest content")
+		logs.WithEF(err, logUrl).Fatal("Cannot get pod manifest content")
 		return nil
 	} else {
 		if response.StatusCode != 200 {
-			logUrl.WithField("status_code", response.StatusCode).WithField("status_message", response.Status).
+			logs.WithFields(logUrl).WithField("status_code", response.StatusCode).
+				WithField("status_message", response.Status).
 				Fatal("Receive response error for discovery")
 		}
 		defer response.Body.Close()
 		content, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			logUrl.WithError(err).Fatal("Cannot read pod manifest content")
+			logs.WithEF(err, logUrl).Fatal("Cannot read pod manifest content")
 		}
 		tmpMap := make(map[string][]cntspec.ACFullname, 1)
 		if err := s.podManifestToMap(tmpMap, content); err != nil {
-			logUrl.WithError(err).Fatal("Cannot read pod content")
+			logs.WithEF(err, logUrl).Fatal("Cannot read pod content")
 		}
 		acis := tmpMap[name.Name()]
 		if acis == nil {
-			logUrl.Fatal("Discovered pod name does not match requested")
+			logs.WithFields(logUrl).Fatal("Discovered pod name does not match requested")
 		}
 		return acis
 	}
@@ -186,19 +187,19 @@ func (s *Service) PrepareAciList() string {
 	}
 
 	override := s.sources(builder.BuildFlags.GenerateManifests)
-	s.log.WithField("data", override).Debug("Local resolved sources")
+	logs.WithFields(s.fields).WithField("data", override).Debug("Local resolved sources")
 
 	var acis string
 	for _, aci := range s.manifest.Containers {
-		containerLog := s.log.WithField("container", aci.String())
-		containerLog.Debug("Processing container")
+		containerLog := s.fields.WithField("container", aci.String())
+		logs.WithFields(containerLog).Debug("Processing container")
 		if strings.HasPrefix(aci.ShortName(), "pod-") && !strings.Contains(aci.ShortName(), "_") { // TODO this is CNT specific
 			var podAcis []cntspec.ACFullname
 			if override[aci.Name()] != nil {
-				containerLog.Debug("Using local source to resolve")
+				logs.WithFields(containerLog).Debug("Using local source to resolve")
 				podAcis = override[aci.Name()]
 			} else {
-				containerLog.Debug("Using remote source to resolve")
+				logs.WithFields(containerLog).Debug("Using remote source to resolve")
 				podAcis = s.discoverPod(aci)
 			}
 			for _, aci := range podAcis {
@@ -207,14 +208,14 @@ func (s *Service) PrepareAciList() string {
 		} else {
 			var taci cntspec.ACFullname
 			if override[aci.Name()] != nil {
-				containerLog.Debug("Using local source to resolve")
+				logs.WithFields(containerLog).Debug("Using local source to resolve")
 				taci = override[aci.Name()][0]
 			} else {
-				containerLog.Debug("Using remote source to resolve")
+				logs.WithFields(containerLog).Debug("Using remote source to resolve")
 				aciTmp, err := aci.FullyResolved()
 				taci = *aciTmp
 				if err != nil {
-					containerLog.Fatal("Cannot resolve aci")
+					logs.WithEF(err, containerLog).Fatal("Cannot resolve aci")
 					return ""
 				}
 			}
@@ -222,7 +223,7 @@ func (s *Service) PrepareAciList() string {
 		}
 	}
 	if acis == "" {
-		s.log.Error("Aci list is empty after discovery")
+		logs.WithFields(s.fields).Error("Cannot resolve aci")
 	}
 	s.aciList = acis
 	return acis

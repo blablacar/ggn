@@ -2,11 +2,12 @@ package work
 
 import (
 	"github.com/blablacar/ggn/spec"
+	"github.com/n0rad/go-erlog/logs"
 	"sync"
 )
 
 func (e Env) Check() {
-	e.log.Debug("Running check")
+	logs.WithFields(e.fields).Debug("Running check")
 
 	info := spec.HookInfo{Command: "env/check", Action: "env/check"}
 	e.RunEarlyHook(info)

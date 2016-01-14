@@ -3,11 +3,11 @@ package commands
 import (
 	"bufio"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/cnt/utils"
 	"github.com/blablacar/ggn/builder"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/coreos/go-semver/semver"
+	"github.com/n0rad/go-erlog/logs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"os"
@@ -40,14 +40,14 @@ func Execute() {
 	})
 
 	args := []string{findEnv()}
-	log.WithField("args", args).Debug("Processing env with args")
+	logs.WithField("args", args).Debug("Processing env with args")
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
 
-	log.Debug("Victory !")
+	logs.Debug("Victory !")
 }
 
 func findEnv() string { //TODO this is fucking dirty
@@ -82,12 +82,12 @@ func prepareLogs() {
 		lvl = "info"
 	}
 
-	level, err := log.ParseLevel(lvl)
+	level, err := logs.ParseLevel(lvl)
 	if err != nil {
 		fmt.Printf("Unknown log level : %s", lvl)
 		os.Exit(1)
 	}
-	log.SetLevel(level)
+	logs.SetLevel(level)
 }
 
 func discoverHome() ggn.HomeStruct {
@@ -98,7 +98,7 @@ func discoverHome() ggn.HomeStruct {
 		_, err := os.Stat(homefolder + "/green-garden")
 		_, err2 := os.Stat(homefolder + "/ggn")
 		if os.IsNotExist(err2) && err == nil {
-			log.WithField("oldPath", homefolder+"/green-garden").
+			logs.WithField("oldPath", homefolder+"/green-garden").
 				WithField("newPath", homefolder+"/ggn").
 				Warn("You are using the old home folder")
 			homefolder += "/green-garden"
@@ -157,7 +157,7 @@ func logLevelFromArgs() string {
 func checkFleetVersion() {
 	output, err := utils.ExecCmdGetOutput("fleetctl")
 	if err != nil {
-		log.Fatal("fleetctl is required in PATH")
+		logs.Fatal("fleetctl is required in PATH")
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(output))
@@ -168,12 +168,12 @@ func checkFleetVersion() {
 			versionString := strings.TrimSpace(scanner.Text())
 			version, err := semver.NewVersion(versionString)
 			if err != nil {
-				log.Error("Cannot parse version of fleetctl", versionString)
+				logs.Error("Cannot parse version of fleetctl", versionString)
 				os.Exit(1)
 			}
 			supported, _ := semver.NewVersion(FLEET_SUPPORTED_VERSION)
 			if version.LessThan(*supported) {
-				log.Error("fleetctl version in your path is too old. Require >= " + FLEET_SUPPORTED_VERSION)
+				logs.Error("fleetctl version in your path is too old. Require >= " + FLEET_SUPPORTED_VERSION)
 				os.Exit(1)
 			}
 			break

@@ -1,8 +1,8 @@
 package spec
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/coreos/etcd/client"
+	"github.com/n0rad/go-erlog/data"
 )
 
 const PATH_ATTRIBUTES = "/attributes"
@@ -27,7 +27,7 @@ type HookInfo struct {
 
 type Env interface {
 	GetName() string
-	GetLog() logrus.Entry
+	GetFields() data.Fields
 	GetAttributes() map[string]interface{}
 	ListMachineNames() ([]string, error)
 	RunFleetCmdGetOutput(args ...string) (string, string, error)

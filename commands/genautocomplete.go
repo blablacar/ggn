@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/work"
+	"github.com/n0rad/go-erlog/logs"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -30,7 +30,7 @@ or just source them in directly:
 			autocompleteTarget = ggn.Home.Path + "/ggn_completion.sh"
 		}
 		if autocompleteType != "bash" {
-			logrus.WithField("type", autocompleteType).Fatalln("Only Bash is supported for now")
+			logs.WithField("type", autocompleteType).Fatal("Only Bash is supported for now")
 		}
 
 		work := work.NewWork(ggn.Home.Config.WorkPath)
@@ -42,9 +42,9 @@ or just source them in directly:
 		}
 		err := cmd.Root().GenBashCompletionFile(autocompleteTarget)
 		if err != nil {
-			logrus.WithError(err).Fatalln("Failed to generate shell completion file")
+			logs.WithE(err).Fatal("Failed to generate shell completion file")
 		} else {
-			logrus.WithField("path", autocompleteTarget).Println("Bash completion saved")
+			logs.WithField("path", autocompleteTarget).Info("Bash completion saved")
 		}
 		os.Exit(0)
 	},

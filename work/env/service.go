@@ -3,8 +3,6 @@ package env
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Sirupsen/logrus"
-	log "github.com/Sirupsen/logrus"
 	"github.com/blablacar/attributes-merger/attributes"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/spec"
@@ -12,6 +10,8 @@ import (
 	"github.com/blablacar/ggn/work/env/service"
 	"github.com/coreos/etcd/client"
 	"github.com/juju/errors"
+	"github.com/n0rad/go-erlog/data"
+	"github.com/n0rad/go-erlog/logs"
 	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -22,13 +22,13 @@ import (
 )
 
 type Service struct {
+	fields         data.Fields
 	env            spec.Env
 	path           string
 	Name           string
 	hasTimer       bool
 	manifest       spec.ServiceManifest
 	nodesAsJsonMap []interface{}
-	log            log.Entry
 	lockPath       string
 	attributes     map[string]interface{}
 	generated      bool
@@ -40,7 +40,7 @@ type Service struct {
 }
 
 func NewService(path string, name string, env spec.Env) *Service {
-	l := env.GetLog()
+	l := env.GetFields()
 
 	hasTimer := false
 	if _, err := os.Stat(path + "/" + name + spec.PATH_UNIT_TIMER_TEMPLATE); err == nil {
@@ -53,14 +53,14 @@ func NewService(path string, name string, env spec.Env) *Service {
 		aciListMutex:   &sync.Mutex{},
 		generatedMutex: &sync.Mutex{},
 		hasTimer:       hasTimer,
-		log:            *l.WithField("service", name),
+		fields:         l.WithField("service", name),
 		path:           path + "/" + name,
 		Name:           name,
 		env:            env,
 		lockPath:       "/ggn-lock/" + name + "/lock",
 	}
 
-	service.log.Debug("New Service")
+	logs.WithFields(service.fields).Debug("New service")
 
 	service.loadManifest()
 	service.loadAttributes()
@@ -72,18 +72,18 @@ func (s *Service) prepareNodesAsJsonMap() {
 	tmpRes, err := utils.TransformYamlToJson(s.manifest.Nodes)
 	var res []interface{} = tmpRes.([]interface{})
 	if err != nil {
-		s.log.WithError(err).Fatal("Cannot transform yaml to json")
+		logs.WithEF(err, s.fields).Fatal("Cannot transform yaml to json")
 	}
 
 	if res[0].(map[string]interface{})[spec.NODE_HOSTNAME].(string) == "*" {
 		if len(res) > 1 {
-			s.log.Fatal("You cannot mix all nodes with single node. Yet ?")
+			logs.WithFields(s.fields).Fatal("You cannot mix all nodes with single node. Yet ?")
 		}
 
 		newNodes := *new([]interface{})
 		machines, err := s.env.ListMachineNames()
 		if err != nil {
-			s.log.WithError(err).Fatal("Cannot list machines to generate units")
+			logs.WithEF(err, s.fields).Fatal("Cannot list machines to generate units")
 		}
 		for _, machine := range machines {
 			node := utils.CopyMap(res[0].(map[string]interface{}))
@@ -111,8 +111,8 @@ func (s *Service) GetEnv() spec.Env {
 	return s.env
 }
 
-func (s *Service) GetLog() logrus.Entry {
-	return s.log
+func (s *Service) GetFields() data.Fields {
+	return s.fields
 }
 
 func (s *Service) LoadUnit(name string) *service.Unit {
@@ -162,7 +162,7 @@ func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this
 func (s *Service) FleetListUnits(command string) {
 	stdout, _, err := s.env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-units", "--full", "--no-legend")
 	if err != nil {
-		s.log.WithError(err).Fatal("Failed to list-units")
+		logs.WithEF(err, s.fields).Fatal("Failed to list-units")
 	}
 
 	unitStatuses := strings.Split(stdout, "\n")
@@ -175,14 +175,14 @@ func (s *Service) FleetListUnits(command string) {
 }
 
 func (s *Service) Unlock(command string) {
-	s.log.Info("Unlocking")
+	logs.WithFields(s.fields).Info("Unlocking")
 	s.runHook(EARLY, command, "unlock")
 	defer s.runHook(LATE, command, "unlock")
 
 	kapi := s.env.EtcdClient()
 	_, err := kapi.Delete(context.Background(), s.lockPath, nil)
 	if cerr, ok := err.(*client.ClusterError); ok {
-		s.log.WithError(cerr).Panic("Cannot unlock service")
+		logs.WithEF(cerr, s.fields).Fatal("Cannot unlock service")
 	}
 }
 
@@ -190,26 +190,26 @@ func (s *Service) Lock(command string, ttl time.Duration, message string) {
 	userAndHost := "[" + ggn.GetUserAndHost() + "] "
 	message = userAndHost + message
 
-	s.log.WithField("ttl", ttl).WithField("message", message).Info("locking")
+	logs.WithFields(s.fields).WithField("ttl", ttl).WithField("message", message).Info("Locking")
 	s.runHook(EARLY, command, "lock")
 	defer s.runHook(LATE, command, "lock")
 
 	kapi := s.env.EtcdClient()
 	resp, err := kapi.Get(context.Background(), s.lockPath, nil)
 	if cerr, ok := err.(*client.ClusterError); ok {
-		s.log.WithError(cerr).Fatal("Server error reading on fleet")
+		logs.WithEF(cerr, s.fields).Fatal("Server error reading on fleet")
 	} else if err != nil {
 		_, err := kapi.Set(context.Background(), s.lockPath, message, &client.SetOptions{TTL: ttl})
 		if err != nil {
-			s.log.WithError(err).Fatal("Cannot write lock")
+			logs.WithEF(cerr, s.fields).Fatal("Cannot write lock")
 		}
 	} else if strings.HasPrefix(resp.Node.Value, userAndHost) {
 		_, err := kapi.Set(context.Background(), s.lockPath, message, &client.SetOptions{TTL: ttl})
 		if err != nil {
-			s.log.WithError(err).Fatal("Cannot write lock")
+			logs.WithEF(cerr, s.fields).Fatal("Cannot write lock")
 		}
 	} else {
-		s.log.WithField("message", resp.Node.Value).
+		logs.WithFields(s.fields).WithField("message", resp.Node.Value).
 			WithField("ttl", resp.Node.TTLDuration().String()).
 			Fatal("Service is already locked")
 	}
@@ -232,7 +232,7 @@ const LATE = false
 func (s *Service) runHook(isEarly bool, command string, action string) {
 	out, err := json.Marshal(s.attributes)
 	if err != nil {
-		s.log.WithError(err).Panic("Cannot marshall attributes")
+		logs.WithEF(err, s.fields).Fatal("Cannot marshall attributes")
 	}
 
 	info := spec.HookInfo{
@@ -253,11 +253,11 @@ func (s *Service) loadAttributes() {
 	attr := utils.CopyMap(s.env.GetAttributes())
 	files, err := utils.AttributeFiles(s.path + spec.PATH_ATTRIBUTES)
 	if err != nil {
-		s.log.WithError(err).WithField("path", s.path+spec.PATH_ATTRIBUTES).Panic("Cannot load Attributes files")
+		logs.WithEF(err, s.fields).WithField("path", s.path+spec.PATH_ATTRIBUTES).Fatal("Cannot load Attributes files")
 	}
 	attr = attributes.MergeAttributesFilesForMap(attr, files)
 	s.attributes = attr
-	s.log.WithField("attributes", s.attributes).Debug("Attributes loaded")
+	logs.WithFields(s.fields).WithField("attributes", s.attributes).Debug("Attributes loaded")
 }
 
 func (s *Service) loadUnitTemplate(filename string) (*utils.Templating, error) {
@@ -279,17 +279,17 @@ func (s *Service) loadManifest() {
 	path := s.manifestPath()
 	source, err := ioutil.ReadFile(path)
 	if err != nil {
-		s.log.WithError(err).WithField("path", path).Warn("Cannot find manifest for service")
+		logs.WithEF(err, s.fields).WithField("path", path).Warn("Cannot find manifest for service")
 	}
 	err = yaml.Unmarshal([]byte(source), &manifest)
 	if err != nil {
-		s.log.WithError(err).Fatal("Cannot Read service manifest")
+		logs.WithEF(err, s.fields).Fatal("Cannot Read service manifest")
 	}
 
 	if manifest.ConcurrentUpdater == 0 {
 		manifest.ConcurrentUpdater = 1
 	}
 
-	s.log.WithField("manifest", manifest).Debug("Manifest loaded")
+	logs.WithFields(s.fields).WithField("manifest", manifest).Debug("Manifest loaded")
 	s.manifest = manifest
 }

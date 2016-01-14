@@ -1,7 +1,9 @@
 package work
 
+import "github.com/n0rad/go-erlog/logs"
+
 func (e Env) Generate() {
-	e.log.Debug("Generating units")
+	logs.WithFields(e.fields).Debug("Generating units")
 	services := e.ListServices()
 
 	for _, service := range services {

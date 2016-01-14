@@ -3,6 +3,7 @@ package work
 import (
 	"bufio"
 	"github.com/blablacar/ggn/spec"
+	"github.com/n0rad/go-erlog/logs"
 	"strings"
 	"sync"
 )
@@ -20,7 +21,7 @@ func (e Env) ListUnits() map[string]spec.UnitStatus {
 
 	stdout, _, err := e.RunFleetCmdGetOutput("list-units", "-no-legend")
 	if err != nil {
-		e.log.WithError(err).Fatal("Cannot list units")
+		logs.WithEF(err, e.fields).Debug("Cannot list units")
 	}
 
 	var lines []string

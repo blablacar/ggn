@@ -1,8 +1,8 @@
 package spec
 
 import (
-	"github.com/Sirupsen/logrus"
 	cntspec "github.com/blablacar/cnt/spec"
+	"github.com/n0rad/go-erlog/data"
 	"time"
 )
 
@@ -34,6 +34,6 @@ type Service interface {
 	Lock(command string, ttl time.Duration, message string)
 	GetName() string
 	GetEnv() Env
-	GetLog() logrus.Entry
+	GetFields() data.Fields
 	GetFleetUnitContent(unit string) (string, error)
 }

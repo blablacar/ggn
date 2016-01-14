@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/blablacar/ggn/utils"
+	"github.com/n0rad/go-erlog/logs"
 	"github.com/peterbourgon/mergemap"
 	"io/ioutil"
 	"os"
@@ -19,13 +20,13 @@ func (u *Unit) Generate(tmpl *utils.Templating) {
 		return
 	}
 
-	u.Log.Debug("Generate")
+	logs.WithFields(u.Fields).Debug("Generate")
 	data := u.GenerateAttributes()
 	data["acis"] = u.Service.PrepareAciList()
 
 	out, err := json.Marshal(data)
 	if err != nil {
-		u.Log.WithError(err).Panic("Cannot marshall attributes")
+		logs.WithEF(err, u.Fields).Panic("Cannot marshall attributes")
 	}
 	res := strings.Replace(string(out), "\\\"", "\\\\\\\"", -1)
 	res = strings.Replace(res, "'", "\\'", -1)
@@ -36,7 +37,7 @@ func (u *Unit) Generate(tmpl *utils.Templating) {
 	var b bytes.Buffer
 	err = tmpl.Execute(&b, data)
 	if err != nil {
-		u.Log.Error("Failed to run templating", err)
+		logs.WithEF(err, u.Fields).Error("Failed to run templating")
 	}
 	ok, err := utils.Exists(u.path)
 	if !ok || err != nil {
@@ -44,7 +45,7 @@ func (u *Unit) Generate(tmpl *utils.Templating) {
 	}
 	err = ioutil.WriteFile(u.path+"/"+u.Filename, b.Bytes(), 0644)
 	if err != nil {
-		u.Log.WithError(err).WithField("path", u.path+"/"+u.Filename).Error("Cannot writer unit")
+		logs.WithEF(err, u.Fields).WithField("path", u.path+"/"+u.Filename).Error("Cannot writer unit")
 	}
 
 	u.generated = true
