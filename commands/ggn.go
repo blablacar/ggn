@@ -38,7 +38,10 @@ func Execute() {
 	rootCmd.PersistentFlags().VisitAll(func(flag *pflag.Flag) {
 		newRoot.PersistentFlags().AddFlag(flag)
 	})
-	rootCmd.SetArgs([]string{findEnv()})
+
+	args := []string{findEnv()}
+	log.WithField("args", args).Debug("Processing env with args")
+	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
@@ -55,13 +58,16 @@ func findEnv() string { //TODO this is fucking dirty
 		if os.Args[i] == "-h" || os.Args[i] == "--help" {
 			return os.Args[i]
 		}
-		if os.Args[i] == "-M" || strings.HasPrefix(os.Args[i], "--generate-manifest=") ||
-			os.Args[i] == "-L" || strings.HasPrefix(os.Args[i], "--log-level=") ||
-			os.Args[i] == "-H" || strings.HasPrefix(os.Args[i], "--home-path=") {
+		if os.Args[i] == "-M" ||
+			os.Args[i] == "-L" ||
+			os.Args[i] == "-H" {
 			i++
 			continue
 		}
-		if strings.HasPrefix(os.Args[i], "-") {
+		if strings.HasPrefix(os.Args[i], "-") ||
+			strings.HasPrefix(os.Args[i], "--generate-manifest=") ||
+			strings.HasPrefix(os.Args[i], "--log-level=") ||
+			strings.HasPrefix(os.Args[i], "--home-path=") {
 			continue
 		}
 		return os.Args[i]
