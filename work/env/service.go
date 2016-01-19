@@ -69,6 +69,10 @@ func NewService(path string, name string, env spec.Env) *Service {
 }
 
 func (s *Service) prepareNodesAsJsonMap() {
+	if s.manifest.Nodes == nil || len(s.manifest.Nodes.([]interface{})) == 0 {
+		logs.WithFields(s.fields).Warn("No nodes defined in service")
+		return
+	}
 	tmpRes, err := utils.TransformYamlToJson(s.manifest.Nodes)
 	var res []interface{} = tmpRes.([]interface{})
 	if err != nil {
