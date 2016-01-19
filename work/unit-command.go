@@ -1,8 +1,6 @@
-package service
+package work
 
 import (
-	"github.com/blablacar/ggn/builder"
-	"github.com/blablacar/ggn/spec"
 	"github.com/n0rad/go-erlog/logs"
 	"os"
 	"strconv"
@@ -43,7 +41,7 @@ func (u *Unit) Destroy(command string) error {
 
 func (u *Unit) Restart(command string) error {
 	logs.WithFields(u.Fields).Debug("restart")
-	if u.Type == spec.TYPE_SERVICE && u.Service.HasTimer() {
+	if u.Type == TYPE_SERVICE && u.Service.HasTimer() {
 		logs.WithFields(u.Fields).Fatal("You cannot restart a service associated to a time")
 	}
 
@@ -77,7 +75,7 @@ func (u *Unit) Update(command string) error {
 		logs.WithFields(u.Fields).Info("Remote service is already up to date")
 		if !u.IsRunning() {
 			logs.WithFields(u.Fields).Info("But service is not running")
-		} else if !builder.BuildFlags.Force {
+		} else if !BuildFlags.Force {
 			return nil
 		}
 	}

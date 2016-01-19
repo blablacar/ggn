@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/blablacar/cnt/utils"
-	"github.com/blablacar/ggn/builder"
 	"github.com/blablacar/ggn/ggn"
+	"github.com/blablacar/ggn/work"
 	"github.com/coreos/go-semver/semver"
 	"github.com/n0rad/go-erlog/logs"
 	"github.com/spf13/cobra"
@@ -21,7 +21,7 @@ func Execute() {
 
 	ggn.Home = discoverHome()
 	prepareLogs()
-	builder.BuildFlags.GenerateManifests = GenerateManifestPathFromArgs()
+	work.BuildFlags.GenerateManifests = GenerateManifestPathFromArgs()
 
 	rootCmd := &cobra.Command{
 		Use: "ggn",

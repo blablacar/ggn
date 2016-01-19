@@ -1,4 +1,4 @@
-package env
+package work
 
 import (
 	"github.com/n0rad/go-erlog/logs"

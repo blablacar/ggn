@@ -5,9 +5,7 @@ import (
 	"github.com/blablacar/attributes-merger/attributes"
 	cntUtils "github.com/blablacar/cnt/utils"
 	"github.com/blablacar/ggn/ggn"
-	"github.com/blablacar/ggn/spec"
 	"github.com/blablacar/ggn/utils"
-	"github.com/blablacar/ggn/work/env"
 	"github.com/coreos/etcd/client"
 	"github.com/juju/errors"
 	"github.com/n0rad/go-erlog/data"
@@ -38,7 +36,7 @@ type Env struct {
 	fields        data.Fields
 	attributes    map[string]interface{}
 	config        Config
-	services      map[string]*env.Service
+	services      map[string]*Service
 	servicesMutex *sync.Mutex
 }
 
@@ -51,7 +49,7 @@ func NewEnvironment(root string, name string) *Env {
 	}
 
 	env := &Env{
-		services:      map[string]*env.Service{},
+		services:      map[string]*Service{},
 		servicesMutex: &sync.Mutex{},
 		path:          path,
 		name:          name,
@@ -87,7 +85,7 @@ func (e Env) FleetctlListUnits() {
 	}
 }
 
-func (e Env) LoadService(name string) *env.Service {
+func (e Env) LoadService(name string) *Service {
 	e.servicesMutex.Lock()
 	defer e.servicesMutex.Unlock()
 
@@ -95,13 +93,13 @@ func (e Env) LoadService(name string) *env.Service {
 		return val
 	}
 
-	service := env.NewService(e.path+"/services", name, e)
+	service := NewService(e.path+"/services", name, e)
 	e.services[name] = service
 	return service
 }
 
 func (e Env) attributesDir() string {
-	return e.path + spec.PATH_ATTRIBUTES
+	return e.path + PATH_ATTRIBUTES
 }
 
 func (e *Env) loadConfig() {
@@ -114,9 +112,9 @@ func (e *Env) loadConfig() {
 }
 
 func (e *Env) loadAttributes() {
-	files, err := utils.AttributeFiles(e.path + spec.PATH_ATTRIBUTES)
+	files, err := utils.AttributeFiles(e.path + PATH_ATTRIBUTES)
 	if err != nil {
-		logs.WithEF(err, e.fields).WithField("path", e.path+spec.PATH_ATTRIBUTES).Fatal("Cannot load attribute files")
+		logs.WithEF(err, e.fields).WithField("path", e.path+PATH_ATTRIBUTES).Fatal("Cannot load attribute files")
 	}
 	e.attributes = attributes.MergeAttributesFiles(files)
 	logs.WithFields(e.fields).WithField("attributes", e.attributes).Debug("Attributes loaded")
@@ -134,7 +132,7 @@ func (e Env) ListServices() []string {
 		if !file.IsDir() {
 			continue
 		}
-		if _, err := os.Stat(path + "/" + file.Name() + spec.PATH_SERVICE_MANIFEST); os.IsNotExist(err) {
+		if _, err := os.Stat(path + "/" + file.Name() + PATH_SERVICE_MANIFEST); os.IsNotExist(err) {
 			continue
 		}
 
@@ -180,15 +178,15 @@ func (e Env) ListMachineNames() ([]string, error) {
 
 const PATH_HOOKS = "/hooks"
 
-func (e Env) RunEarlyHook(info spec.HookInfo) {
+func (e Env) RunEarlyHook(info HookInfo) {
 	e.runHook("/early", info)
 }
 
-func (e Env) RunLateHook(info spec.HookInfo) {
+func (e Env) RunLateHook(info HookInfo) {
 	e.runHook("/late", info)
 }
 
-func (e Env) runHook(path string, info spec.HookInfo) {
+func (e Env) runHook(path string, info HookInfo) {
 	logs.WithFields(e.fields).WithField("path", path).WithField("info", info).Debug("Running hook")
 	files, err := ioutil.ReadDir(e.path + PATH_HOOKS + path)
 	if err != nil {

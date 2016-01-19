@@ -1,12 +1,11 @@
 package commands
 
 import (
-	"github.com/blablacar/ggn/builder"
-	"github.com/blablacar/ggn/work/env/service"
+	"github.com/blablacar/ggn/work"
 	"github.com/spf13/cobra"
 )
 
-func prepareUnitCommands(unit *service.Unit) *cobra.Command {
+func prepareUnitCommands(unit *work.Unit) *cobra.Command {
 	var follow bool
 	var lines int
 
@@ -120,13 +119,13 @@ func prepareUnitCommands(unit *service.Unit) *cobra.Command {
 
 	journalCmd.Flags().BoolVarP(&follow, "follow", "f", false, "follow")
 	journalCmd.Flags().IntVarP(&lines, "lines", "l", 10, "lines")
-	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Force, "force", "f", false, "force update even if up to date")
+	updateCmd.Flags().BoolVarP(&work.BuildFlags.Force, "force", "f", false, "force update even if up to date")
 
 	unitCmd.AddCommand(startCmd, stopCmd, updateCmd, destroyCmd, statusCmd, unloadCmd,
 		diffCmd, checkCmd, journalCmd, loadCmd, sshCmd, restartCmd, generateCmd)
 	return unitCmd
 }
 
-func getShortDescription(unit *service.Unit, action string) string {
+func getShortDescription(unit *work.Unit, action string) string {
 	return action + " '" + unit.Name + "' from '" + unit.Service.GetName() + "' on env '" + unit.Service.GetEnv().GetName() + "'"
 }

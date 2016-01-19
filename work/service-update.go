@@ -1,10 +1,8 @@
-package env
+package work
 
 import (
 	"bufio"
 	"fmt"
-	"github.com/blablacar/ggn/builder"
-	"github.com/blablacar/ggn/work/env/service"
 	"github.com/mgutz/ansi"
 	"github.com/n0rad/go-erlog/logs"
 	"os"
@@ -21,7 +19,7 @@ func (s *Service) Update() error {
 	s.Lock("service/update", 1*time.Hour, "Updating")
 	defer s.Unlock("service/update")
 
-	if s.manifest.ConcurrentUpdater > 1 && !builder.BuildFlags.Yes {
+	if s.manifest.ConcurrentUpdater > 1 && !BuildFlags.Yes {
 		logs.WithFields(s.fields).Fatal("Update concurrently require -y")
 	}
 
@@ -29,7 +27,7 @@ func (s *Service) Update() error {
 	return nil
 }
 
-func (s *Service) updateUnit(u service.Unit) {
+func (s *Service) updateUnit(u Unit) {
 ask:
 	for {
 		same, err := u.IsLocalContentSameAsRemote()
@@ -40,12 +38,12 @@ ask:
 			logs.WithFields(s.fields).Info("Remote service is already up to date")
 			if !u.IsRunning() {
 				logs.WithFields(s.fields).Info("But service is not running")
-			} else if !builder.BuildFlags.All {
+			} else if !BuildFlags.All {
 				return
 			}
 		}
 
-		if builder.BuildFlags.Yes {
+		if BuildFlags.Yes {
 			break ask
 		}
 		action := askToProcessService(u)
@@ -86,7 +84,7 @@ var globalUpdater uint32 = 0
 
 func (s *Service) concurrentUpdater(units []string) {
 	wg := &sync.WaitGroup{}
-	updateChan := make(chan service.Unit)
+	updateChan := make(chan Unit)
 	for i := 0; i < s.manifest.ConcurrentUpdater; i++ {
 		wg.Add(1)
 		go func() {
@@ -106,7 +104,7 @@ func (s *Service) concurrentUpdater(units []string) {
 }
 
 //////////////////////////////////////////////////////////
-func askToProcessService(unit service.Unit) Action {
+func askToProcessService(unit Unit) Action {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("Update unit " + ansi.LightGreen + unit.Name + ansi.Reset + " ? : (yes,skip,diff,quit) ")

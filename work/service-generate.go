@@ -1,11 +1,9 @@
-package env
+package work
 
 import (
 	"github.com/appc/spec/discovery"
 	"github.com/appc/spec/schema"
 	cntspec "github.com/blablacar/cnt/spec"
-	"github.com/blablacar/ggn/builder"
-	"github.com/blablacar/ggn/spec"
 	"github.com/blablacar/ggn/utils"
 	"github.com/n0rad/go-erlog/logs"
 	"io/ioutil"
@@ -23,14 +21,14 @@ func (s *Service) Generate() {
 
 	logs.WithFields(s.fields).Debug("Generating units")
 
-	serviceTmpl, err := s.loadUnitTemplate(spec.PATH_UNIT_SERVICE_TEMPLATE)
+	serviceTmpl, err := s.loadUnitTemplate(PATH_UNIT_SERVICE_TEMPLATE)
 	if err != nil {
 		logs.WithEF(err, s.fields).Fatal("Cannot load service template")
 	}
 
 	var timerTmpl *utils.Templating
 	if s.hasTimer {
-		timerTmpl, err = s.loadUnitTemplate(spec.PATH_UNIT_TIMER_TEMPLATE)
+		timerTmpl, err = s.loadUnitTemplate(PATH_UNIT_TIMER_TEMPLATE)
 		if err != nil {
 			logs.WithEF(err, s.fields).Fatal("Cannot load timer template")
 		}
@@ -43,9 +41,9 @@ func (s *Service) Generate() {
 
 	for _, unitName := range s.ListUnits() {
 		unit := s.LoadUnit(unitName)
-		if unit.GetType() == spec.TYPE_SERVICE {
+		if unit.GetType() == TYPE_SERVICE {
 			unit.Generate(serviceTmpl)
-		} else if unit.GetType() == spec.TYPE_TIMER {
+		} else if unit.GetType() == TYPE_TIMER {
 			unit.Generate(timerTmpl)
 		} else {
 			logs.WithFields(s.fields).WithField("type", unit.GetType()).Fatal("Unknown unit type")
@@ -56,7 +54,7 @@ func (s *Service) Generate() {
 
 func (s Service) NodeAttributes(hostname string) map[string]interface{} {
 	for _, node := range s.nodesAsJsonMap {
-		host := node.(map[string]interface{})[spec.NODE_HOSTNAME].(string)
+		host := node.(map[string]interface{})[NODE_HOSTNAME].(string)
 		if host == hostname {
 			return node.(map[string]interface{})
 		}
@@ -186,7 +184,7 @@ func (s *Service) PrepareAciList() string {
 		return s.aciList
 	}
 
-	override := s.sources(builder.BuildFlags.GenerateManifests)
+	override := s.sources(BuildFlags.GenerateManifests)
 	logs.WithFields(s.fields).WithField("data", override).Debug("Local resolved sources")
 
 	var acis string

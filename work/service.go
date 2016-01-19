@@ -1,13 +1,11 @@
-package env
+package work
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/blablacar/attributes-merger/attributes"
 	"github.com/blablacar/ggn/ggn"
-	"github.com/blablacar/ggn/spec"
 	"github.com/blablacar/ggn/utils"
-	"github.com/blablacar/ggn/work/env/service"
 	"github.com/coreos/etcd/client"
 	"github.com/juju/errors"
 	"github.com/n0rad/go-erlog/data"
@@ -23,32 +21,32 @@ import (
 
 type Service struct {
 	fields         data.Fields
-	env            spec.Env
+	env            Env
 	path           string
 	Name           string
 	hasTimer       bool
-	manifest       spec.ServiceManifest
+	manifest       ServiceManifest
 	nodesAsJsonMap []interface{}
 	lockPath       string
 	attributes     map[string]interface{}
 	generated      bool
 	generatedMutex *sync.Mutex
-	units          map[string]*service.Unit
+	units          map[string]*Unit
 	unitsMutex     *sync.Mutex
 	aciList        string
 	aciListMutex   *sync.Mutex
 }
 
-func NewService(path string, name string, env spec.Env) *Service {
+func NewService(path string, name string, env Env) *Service {
 	l := env.GetFields()
 
 	hasTimer := false
-	if _, err := os.Stat(path + "/" + name + spec.PATH_UNIT_TIMER_TEMPLATE); err == nil {
+	if _, err := os.Stat(path + "/" + name + PATH_UNIT_TIMER_TEMPLATE); err == nil {
 		hasTimer = true
 	}
 
 	service := &Service{
-		units:          map[string]*service.Unit{},
+		units:          map[string]*Unit{},
 		unitsMutex:     &sync.Mutex{},
 		aciListMutex:   &sync.Mutex{},
 		generatedMutex: &sync.Mutex{},
@@ -79,7 +77,7 @@ func (s *Service) prepareNodesAsJsonMap() {
 		logs.WithEF(err, s.fields).Fatal("Cannot transform yaml to json")
 	}
 
-	if res[0].(map[string]interface{})[spec.NODE_HOSTNAME].(string) == "*" {
+	if res[0].(map[string]interface{})[NODE_HOSTNAME].(string) == "*" {
 		if len(res) > 1 {
 			logs.WithFields(s.fields).Fatal("You cannot mix all nodes with single node. Yet ?")
 		}
@@ -91,7 +89,7 @@ func (s *Service) prepareNodesAsJsonMap() {
 		}
 		for _, machine := range machines {
 			node := utils.CopyMap(res[0].(map[string]interface{}))
-			node[spec.NODE_HOSTNAME] = machine
+			node[NODE_HOSTNAME] = machine
 			newNodes = append(newNodes, node)
 		}
 		res = newNodes
@@ -111,7 +109,7 @@ func (s *Service) GetName() string {
 	return s.Name
 }
 
-func (s *Service) GetEnv() spec.Env {
+func (s *Service) GetEnv() Env {
 	return s.env
 }
 
@@ -119,18 +117,18 @@ func (s *Service) GetFields() data.Fields {
 	return s.fields
 }
 
-func (s *Service) LoadUnit(name string) *service.Unit {
+func (s *Service) LoadUnit(name string) *Unit {
 	s.unitsMutex.Lock()
 	defer s.unitsMutex.Unlock()
 
 	if val, ok := s.units[name]; ok {
 		return val
 	}
-	var unit *service.Unit
-	if strings.HasSuffix(name, spec.TYPE_TIMER.String()) {
-		unit = service.NewUnit(s.path+"/units", name[:len(name)-len(spec.TYPE_TIMER.String())], spec.TYPE_TIMER, s)
+	var unit *Unit
+	if strings.HasSuffix(name, TYPE_TIMER.String()) {
+		unit = NewUnit(s.path+"/units", name[:len(name)-len(TYPE_TIMER.String())], TYPE_TIMER, s)
 	} else {
-		unit = service.NewUnit(s.path+"/units", name, spec.TYPE_SERVICE, s)
+		unit = NewUnit(s.path+"/units", name, TYPE_SERVICE, s)
 	}
 	s.units[name] = unit
 	return unit
@@ -147,9 +145,9 @@ func (s *Service) Diff() {
 func (s *Service) ListUnits() []string {
 	res := []string{}
 	for _, node := range s.nodesAsJsonMap {
-		res = append(res, node.(map[string]interface{})[spec.NODE_HOSTNAME].(string))
+		res = append(res, node.(map[string]interface{})[NODE_HOSTNAME].(string))
 		if s.hasTimer {
-			res = append(res, node.(map[string]interface{})[spec.NODE_HOSTNAME].(string)+".timer")
+			res = append(res, node.(map[string]interface{})[NODE_HOSTNAME].(string)+".timer")
 		}
 	}
 	return res
@@ -221,25 +219,13 @@ func (s *Service) Lock(command string, ttl time.Duration, message string) {
 
 /////////////////////////////////////////////////
 
-type Action int
-
-const (
-	ACTION_YES Action = iota
-	ACTION_SKIP
-	ACTION_DIFF
-	ACTION_QUIT
-)
-
-const EARLY = true
-const LATE = false
-
 func (s *Service) runHook(isEarly bool, command string, action string) {
 	out, err := json.Marshal(s.attributes)
 	if err != nil {
 		logs.WithEF(err, s.fields).Fatal("Cannot marshall attributes")
 	}
 
-	info := spec.HookInfo{
+	info := HookInfo{
 		Service:    s,
 		Action:     "service/" + action,
 		Command:    command,
@@ -255,9 +241,9 @@ func (s *Service) runHook(isEarly bool, command string, action string) {
 
 func (s *Service) loadAttributes() {
 	attr := utils.CopyMap(s.env.GetAttributes())
-	files, err := utils.AttributeFiles(s.path + spec.PATH_ATTRIBUTES)
+	files, err := utils.AttributeFiles(s.path + PATH_ATTRIBUTES)
 	if err != nil {
-		logs.WithEF(err, s.fields).WithField("path", s.path+spec.PATH_ATTRIBUTES).Fatal("Cannot load Attributes files")
+		logs.WithEF(err, s.fields).WithField("path", s.path+PATH_ATTRIBUTES).Fatal("Cannot load Attributes files")
 	}
 	attr = attributes.MergeAttributesFilesForMap(attr, files)
 	s.attributes = attr
@@ -275,11 +261,11 @@ func (s *Service) loadUnitTemplate(filename string) (*utils.Templating, error) {
 }
 
 func (s *Service) manifestPath() string {
-	return s.path + spec.PATH_SERVICE_MANIFEST
+	return s.path + PATH_SERVICE_MANIFEST
 }
 
 func (s *Service) loadManifest() {
-	manifest := spec.ServiceManifest{}
+	manifest := ServiceManifest{}
 	path := s.manifestPath()
 	source, err := ioutil.ReadFile(path)
 	if err != nil {

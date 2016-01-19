@@ -1,4 +1,4 @@
-package builder
+package work
 
 type Flags struct {
 	All               bool

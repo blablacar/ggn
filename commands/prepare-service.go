@@ -1,8 +1,7 @@
 package commands
 
 import (
-	"github.com/blablacar/ggn/builder"
-	"github.com/blablacar/ggn/work/env"
+	"github.com/blablacar/ggn/work"
 	"github.com/n0rad/go-erlog/logs"
 	"github.com/spf13/cobra"
 	"os"
@@ -10,7 +9,7 @@ import (
 	"time"
 )
 
-func prepareServiceCommands(service *env.Service) *cobra.Command {
+func prepareServiceCommands(service *work.Service) *cobra.Command {
 	var ttl string
 
 	serviceCmd := &cobra.Command{
@@ -91,8 +90,8 @@ func prepareServiceCommands(service *env.Service) *cobra.Command {
 	}
 
 	lockCmd.Flags().StringVarP(&ttl, "duration", "t", "1h", "lock duration")
-	updateCmd.Flags().BoolVarP(&builder.BuildFlags.All, "all", "a", false, "process all units, even up to date")
-	updateCmd.Flags().BoolVarP(&builder.BuildFlags.Yes, "yes", "y", false, "process units without asking")
+	updateCmd.Flags().BoolVarP(&work.BuildFlags.All, "all", "a", false, "process all units, even up to date")
+	updateCmd.Flags().BoolVarP(&work.BuildFlags.Yes, "yes", "y", false, "process units without asking")
 
 	serviceCmd.AddCommand(generateCmd, lockCmd, unlockCmd, updateCmd, checkCmd, diffCmd, listCmd)
 

@@ -1,10 +1,9 @@
-package service
+package work
 
 import (
 	"bufio"
 	"encoding/json"
 	"github.com/blablacar/cnt/utils"
-	"github.com/blablacar/ggn/spec"
 	"github.com/coreos/fleet/unit"
 	"github.com/juju/errors"
 	"github.com/n0rad/go-erlog/data"
@@ -18,24 +17,24 @@ import (
 
 type Unit struct {
 	Fields         data.Fields
-	Type           spec.UnitType
+	Type           UnitType
 	path           string
 	Name           string
 	hostname       string
 	Filename       string
 	unitPath       string
-	Service        spec.Service
+	Service        *Service
 	generated      bool
 	generatedMutex *sync.Mutex
 }
 
-func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Service) *Unit {
+func NewUnit(path string, hostname string, utype UnitType, service *Service) *Unit {
 	l := service.GetFields()
 
 	filename := service.GetEnv().GetName() + "_" + service.GetName() + "_" + hostname + utype.String()
 
 	name := hostname
-	if utype != spec.TYPE_SERVICE {
+	if utype != TYPE_SERVICE {
 		name += utype.String()
 	}
 	unit := &Unit{
@@ -54,7 +53,7 @@ func NewUnit(path string, hostname string, utype spec.UnitType, service spec.Ser
 	return unit
 }
 
-func (u *Unit) GetType() spec.UnitType {
+func (u *Unit) GetType() UnitType {
 	return u.Type
 }
 
@@ -62,14 +61,14 @@ func (u *Unit) GetName() string {
 	return u.Name
 }
 
-func (u *Unit) GetService() spec.Service {
+func (u *Unit) GetService() *Service {
 	return u.Service
 }
 
 func (u *Unit) Check(command string) {
 	logs.WithFields(u.Fields).Debug("Check")
 
-	info := spec.HookInfo{
+	info := HookInfo{
 		Service: u.Service,
 		Unit:    u,
 		Action:  "check",
@@ -79,7 +78,7 @@ func (u *Unit) Check(command string) {
 	defer u.Service.GetEnv().RunLateHook(info)
 
 	statuses := u.Service.GetEnv().ListUnits()
-	var status spec.UnitStatus
+	var status UnitStatus
 	if _, ok := statuses[u.Filename]; !ok {
 		logs.WithFields(u.Fields).Warn("cannot find unit on fleet")
 		return
@@ -87,11 +86,11 @@ func (u *Unit) Check(command string) {
 	status = statuses[u.Filename]
 	logs.WithField("status", status).Debug("status")
 
-	if status.Active != spec.ACTIVE_ACTIVE {
+	if status.Active != ACTIVE_ACTIVE {
 		logs.WithFields(u.Fields).WithField("active", status.Active).Warn("unit status is not active")
 		return
 	}
-	if status.Sub != spec.SUB_RUNNING {
+	if status.Sub != SUB_RUNNING {
 		logs.WithFields(u.Fields).WithField("sub", status.Sub).Warn("unit sub is not running")
 		return
 	}
@@ -123,7 +122,7 @@ func (u *Unit) GetUnitContentAsFleeted() (string, error) {
 func (u *Unit) UpdateInside(command string) {
 	u.Destroy(command)
 	time.Sleep(time.Second * 2)
-	if u.Type == spec.TYPE_SERVICE && u.Service.HasTimer() {
+	if u.Type == TYPE_SERVICE && u.Service.HasTimer() {
 		u.Load(command)
 	} else {
 		u.Start(command)
@@ -159,16 +158,13 @@ func (u *Unit) IsLocalContentSameAsRemote() (bool, error) {
 
 ///////////////////////////////////////////
 
-const EARLY = true
-const LATE = false
-
 func (u *Unit) runHook(isEarly bool, command string, action string) {
 	out, err := json.Marshal(u.GenerateAttributes())
 	if err != nil {
 		logs.WithEF(err, u.Fields).Fatal("Cannot marshall attributes")
 	}
 
-	info := spec.HookInfo{
+	info := HookInfo{
 		Service:    u.Service,
 		Unit:       u,
 		Action:     "unit/" + action,
