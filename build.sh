@@ -29,7 +29,8 @@ else
     done
 fi
 
-godep go install
+# install
+cp $dir/dist/linux-amd64/ggn $GOPATH/bin/ggn
 
 end=`date +%s`
 echo "Duration : $((end-start))s"

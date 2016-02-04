@@ -190,7 +190,7 @@ func (e Env) runHook(path string, info HookInfo) {
 	logs.WithFields(e.fields).WithField("path", path).WithField("info", info).Debug("Running hook")
 	files, err := ioutil.ReadDir(e.path + PATH_HOOKS + path)
 	if err != nil {
-		logs.WithEF(err, e.fields).Debug("Cannot read hood directory")
+		logs.WithEF(err, e.fields).Debug("Cannot read hook directory")
 		return
 	}
 

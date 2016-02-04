@@ -84,7 +84,7 @@ func prepareLogs() {
 
 	level, err := logs.ParseLevel(lvl)
 	if err != nil {
-		fmt.Printf("Unknown log level : %s", lvl)
+		fmt.Printf("Unknown log level : %s\n", lvl)
 		os.Exit(1)
 	}
 	logs.SetLevel(level)
