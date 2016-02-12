@@ -3,8 +3,8 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"github.com/mitchellh/go-homedir"
+	"github.com/n0rad/go-erlog/logs"
 	"io"
 	"math/rand"
 	"os"
@@ -25,7 +25,9 @@ func ExecCmdGetStdoutAndStderr(head string, parts ...string) (string, string, er
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	log.Debug("Exec > ", head, " ", strings.Join(parts, " "))
+	if logs.IsDebugEnabled() {
+		logs.WithField("command", strings.Join([]string{head, " ", strings.Join(parts, " ")}, " ")).Debug("Running external command")
+	}
 	cmd := exec.Command(head, parts...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -37,7 +39,9 @@ func ExecCmdGetStdoutAndStderr(head string, parts ...string) (string, string, er
 func ExecCmdGetOutput(head string, parts ...string) (string, error) {
 	var stdout bytes.Buffer
 
-	log.Debug("Exec > ", head, " ", strings.Join(parts, " "))
+	if logs.IsDebugEnabled() {
+		logs.WithField("command", strings.Join([]string{head, " ", strings.Join(parts, " ")}, " ")).Debug("Running external command")
+	}
 	cmd := exec.Command(head, parts...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = os.Stderr
@@ -47,7 +51,9 @@ func ExecCmdGetOutput(head string, parts ...string) (string, error) {
 }
 
 func ExecCmd(head string, parts ...string) error {
-	log.Debug("Exec > ", head, " ", strings.Join(parts, " "))
+	if logs.IsDebugEnabled() {
+		logs.WithField("command", strings.Join([]string{head, " ", strings.Join(parts, " ")}, " ")).Debug("Running external command")
+	}
 	cmd := exec.Command(head, parts...)
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
@@ -132,20 +138,20 @@ func CopyFile(src, dst string) (err error) {
 			return
 		}
 	}
-	if err = os.Link(src, dst); err == nil {
-		return
-	}
-	err = copyFileContents(src, dst)
+	//	if err = os.Link(src, dst); err == nil {
+	//		return
+	//	}
+	err = copyFileContents(src, dst, sfi)
 	return
 }
 
-func copyFileContents(src, dst string) (err error) {
+func copyFileContents(src, dst string, sfi os.FileInfo) (err error) {
 	in, err := os.Open(src)
 	if err != nil {
 		return
 	}
 	defer in.Close()
-	out, err := os.Create(dst)
+	out, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, sfi.Mode())
 	if err != nil {
 		return
 	}
