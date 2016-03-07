@@ -3,7 +3,7 @@ package work
 import (
 	"github.com/appc/spec/discovery"
 	"github.com/appc/spec/schema"
-	cntspec "github.com/blablacar/cnt/spec"
+	"github.com/blablacar/dgr/bin-dgr/common"
 	"github.com/blablacar/ggn/utils"
 	"github.com/n0rad/go-erlog/logs"
 	"io/ioutil"
@@ -63,7 +63,7 @@ func (s Service) NodeAttributes(hostname string) map[string]interface{} {
 	return nil
 }
 
-func (s Service) podManifestToMap(result map[string][]cntspec.ACFullname, contents []byte) error {
+func (s Service) podManifestToMap(result map[string][]common.ACFullname, contents []byte) error {
 	pod := schema.BlankPodManifest()
 	err := pod.UnmarshalJSON(contents)
 	if err != nil {
@@ -71,10 +71,10 @@ func (s Service) podManifestToMap(result map[string][]cntspec.ACFullname, conten
 	}
 
 	var podname string
-	var acis []cntspec.ACFullname
+	var acis []common.ACFullname
 	for i, podAci := range pod.Apps {
 		version, _ := podAci.Image.Labels.Get("version")
-		fullname := cntspec.NewACFullName(podAci.Image.Name.String() + ":" + version)
+		fullname := common.NewACFullName(podAci.Image.Name.String() + ":" + version)
 		if i == 0 {
 			nameSplit := strings.SplitN(fullname.ShortName(), "_", 2)
 			podname = fullname.DomainName() + "/" + nameSplit[0]
@@ -91,7 +91,7 @@ func (s Service) podManifestToMap(result map[string][]cntspec.ACFullname, conten
 	return nil
 }
 
-func (s Service) aciManifestToMap(result map[string][]cntspec.ACFullname, contents []byte) error {
+func (s Service) aciManifestToMap(result map[string][]common.ACFullname, contents []byte) error {
 	aci := schema.BlankImageManifest()
 	err := aci.UnmarshalJSON(contents)
 	if err != nil {
@@ -99,13 +99,13 @@ func (s Service) aciManifestToMap(result map[string][]cntspec.ACFullname, conten
 	}
 
 	version, _ := aci.Labels.Get("version")
-	fullname := cntspec.NewACFullName(aci.Name.String() + ":" + version)
-	result[fullname.Name()] = []cntspec.ACFullname{*fullname}
+	fullname := common.NewACFullName(aci.Name.String() + ":" + version)
+	result[fullname.Name()] = []common.ACFullname{*fullname}
 	return nil
 }
 
-func (s Service) sources(sources []string) map[string][]cntspec.ACFullname {
-	res := make(map[string][]cntspec.ACFullname)
+func (s Service) sources(sources []string) map[string][]common.ACFullname {
+	res := make(map[string][]common.ACFullname)
 	for _, source := range sources {
 		content, err := ioutil.ReadFile(source)
 		if err != nil {
@@ -121,7 +121,7 @@ func (s Service) sources(sources []string) map[string][]cntspec.ACFullname {
 	return res
 }
 
-func (s Service) discoverPod(name cntspec.ACFullname) []cntspec.ACFullname {
+func (s Service) discoverPod(name common.ACFullname) []common.ACFullname {
 	podFields := s.fields.WithField("pod", name)
 
 	app, err := discovery.NewAppFromString(name.String())
@@ -159,7 +159,7 @@ func (s Service) discoverPod(name cntspec.ACFullname) []cntspec.ACFullname {
 		if err != nil {
 			logs.WithEF(err, logUrl).Fatal("Cannot read pod manifest content")
 		}
-		tmpMap := make(map[string][]cntspec.ACFullname, 1)
+		tmpMap := make(map[string][]common.ACFullname, 1)
 		if err := s.podManifestToMap(tmpMap, content); err != nil {
 			logs.WithEF(err, logUrl).Fatal("Cannot read pod content")
 		}
@@ -192,7 +192,7 @@ func (s *Service) PrepareAciList() string {
 		containerLog := s.fields.WithField("container", aci.String())
 		logs.WithFields(containerLog).Debug("Processing container")
 		if strings.HasPrefix(aci.ShortName(), "pod-") && !strings.Contains(aci.ShortName(), "_") { // TODO this is CNT specific
-			var podAcis []cntspec.ACFullname
+			var podAcis []common.ACFullname
 			if override[aci.Name()] != nil {
 				logs.WithFields(containerLog).Debug("Using local source to resolve")
 				podAcis = override[aci.Name()]
@@ -204,7 +204,7 @@ func (s *Service) PrepareAciList() string {
 				acis += aci.String() + " "
 			}
 		} else {
-			var taci cntspec.ACFullname
+			var taci common.ACFullname
 			if override[aci.Name()] != nil {
 				logs.WithFields(containerLog).Debug("Using local source to resolve")
 				taci = override[aci.Name()][0]

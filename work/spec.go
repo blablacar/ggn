@@ -1,6 +1,8 @@
 package work
 
-import "github.com/blablacar/cnt/spec"
+import (
+	"github.com/blablacar/dgr/bin-dgr/common"
+)
 
 const PATH_ATTRIBUTES = "/attributes"
 
@@ -38,11 +40,11 @@ type HookInfo struct {
 }
 
 type ServiceManifest struct {
-	ConcurrentUpdater int               `yaml:"concurrentUpdater"`
-	Containers        []spec.ACFullname `yaml:"containers"`
-	ExecStartPre      []string          `yaml:"execStartPre"`
-	ExecStart         []string          `yaml:"execStart"`
-	Nodes             interface{}       `yaml:"nodes"`
+	ConcurrentUpdater int                 `yaml:"concurrentUpdater"`
+	Containers        []common.ACFullname `yaml:"containers"`
+	ExecStartPre      []string            `yaml:"execStartPre"`
+	ExecStart         []string            `yaml:"execStart"`
+	Nodes             interface{}         `yaml:"nodes"`
 }
 
 type UnitType int
