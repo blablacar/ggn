@@ -22,7 +22,13 @@ func (u *Unit) Generate(tmpl *utils.Templating) {
 
 	logs.WithFields(u.Fields).Debug("Generate")
 	data := u.GenerateAttributes()
-	data["acis"] = u.Service.PrepareAciList()
+	aciList := u.Service.PrepareAcis()
+	acis := ""
+	for _, aci := range aciList {
+		acis += aci
+	}
+	data["aciList"] = aciList
+	data["acis"] = acis
 
 	out, err := json.Marshal(data)
 	if err != nil {

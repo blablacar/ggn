@@ -33,7 +33,7 @@ type Service struct {
 	generatedMutex *sync.Mutex
 	units          map[string]*Unit
 	unitsMutex     *sync.Mutex
-	aciList        string
+	aciList        []string
 	aciListMutex   *sync.Mutex
 }
 

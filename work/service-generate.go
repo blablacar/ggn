@@ -171,23 +171,23 @@ func (s Service) discoverPod(name common.ACFullname) []common.ACFullname {
 	}
 }
 
-func (s *Service) PrepareAciList() string {
+func (s *Service) PrepareAcis() []string {
 
 	if len(s.manifest.Containers) == 0 {
-		return ""
+		return []string{}
 	}
 
 	s.aciListMutex.Lock()
 	defer s.aciListMutex.Unlock()
 
-	if s.aciList != "" {
+	if len(s.aciList) > 0 {
 		return s.aciList
 	}
 
 	override := s.sources(BuildFlags.GenerateManifests)
 	logs.WithFields(s.fields).WithField("data", override).Debug("Local resolved sources")
 
-	var acis string
+	var acis []string
 	for _, aci := range s.manifest.Containers {
 		containerLog := s.fields.WithField("container", aci.String())
 		logs.WithFields(containerLog).Debug("Processing container")
@@ -201,7 +201,7 @@ func (s *Service) PrepareAciList() string {
 				podAcis = s.discoverPod(aci)
 			}
 			for _, aci := range podAcis {
-				acis += aci.String() + " "
+				acis = append(acis, aci.String())
 			}
 		} else {
 			var taci common.ACFullname
@@ -214,13 +214,13 @@ func (s *Service) PrepareAciList() string {
 				taci = *aciTmp
 				if err != nil {
 					logs.WithEF(err, containerLog).Fatal("Cannot resolve aci")
-					return ""
+					return []string{}
 				}
 			}
-			acis += taci.String() + " "
+			acis = append(acis, taci.String())
 		}
 	}
-	if acis == "" {
+	if len(acis) == 0 {
 		logs.WithFields(s.fields).Error("Cannot resolve aci")
 	}
 	s.aciList = acis
