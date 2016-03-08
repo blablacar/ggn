@@ -16,7 +16,15 @@ import (
 
 const FLEET_SUPPORTED_VERSION = "0.11.5"
 
-func Execute() {
+var CommitHash string
+var GgnVersion string
+var BuildDate string
+
+func Execute(commitHash string, ggnVersion string, buildDate string) {
+	CommitHash = commitHash
+	GgnVersion = ggnVersion
+	BuildDate = buildDate
+
 	checkFleetVersion()
 
 	ggn.Home = discoverHome()

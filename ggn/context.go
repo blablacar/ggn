@@ -5,10 +5,6 @@ import (
 )
 
 var Home HomeStruct
-var CommitHash = ""
-var Version = "DEV"
-var BuildDate = ""
-var PathSkip = 0
 
 func GetUserAndHost() string {
 	user := os.Getenv("USER")
