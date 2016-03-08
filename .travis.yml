@@ -3,5 +3,8 @@ language: go
 go:
  - 1.5
 
+install:
+  - sudo apt-get install upx
+
 script:
   - ./build.sh
