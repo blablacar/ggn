@@ -85,6 +85,18 @@ func (e Env) FleetctlListUnits() {
 	}
 }
 
+func (e Env) FleetctlListMachines() {
+	stdout, _, err := e.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-machines", "--full", "--no-legend")
+	if err != nil {
+		logs.WithEF(err, e.fields).Fatal("Failed to list-machines")
+	}
+
+	machines := strings.Split(stdout, "\n")
+	for _, machine := range machines {
+		fmt.Println(machine)
+	}
+}
+
 func (e Env) LoadService(name string) *Service {
 	e.servicesMutex.Lock()
 	defer e.servicesMutex.Unlock()
