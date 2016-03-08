@@ -3,11 +3,12 @@ package work
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/blablacar/cnt/utils"
 	"github.com/coreos/fleet/unit"
 	"github.com/juju/errors"
 	"github.com/n0rad/go-erlog/data"
 	"github.com/n0rad/go-erlog/logs"
+
+	"github.com/blablacar/dgr/bin-dgr/common"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -142,7 +143,7 @@ func (u *Unit) DisplayDiff() error {
 	defer os.Remove(localPath)
 	ioutil.WriteFile(remotePath, []byte(remote), 0644)
 	defer os.Remove(remotePath)
-	return utils.ExecCmd("git", "diff", "--word-diff", remotePath, localPath)
+	return common.ExecCmd("git", "diff", "--word-diff", remotePath, localPath)
 }
 
 func (u *Unit) IsLocalContentSameAsRemote() (bool, error) {

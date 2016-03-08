@@ -3,6 +3,7 @@ package work
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/blablacar/dgr/bin-templater/template"
 	"github.com/blablacar/ggn/utils"
 	"github.com/n0rad/go-erlog/logs"
 	"github.com/peterbourgon/mergemap"
@@ -12,7 +13,7 @@ import (
 	"strings"
 )
 
-func (u *Unit) Generate(tmpl *utils.Templating) {
+func (u *Unit) Generate(tmpl *template.Templating) {
 	u.generatedMutex.Lock()
 	defer u.generatedMutex.Unlock()
 

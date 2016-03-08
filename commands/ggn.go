@@ -3,7 +3,7 @@ package commands
 import (
 	"bufio"
 	"fmt"
-	"github.com/blablacar/cnt/utils"
+	"github.com/blablacar/dgr/bin-dgr/common"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/work"
 	"github.com/coreos/go-semver/semver"
@@ -155,7 +155,7 @@ func logLevelFromArgs() string {
 }
 
 func checkFleetVersion() {
-	output, err := utils.ExecCmdGetOutput("fleetctl")
+	output, err := common.ExecCmdGetOutput("fleetctl")
 	if err != nil {
 		logs.Fatal("fleetctl is required in PATH")
 	}

@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/blablacar/ggn",
-	"GoVersion": "go1.5.3",
+	"GoVersion": "go1.6",
 	"Packages": [
 		"./..."
 	],
@@ -36,14 +36,14 @@
 			"Rev": "431a37282b0ef85175c8c30eb79f3918c378c7d1"
 		},
 		{
-			"ImportPath": "github.com/blablacar/cnt/spec",
-			"Comment": "53-10-g4ce5c8b",
-			"Rev": "4ce5c8b645f310300e3b86a0253390c2e2df9f9b"
+			"ImportPath": "github.com/blablacar/dgr/bin-dgr/common",
+			"Comment": "56-32-g7627526",
+			"Rev": "76275266f686b07ea4a021d51ad711b781a464ad"
 		},
 		{
-			"ImportPath": "github.com/blablacar/cnt/utils",
-			"Comment": "53-10-g4ce5c8b",
-			"Rev": "4ce5c8b645f310300e3b86a0253390c2e2df9f9b"
+			"ImportPath": "github.com/blablacar/dgr/bin-templater/template",
+			"Comment": "56-32-g7627526",
+			"Rev": "76275266f686b07ea4a021d51ad711b781a464ad"
 		},
 		{
 			"ImportPath": "github.com/camlistore/camlistore/pkg/errorutil",
@@ -110,8 +110,8 @@
 			"Rev": "1b5e39b83d1835fa480e0c2ddefb040ee82d58b3"
 		},
 		{
-			"ImportPath": "github.com/kelseyhightower/memkv",
-			"Rev": "32a4556de2a1aab8ea4c8600f5ea24db3fbd8908"
+			"ImportPath": "github.com/leekchan/gtf",
+			"Rev": "882e96b937c8506c67b5adf98ff1f84cd7b7b93a"
 		},
 		{
 			"ImportPath": "github.com/mgutz/ansi",
@@ -123,7 +123,7 @@
 		},
 		{
 			"ImportPath": "github.com/n0rad/go-erlog",
-			"Rev": "d91d1cac32e6fa5843dcef5818e10e83a4a7c1bf"
+			"Rev": "73ef27688910c7154b1428a4aa63b1d3f4ada1f9"
 		},
 		{
 			"ImportPath": "github.com/peterbourgon/mergemap",

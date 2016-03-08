@@ -1,8 +1,8 @@
 package ggn
 
 import (
-	"github.com/blablacar/cnt/utils"
 	"github.com/ghodss/yaml"
+	"github.com/mitchellh/go-homedir"
 	"github.com/n0rad/go-erlog/data"
 	"github.com/n0rad/go-erlog/logs"
 	"io/ioutil"
@@ -64,5 +64,9 @@ func (h *HomeStruct) SaveMachinesCache(env string, data string) {
 }
 
 func DefaultHomeRoot() string {
-	return utils.UserHomeOrFatal() + "/.config"
+	home, err := homedir.Dir()
+	if err != nil {
+		logs.WithError(err).Fatal("Failed to find user home folder")
+	}
+	return home + "/.config"
 }

@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/blablacar/attributes-merger/attributes"
+	"github.com/blablacar/dgr/bin-templater/template"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/utils"
 	"github.com/coreos/etcd/client"
 	"github.com/juju/errors"
 	"github.com/n0rad/go-erlog/data"
+	"github.com/n0rad/go-erlog/errs"
 	"github.com/n0rad/go-erlog/logs"
 	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
@@ -250,14 +252,17 @@ func (s *Service) loadAttributes() {
 	logs.WithFields(s.fields).WithField("attributes", s.attributes).Debug("Attributes loaded")
 }
 
-func (s *Service) loadUnitTemplate(filename string) (*utils.Templating, error) {
+func (s *Service) loadUnitTemplate(filename string) (*template.Templating, error) {
 	path := s.path + filename
 	source, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, errors.Annotate(err, "Cannot read unit template file")
 	}
-	template := utils.NewTemplating(s.Name, string(source))
-	return template, template.Parse()
+	template, err := template.NewTemplating(nil, path, string(source))
+	if err != nil {
+		return nil, errs.WithEF(err, s.fields, "Failed to load unit template")
+	}
+	return template, nil
 }
 
 func (s *Service) manifestPath() string {

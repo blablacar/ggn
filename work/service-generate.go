@@ -4,7 +4,7 @@ import (
 	"github.com/appc/spec/discovery"
 	"github.com/appc/spec/schema"
 	"github.com/blablacar/dgr/bin-dgr/common"
-	"github.com/blablacar/ggn/utils"
+	"github.com/blablacar/dgr/bin-templater/template"
 	"github.com/n0rad/go-erlog/logs"
 	"io/ioutil"
 	"net/http"
@@ -26,7 +26,7 @@ func (s *Service) Generate() {
 		logs.WithEF(err, s.fields).Fatal("Cannot load service template")
 	}
 
-	var timerTmpl *utils.Templating
+	var timerTmpl *template.Templating
 	if s.hasTimer {
 		timerTmpl, err = s.loadUnitTemplate(PATH_UNIT_TIMER_TEMPLATE)
 		if err != nil {

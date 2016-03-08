@@ -3,7 +3,7 @@ package work
 import (
 	"fmt"
 	"github.com/blablacar/attributes-merger/attributes"
-	cntUtils "github.com/blablacar/cnt/utils"
+	"github.com/blablacar/dgr/bin-dgr/common"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/utils"
 	"github.com/coreos/etcd/client"
@@ -218,7 +218,7 @@ func (e Env) runHook(path string, info HookInfo) {
 			}
 
 			logs.WithFields(hookFields).Debug("Running Hook")
-			if err := cntUtils.ExecCmd("bash", "-c", strings.Join(args, " ")); err != nil {
+			if err := common.ExecCmd("bash", "-c", strings.Join(args, " ")); err != nil {
 				logs.WithFields(hookFields).Fatal("Hook status is failed")
 			}
 		}
@@ -278,9 +278,9 @@ func (e Env) runFleetCmdInternal(getOutput bool, args []string) (string, string,
 	var stderr string
 	var err error
 	if getOutput {
-		stdout, stderr, err = cntUtils.ExecCmdGetStdoutAndStderr("bash", "-c", strings.Join(args, " "))
+		stdout, stderr, err = common.ExecCmdGetStdoutAndStderr("bash", "-c", strings.Join(args, " "))
 	} else {
-		err = cntUtils.ExecCmd("bash", "-c", strings.Join(args, " "))
+		err = common.ExecCmd("bash", "-c", strings.Join(args, " "))
 	}
 	return stdout, stderr, err
 }
