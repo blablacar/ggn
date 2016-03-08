@@ -26,7 +26,7 @@ func (u *Unit) Generate(tmpl *template.Templating) {
 	aciList := u.Service.PrepareAcis()
 	acis := ""
 	for _, aci := range aciList {
-		acis += aci
+		acis += aci + " "
 	}
 	data["aciList"] = aciList
 	data["acis"] = acis
