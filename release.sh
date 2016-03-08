@@ -39,7 +39,8 @@ require_clean_work_tree () {
     fi
 }
 
-VERSION=$version go generate
+export VERSION=${version}
+${dir}/clean.sh
 ${dir}/build.sh
 require_clean_work_tree
 
@@ -48,12 +49,12 @@ for i in ${dir}/dist/*-amd64/ ; do
     if [ -d "$i" ]; then
         cd $i
         platform=${PWD##*/}
-        tar cvzf ggn-$platform-$version.tar.gz ggn
+        tar cvzf ggn-${platform}-${version}.tar.gz ggn
         cd -
     fi
 done
 
-git tag $version -a -m "Version $version"
+git tag ${version} -a -m "Version $version"
 git push --tags
 
 sleep 5
