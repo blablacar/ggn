@@ -6,6 +6,7 @@ import (
 )
 
 func (e Env) Check() {
+	e.Generate()
 	logs.WithFields(e.fields).Debug("Running check")
 
 	info := HookInfo{Command: "env/check", Action: "env/check"}

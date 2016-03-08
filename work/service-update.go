@@ -13,8 +13,8 @@ import (
 )
 
 func (s *Service) Update() error {
-	logs.WithFields(s.fields).Info("Updating service")
 	s.Generate()
+	logs.WithFields(s.fields).Info("Updating service")
 
 	s.Lock("service/update", 1*time.Hour, "Updating")
 	defer s.Unlock("service/update")

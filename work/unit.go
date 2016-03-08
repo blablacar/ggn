@@ -67,6 +67,7 @@ func (u *Unit) GetService() *Service {
 }
 
 func (u *Unit) Check(command string) {
+	u.Service.Generate()
 	logs.WithFields(u.Fields).Debug("Check")
 
 	info := HookInfo{

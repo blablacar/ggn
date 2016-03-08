@@ -6,6 +6,7 @@ import (
 )
 
 func (s *Service) Check() {
+	s.Generate()
 	logs.WithFields(s.fields).Debug("Running check")
 	s.runHook(EARLY, "service/check", "check")
 	defer s.runHook(LATE, "service/check", "check")
