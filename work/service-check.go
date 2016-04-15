@@ -5,14 +5,17 @@ import (
 	"sync"
 )
 
-func (s *Service) Check() {
-	s.Generate()
+func (s *Service) Check() error {
+	if err := s.Generate(); err != nil {
+		return err
+	}
 	logs.WithFields(s.fields).Debug("Running check")
 	s.runHook(EARLY, "service/check", "check")
 	defer s.runHook(LATE, "service/check", "check")
 
 	s.concurrentChecker(s.ListUnits())
 
+	return nil
 	//	for _, unitName := range s.ListUnits() {
 	//		s.LoadUnit(unitName).Check("service/check")
 	//	}

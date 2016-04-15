@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/blablacar/ggn/work"
+	"github.com/n0rad/go-erlog/logs"
 	"github.com/spf13/cobra"
 )
 
@@ -113,7 +114,9 @@ func prepareUnitCommands(unit *work.Unit) *cobra.Command {
 		Use:   "generate",
 		Short: getShortDescription(unit, "generate"),
 		Run: func(cmd *cobra.Command, args []string) {
-			unit.Service.Generate()
+			if err := unit.Service.Generate(); err != nil {
+				logs.WithE(err).Error("Generate failed")
+			}
 		},
 	}
 

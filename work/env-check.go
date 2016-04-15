@@ -40,7 +40,9 @@ func (e Env) concurrentChecker(services []string) {
 		wg.Add(1)
 		go func() {
 			for service := range aChan {
-				e.LoadService(service).Check()
+				if err := e.LoadService(service).Check(); err != nil {
+					logs.WithE(err).WithField("service", service).Error("Check failed")
+				}
 			}
 			wg.Done()
 		}()

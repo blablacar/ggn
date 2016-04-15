@@ -13,17 +13,20 @@ import (
 	"strings"
 )
 
-func (u *Unit) Generate(tmpl *template.Templating) {
+func (u *Unit) Generate(tmpl *template.Templating) error {
 	u.generatedMutex.Lock()
 	defer u.generatedMutex.Unlock()
 
 	if u.generated {
-		return
+		return nil
 	}
 
 	logs.WithFields(u.Fields).Debug("Generate")
 	data := u.GenerateAttributes()
-	aciList := u.Service.PrepareAcis()
+	aciList, err := u.Service.PrepareAcis()
+	if err != nil {
+		return err
+	}
 	acis := ""
 	for _, aci := range aciList {
 		acis += aci + " "
@@ -56,6 +59,7 @@ func (u *Unit) Generate(tmpl *template.Templating) {
 	}
 
 	u.generated = true
+	return nil
 }
 
 func (u Unit) GenerateAttributes() map[string]interface{} {

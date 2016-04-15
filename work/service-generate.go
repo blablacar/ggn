@@ -5,25 +5,26 @@ import (
 	"github.com/appc/spec/schema"
 	"github.com/blablacar/dgr/bin-dgr/common"
 	"github.com/blablacar/dgr/bin-templater/template"
+	"github.com/n0rad/go-erlog/errs"
 	"github.com/n0rad/go-erlog/logs"
 	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
-func (s *Service) Generate() {
+func (s *Service) Generate() error {
 	s.generatedMutex.Lock()
 	defer s.generatedMutex.Unlock()
 
 	if s.generated {
-		return
+		return nil
 	}
 
 	logs.WithFields(s.fields).Debug("Generating units")
 
 	serviceTmpl, err := s.loadUnitTemplate(PATH_UNIT_SERVICE_TEMPLATE)
 	if err != nil {
-		logs.WithEF(err, s.fields).Fatal("Cannot load service template")
+		return errs.WithEF(err, s.fields, "Cannot load service template")
 	}
 
 	var timerTmpl *template.Templating
@@ -36,20 +37,25 @@ func (s *Service) Generate() {
 
 	if len(s.nodesAsJsonMap) == 0 {
 		logs.WithFields(s.fields).Fatal("No node to process in manifest")
-		return
+		return nil
 	}
 
 	for _, unitName := range s.ListUnits() {
 		unit := s.LoadUnit(unitName)
 		if unit.GetType() == TYPE_SERVICE {
-			unit.Generate(serviceTmpl)
+			if err := unit.Generate(serviceTmpl); err != nil {
+				return err
+			}
 		} else if unit.GetType() == TYPE_TIMER {
-			unit.Generate(timerTmpl)
+			if err := unit.Generate(timerTmpl); err != nil {
+				return err
+			}
 		} else {
 			logs.WithFields(s.fields).WithField("type", unit.GetType()).Fatal("Unknown unit type")
 		}
 	}
 	s.generated = true
+	return nil
 }
 
 func (s Service) NodeAttributes(hostname string) map[string]interface{} {
@@ -121,7 +127,7 @@ func (s Service) sources(sources []string) map[string][]common.ACFullname {
 	return res
 }
 
-func (s Service) discoverPod(name common.ACFullname) []common.ACFullname {
+func (s Service) discoverPod(name common.ACFullname) ([]common.ACFullname, error) {
 	podFields := s.fields.WithField("pod", name)
 
 	app, err := discovery.NewAppFromString(name.String())
@@ -146,13 +152,11 @@ func (s Service) discoverPod(name common.ACFullname) []common.ACFullname {
 	logUrl := podFields.WithField("url", url)
 	response, err := http.Get(url)
 	if err != nil {
-		logs.WithEF(err, logUrl).Fatal("Cannot get pod manifest content")
-		return nil
+		return nil, errs.WithEF(err, logUrl, "Cannot get pod manifest content")
 	} else {
 		if response.StatusCode != 200 {
-			logs.WithFields(logUrl).WithField("status_code", response.StatusCode).
-				WithField("status_message", response.Status).
-				Fatal("Receive response error for discovery")
+			return nil, errs.WithF(logUrl.WithField("status_code", response.StatusCode).
+				WithField("status_message", response.Status), "Receive response error for discovery")
 		}
 		defer response.Body.Close()
 		content, err := ioutil.ReadAll(response.Body)
@@ -167,21 +171,21 @@ func (s Service) discoverPod(name common.ACFullname) []common.ACFullname {
 		if acis == nil {
 			logs.WithFields(logUrl).Fatal("Discovered pod name does not match requested")
 		}
-		return acis
+		return acis, nil
 	}
 }
 
-func (s *Service) PrepareAcis() []string {
+func (s *Service) PrepareAcis() ([]string, error) {
 
 	if len(s.manifest.Containers) == 0 {
-		return []string{}
+		return []string{}, nil
 	}
 
 	s.aciListMutex.Lock()
 	defer s.aciListMutex.Unlock()
 
 	if len(s.aciList) > 0 {
-		return s.aciList
+		return s.aciList, nil
 	}
 
 	override := s.sources(BuildFlags.GenerateManifests)
@@ -198,7 +202,11 @@ func (s *Service) PrepareAcis() []string {
 				podAcis = override[aci.Name()]
 			} else {
 				logs.WithFields(containerLog).Debug("Using remote source to resolve")
-				podAcis = s.discoverPod(aci)
+				pAcis, err := s.discoverPod(aci)
+				if err != nil {
+					return []string{}, err
+				}
+				podAcis = pAcis
 			}
 			for _, aci := range podAcis {
 				acis = append(acis, aci.String())
@@ -214,7 +222,7 @@ func (s *Service) PrepareAcis() []string {
 				taci = *aciTmp
 				if err != nil {
 					logs.WithEF(err, containerLog).Fatal("Cannot resolve aci")
-					return []string{}
+					return []string{}, nil
 				}
 			}
 			acis = append(acis, taci.String())
@@ -224,5 +232,5 @@ func (s *Service) PrepareAcis() []string {
 		logs.WithFields(s.fields).Error("Cannot resolve aci")
 	}
 	s.aciList = acis
-	return acis
+	return acis, nil
 }

@@ -67,7 +67,9 @@ func (u *Unit) GetService() *Service {
 }
 
 func (u *Unit) Check(command string) {
-	u.Service.Generate()
+	if err := u.Service.Generate(); err != nil {
+		logs.WithEF(err, u.Fields).Fatal("Generate failed")
+	}
 	logs.WithFields(u.Fields).Debug("Check")
 
 	info := HookInfo{

@@ -22,7 +22,9 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 		Short: "generate units for " + service.Name + " on env " + service.GetEnv().GetName(),
 		Long:  `generate units using remote resolved or local pod/aci manifests`,
 		Run: func(cmd *cobra.Command, args []string) {
-			service.Generate()
+			if err := service.Generate(); err != nil {
+				logs.WithE(err).Fatal("Generate failed")
+			}
 		},
 	}
 
@@ -30,7 +32,9 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 		Use:   "check [manifest...]",
 		Short: "Check units for " + service.Name + " on env " + service.GetEnv().GetName(),
 		Run: func(cmd *cobra.Command, args []string) {
-			service.Check()
+			if err := service.Check(); err != nil {
+				logs.WithE(err).Fatal("Check failed")
+			}
 		},
 	}
 

@@ -14,7 +14,9 @@ func (u *Unit) Start(command string) error {
 	}
 	if !u.IsLoaded() {
 		logs.WithFields(u.Fields).Debug("unit is not loaded yet")
-		u.Service.Generate()
+		if err := u.Service.Generate(); err != nil {
+			logs.WithEF(err, u.Fields).Fatal("Generate failed")
+		}
 		u.Load(command)
 	} else {
 		logs.WithFields(u.Fields).Debug("unit is already loaded")
@@ -27,7 +29,9 @@ func (u *Unit) Unload(command string) error {
 }
 
 func (u *Unit) Load(command string) error {
-	u.Service.Generate()
+	if err := u.Service.Generate(); err != nil {
+		logs.WithEF(err, u.Fields).Fatal("Generate failed")
+	}
 	return u.runAction(command, "load")
 }
 
@@ -59,7 +63,9 @@ func (u *Unit) Restart(command string) error {
 }
 
 func (u *Unit) Update(command string) error {
-	u.Service.Generate()
+	if err := u.Service.Generate(); err != nil {
+		logs.WithEF(err, u.Fields).Fatal("Generate failed")
+	}
 	logs.WithFields(u.Fields).Debug("Update")
 	u.runHook(EARLY, command, "update")
 	defer u.runHook(LATE, command, "update")
@@ -116,7 +122,9 @@ func (u *Unit) Ssh(command string) {
 
 func (u *Unit) Diff(command string) {
 	logs.WithFields(u.Fields).Debug("diff")
-	u.Service.Generate()
+	if err := u.Service.Generate(); err != nil {
+		logs.WithEF(err, u.Fields).Fatal("Generate failed")
+	}
 	u.runHook(EARLY, command, "diff")
 	defer u.runHook(LATE, command, "diff")
 

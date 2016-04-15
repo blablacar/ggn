@@ -13,7 +13,9 @@ import (
 )
 
 func (s *Service) Update() error {
-	s.Generate()
+	if err := s.Generate(); err != nil {
+		return err
+	}
 	logs.WithFields(s.fields).Info("Updating service")
 
 	s.Lock("service/update", 1*time.Hour, "Updating")
@@ -28,16 +30,17 @@ func (s *Service) Update() error {
 }
 
 func (s *Service) updateUnit(u Unit) {
+	uField := s.fields.WithField("unit", u.Name)
 ask:
 	for {
 		same, err := u.IsLocalContentSameAsRemote()
 		if err != nil {
-			logs.WithEF(err, s.fields).Warn("Cannot compare local and remote service")
+			logs.WithEF(err, uField).Warn("Cannot compare local and remote service")
 		}
 		if same {
-			logs.WithFields(s.fields).Info("Remote service is already up to date")
+			logs.WithFields(uField).Info("Remote service is already up to date")
 			if !u.IsRunning() {
-				logs.WithFields(s.fields).Info("But service is not running")
+				logs.WithFields(uField).Info("But service is not running")
 			} else if !BuildFlags.All {
 				return
 			}
@@ -51,18 +54,18 @@ ask:
 		case ACTION_DIFF:
 			u.DisplayDiff()
 		case ACTION_QUIT:
-			logs.WithFields(s.fields).Debug("User want to quit")
+			logs.WithFields(uField).Debug("User want to quit")
 			if globalUpdater == 0 {
 				s.Unlock("service/update")
 			}
 			os.Exit(1)
 		case ACTION_SKIP:
-			logs.WithFields(s.fields).Debug("User skip this service")
+			logs.WithFields(uField).Debug("User skip this service")
 			return
 		case ACTION_YES:
 			break ask
 		default:
-			logs.WithFields(s.fields).Fatal("Should not be here")
+			logs.WithFields(uField).Fatal("Should not be here")
 		}
 	}
 
@@ -74,7 +77,7 @@ ask:
 		atomic.AddUint32(&globalUpdater, 1)
 	}
 
-	logs.WithFields(s.fields).Info("Updating unit")
+	logs.WithFields(uField).Info("Updating unit")
 	u.UpdateInside("service/update")
 	time.Sleep(time.Second * 2)
 

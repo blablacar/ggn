@@ -137,7 +137,9 @@ func (s *Service) LoadUnit(name string) *Unit {
 }
 
 func (s *Service) Diff() {
-	s.Generate()
+	if err := s.Generate(); err != nil {
+		logs.WithEF(err, s.fields).Fatal("Generate failed")
+	}
 	for _, unitName := range s.ListUnits() {
 		unit := s.LoadUnit(unitName)
 		unit.Diff("service/diff")

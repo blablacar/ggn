@@ -8,6 +8,8 @@ func (e Env) Generate() {
 
 	for _, service := range services {
 		service := e.LoadService(service)
-		service.Generate()
+		if err := service.Generate(); err != nil {
+			logs.WithE(err).Error("Generate failed")
+		}
 	}
 }
