@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/blablacar/attributes-merger/attributes"
 	"github.com/blablacar/dgr/bin-dgr/common"
+	"github.com/blablacar/dgr/bin-templater/template"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/utils"
 	"github.com/coreos/etcd/client"
@@ -15,6 +16,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	txttmpl "text/template"
 	"time"
 )
 
@@ -38,6 +40,7 @@ type Env struct {
 	config        Config
 	services      map[string]*Service
 	servicesMutex *sync.Mutex
+	Partials      *txttmpl.Template
 }
 
 func NewEnvironment(root string, name string) *Env {
@@ -58,6 +61,7 @@ func NewEnvironment(root string, name string) *Env {
 	}
 	env.loadAttributes()
 	env.loadConfig()
+	env.loadPartials()
 	return env
 }
 
@@ -121,6 +125,17 @@ func (e *Env) loadConfig() {
 			panic(err)
 		}
 	}
+}
+
+func (e *Env) loadPartials() {
+	if ok, err := common.IsDirEmpty(e.path + PATH_TEMPLATES); ok || err != nil {
+		return
+	}
+	tmplDir, err := template.NewTemplateDir(e.path+PATH_TEMPLATES, "")
+	if err != nil {
+		logs.WithEF(err, e.fields).WithField("path", e.path+PATH_ATTRIBUTES).Fatal("Failed to load partial templating")
+	}
+	e.Partials = tmplDir.Partials
 }
 
 func (e *Env) loadAttributes() {

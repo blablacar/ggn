@@ -5,6 +5,7 @@ import (
 )
 
 const PATH_ATTRIBUTES = "/attributes"
+const PATH_TEMPLATES = "/templates"
 
 const ACTIVE_ACTIVE = "active"
 const SUB_RUNNING = "running"

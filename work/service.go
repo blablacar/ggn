@@ -260,7 +260,7 @@ func (s *Service) loadUnitTemplate(filename string) (*template.Templating, error
 	if err != nil {
 		return nil, errors.Annotate(err, "Cannot read unit template file")
 	}
-	template, err := template.NewTemplating(nil, path, string(source))
+	template, err := template.NewTemplating(s.GetEnv().Partials, path, string(source))
 	if err != nil {
 		return nil, errs.WithEF(err, s.fields, "Failed to load unit template")
 	}
