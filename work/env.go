@@ -13,6 +13,7 @@ import (
 	"github.com/n0rad/go-erlog/logs"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"strings"
 	"sync"
@@ -125,6 +126,14 @@ func (e *Env) loadConfig() {
 			panic(err)
 		}
 	}
+
+	src := strings.Split(e.config.Fleet.Endpoint, ",")
+	dest := make([]string, len(src))
+	perm := rand.Perm(len(src))
+	for i, v := range perm {
+		dest[v] = src[i]
+	}
+	e.config.Fleet.Endpoint = strings.Join(dest, ",")
 }
 
 func (e *Env) loadPartials() {
@@ -194,7 +203,8 @@ func (e Env) ListMachineNames() ([]string, error) {
 		metas := strings.Split(machine, ",")
 		for _, meta := range metas {
 			elem := strings.Split(meta, "=")
-			if elem[0] == "name" { // TODO this is specific to blablacar's metadata ??
+			if elem[0] == "name" {
+				// TODO this is specific to blablacar's metadata ??
 				names = append(names, elem[1])
 			}
 		}
