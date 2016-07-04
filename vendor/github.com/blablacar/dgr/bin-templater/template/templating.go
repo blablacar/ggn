@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"github.com/leekchan/gtf"
+	"gopkg.in/yaml.v2"
 	"io"
 	"os"
 	"path"
@@ -117,6 +118,16 @@ func UnmarshalJsonArray(data string) ([]interface{}, error) {
 	return ret, err
 }
 
+func toJson(data interface{}) (string, error) {
+	res, err := json.MarshalIndent(data, "", "  ")
+	return string(res), err
+}
+
+func toYaml(data interface{}) (string, error) {
+	res, err := yaml.Marshal(data)
+	return string(res), err
+}
+
 func IsType(data interface{}, t string) bool {
 	dataType := reflect.TypeOf(data)
 	if dataType == nil {
@@ -167,6 +178,14 @@ func IsString(data interface{}) bool {
 		return false
 	}
 	if dataType.Kind() == reflect.String {
+		return true
+	}
+	return false
+}
+
+func IsNil(data interface{}) bool {
+	dataType := reflect.TypeOf(data)
+	if dataType == nil {
 		return true
 	}
 	return false
@@ -274,6 +293,7 @@ func init() {
 	TemplateFunctions["isKind"] = IsKind
 	TemplateFunctions["isString"] = IsString
 	TemplateFunctions["isMapFirst"] = IsMapFirst
+	TemplateFunctions["isNil"] = IsNil
 	TemplateFunctions["isMapLast"] = IsMapLast
 	TemplateFunctions["howDeep"] = HowDeep
 	TemplateFunctions["add"] = add
@@ -281,4 +301,10 @@ func init() {
 	TemplateFunctions["div"] = div
 	TemplateFunctions["sub"] = sub
 	TemplateFunctions["mod"] = mod
+	TemplateFunctions["toJson"] = toJson
+	TemplateFunctions["toYaml"] = toYaml
+
+	TemplateFunctions["IsMapFirst"] = IsMapFirst
+	TemplateFunctions["IsMapLast"] = IsMapLast
+	TemplateFunctions["HowDeep"] = HowDeep
 }

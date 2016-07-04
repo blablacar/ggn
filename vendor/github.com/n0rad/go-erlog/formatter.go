@@ -71,6 +71,11 @@ func (f *ErlogWriterAppender) Fire(event *LogEvent) {
 	//	isColored := isTerminal && (runtime.GOOS != "windows")
 	paths := strings.SplitN(event.File, "/", pathSkip+1)
 
+	packagePath := event.File
+	if len(paths) > pathSkip {
+		packagePath = paths[pathSkip]
+	}
+
 	b := &bytes.Buffer{}
 	fmt.Fprintf(b, "%s %s%-5s%s %s%30s:%-3d%s %s%-44s%s",
 		f.timeColor(event.Level)(time),
@@ -78,7 +83,7 @@ func (f *ErlogWriterAppender) Fire(event *LogEvent) {
 		level,
 		reset,
 		f.fileColor(event.Level),
-		f.reduceFilePath(paths[pathSkip], 30),
+		f.reduceFilePath(packagePath, 30),
 		event.Line,
 		reset,
 		f.textColor(event.Level),
@@ -106,9 +111,15 @@ func (f *ErlogWriterAppender) logError(b *bytes.Buffer, event *LogEvent) {
 		if e, ok := err.(*errs.EntryError); ok {
 			path, line := findFileAndName(e.Stack)
 			paths := strings.SplitN(path, "/", pathSkip+1)
+
+			packagePath := event.File
+			if len(paths) > pathSkip {
+				packagePath = paths[pathSkip]
+			}
+
 			fmt.Fprintf(b, "               %s%30s:%-3d%s %s%-44s%s",
 				f.fileColor(event.Level),
-				f.reduceFilePath(paths[pathSkip], 30),
+				f.reduceFilePath(packagePath, 30),
 				line,
 				reset,
 				f.textColor(event.Level),

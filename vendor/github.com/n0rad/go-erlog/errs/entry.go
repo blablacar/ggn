@@ -118,6 +118,10 @@ func (e *EntryError) Error() string {
 	return buffer.String()
 }
 
+func (e *EntryError) String() string {
+	return e.Error()
+}
+
 //
 //func (e *EntryError) Stack() []byte {
 //	buf := bytes.Buffer{}

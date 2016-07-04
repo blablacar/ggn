@@ -33,18 +33,18 @@ func (n ACFullname) LatestVersion() (string, error) {
 		app.Labels["arch"] = "amd64"
 	}
 
-	endpoint, _, err := discovery.DiscoverEndpoints(*app, nil, false)
+	endpoints, _, err := discovery.DiscoverACIEndpoints(*app, nil, discovery.InsecureTLS|discovery.InsecureHTTP) //TODO support security
 	if err != nil {
 		return "", errors.Annotate(err, "Latest discovery fail")
 	}
 
 	r, _ := regexp.Compile(`^(\d+\.)?(\d+\.)?(\*|\d+)(\-[\dA-Za-z]+){0,1}$`) // TODO this is nexus specific
 
-	if len(endpoint.ACIEndpoints) == 0 {
+	if len(endpoints) == 0 {
 		return "", errs.WithF(data.WithField("aci", string(n)), "Discovery does not give an endpoint to check latest version")
 	}
 
-	url := getRedirectForLatest(endpoint.ACIEndpoints[0].ACI)
+	url := getRedirectForLatest(endpoints[0].ACI)
 	logs.WithField("url", url).Debug("latest verion url")
 
 	for _, part := range strings.Split(url, "/") {
@@ -63,7 +63,7 @@ func (n ACFullname) String() string {
 	return string(n)
 }
 
-/* example.com/yopla:1 */
+/* example.com/dgr/yopla:1 */
 func NewACFullName(s string) *ACFullname {
 	n := ACFullname(s)
 	return &n
@@ -91,13 +91,20 @@ func (n ACFullname) Version() string {
 }
 
 /* yopla:1 */
-func (n ACFullname) ShortNameId() string {
-	return strings.Split(string(n), "/")[1]
+func (n ACFullname) TinyNameId() string {
+	split := strings.Split(string(n), "/")
+	return split[len(split)-1]
+}
+
+/* dgr/yopla */
+func (n ACFullname) ShortName() string {
+	return strings.SplitN(n.Name(), "/", 2)[1]
 }
 
 /* yopla */
-func (n ACFullname) ShortName() string {
-	return strings.Split(n.Name(), "/")[1]
+func (n ACFullname) TinyName() string {
+	split := strings.Split(n.Name(), "/")
+	return split[len(split)-1]
 }
 
 /* example.com */
@@ -105,7 +112,7 @@ func (n ACFullname) DomainName() string {
 	return strings.Split(n.Name(), "/")[0]
 }
 
-/* example.com/yopla */
+/* example.com/dgr/yopla */
 func (n ACFullname) Name() string {
 	return strings.Split(string(n), ":")[0]
 }

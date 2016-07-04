@@ -138,15 +138,16 @@ func (s Service) discoverPod(name common.ACFullname) ([]common.ACFullname, error
 		app.Labels["arch"] = "amd64"
 	}
 
-	endpoint, _, err := discovery.DiscoverEndpoints(*app, nil, false)
+	insecure := discovery.InsecureTLS | discovery.InsecureHTTP
+	endpoint, _, err := discovery.DiscoverACIEndpoints(*app, nil, insecure)
 	if err != nil {
 		logs.WithEF(err, podFields).Fatal("pod discovery failed")
 	}
 
-	if len(endpoint.ACIEndpoints) == 0 {
+	if len(endpoint) == 0 {
 		logs.WithF(podFields).Fatal("Discovery does not contain a url")
 	}
-	url := endpoint.ACIEndpoints[0].ACI
+	url := endpoint[0].ACI
 	url = strings.Replace(url, "=aci", "=pod", 1) // TODO this is nexus specific
 
 	logUrl := podFields.WithField("url", url)

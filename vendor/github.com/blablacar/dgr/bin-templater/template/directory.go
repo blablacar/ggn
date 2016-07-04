@@ -12,19 +12,21 @@ import (
 )
 
 type TemplateDir struct {
-	fields   data.Fields
-	src      string
-	dst      string
-	Partials *txttmpl.Template
+	continueOnError bool
+	fields          data.Fields
+	src             string
+	dst             string
+	Partials        *txttmpl.Template
 }
 
-func NewTemplateDir(path string, targetRoot string) (*TemplateDir, error) {
-	fields := data.WithField("dir", path)
-	logs.WithF(fields).Info("Reading template dir")
+func NewTemplateDir(path string, targetRoot string, continueOnError bool) (*TemplateDir, error) {
+	fields := data.WithField("dir", path).WithField("continueOnError", continueOnError)
+	logs.WithF(fields).Debug("Reading template dir")
 	tmplDir := &TemplateDir{
-		fields: fields,
-		src:    path,
-		dst:    targetRoot,
+		fields:          fields,
+		src:             path,
+		dst:             targetRoot,
+		continueOnError: continueOnError,
 	}
 	return tmplDir, tmplDir.LoadPartial()
 }
@@ -102,7 +104,7 @@ func (t *TemplateDir) processSingleDir(src string, dst string, attributes map[st
 			if err := t.processSingleDir(srcObj, dstObj, attributes); err != nil {
 				return err
 			}
-		} else if strings.HasSuffix(obj.Name(), ".tmpl") || strings.Contains(obj.Name(), ".tmpl.") {
+		} else if strings.HasSuffix(obj.Name(), ".tmpl") || (strings.Contains(obj.Name(), ".tmpl.") && (!strings.HasSuffix(obj.Name(), ".cfg"))) {
 			if strings.HasSuffix(obj.Name(), ".tmpl") {
 				dstObj = dstObj[:len(dstObj)-5]
 			} else {
@@ -112,10 +114,15 @@ func (t *TemplateDir) processSingleDir(src string, dst string, attributes map[st
 			if err != nil {
 				return err
 			}
-			if err := template.runTemplate(dstObj, attributes); err != nil {
-				return err
+			if err2 := template.runTemplate(dstObj, attributes, !t.continueOnError); err2 != nil {
+				if t.continueOnError {
+					err = err2
+					logs.WithEF(err, t.fields).Error("Templating failed")
+				} else {
+					return err2
+				}
 			}
 		}
 	}
-	return nil
+	return err
 }

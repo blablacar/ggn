@@ -140,7 +140,7 @@ func (e *Env) loadPartials() {
 	if ok, err := common.IsDirEmpty(e.path + PATH_TEMPLATES); ok || err != nil {
 		return
 	}
-	tmplDir, err := template.NewTemplateDir(e.path+PATH_TEMPLATES, "")
+	tmplDir, err := template.NewTemplateDir(e.path+PATH_TEMPLATES, "", false)
 	if err != nil {
 		logs.WithEF(err, e.fields).WithField("path", e.path+PATH_ATTRIBUTES).Fatal("Failed to load partial templating")
 	}
