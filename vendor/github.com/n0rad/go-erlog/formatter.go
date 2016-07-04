@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/mgutz/ansi"
-	"github.com/n0rad/go-erlog/data"
-	"github.com/n0rad/go-erlog/errs"
 	"github.com/n0rad/go-erlog/logs"
 	"io"
 	"runtime"
@@ -13,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/n0rad/go-erlog/errs"
+	"github.com/n0rad/go-erlog/data"
 )
 
 var pathSkip int = 0
@@ -37,6 +37,7 @@ type ErlogWriterAppender struct {
 	Level logs.Level
 	mu    sync.Mutex
 }
+
 
 func init() {
 	_, file, _, _ := runtime.Caller(0)
@@ -69,7 +70,7 @@ func (f *ErlogWriterAppender) Fire(event *LogEvent) {
 	level := f.textLevel(event.Level)
 
 	//	isColored := isTerminal && (runtime.GOOS != "windows")
-	paths := strings.SplitN(event.File, "/", pathSkip+1)
+	paths := strings.SplitN(event.File, "/", pathSkip + 1)
 
 	packagePath := event.File
 	if len(paths) > pathSkip {
@@ -110,7 +111,7 @@ func (f *ErlogWriterAppender) logError(b *bytes.Buffer, event *LogEvent) {
 	for err := event.Err; err != nil; {
 		if e, ok := err.(*errs.EntryError); ok {
 			path, line := findFileAndName(e.Stack)
-			paths := strings.SplitN(path, "/", pathSkip+1)
+			paths := strings.SplitN(path, "/", pathSkip + 1)
 
 			packagePath := event.File
 			if len(paths) > pathSkip {
@@ -185,13 +186,13 @@ func (f *ErlogWriterAppender) reduceFilePath(path string, max int) string {
 	reducedSize := len(path)
 	var buffer bytes.Buffer
 	for i, e := range split {
-		if reducedSize > max && i+1 < splitlen {
+		if reducedSize > max && i + 1 < splitlen {
 			buffer.WriteByte(e[0])
 			reducedSize -= len(e) - 1
 		} else {
 			buffer.WriteString(e)
 		}
-		if i+1 < splitlen {
+		if i + 1 < splitlen {
 			buffer.WriteByte('/')
 		}
 	}
@@ -268,9 +269,9 @@ func (f *ErlogWriterAppender) levelColor(level logs.Level) string {
 func needsQuoting(text string) bool {
 	for _, ch := range text {
 		if !((ch >= 'a' && ch <= 'z') ||
-			(ch >= 'A' && ch <= 'Z') ||
-			(ch >= '0' && ch <= '9') ||
-			ch == '-' || ch == '.') {
+		(ch >= 'A' && ch <= 'Z') ||
+		(ch >= '0' && ch <= '9') ||
+		ch == '-' || ch == '.') {
 			return false
 		}
 	}

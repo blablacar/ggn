@@ -1,15 +1,15 @@
 package attributes
-
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/peterbourgon/mergemap"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"os"
+	"gopkg.in/yaml.v2"
+	"github.com/peterbourgon/mergemap"
 	"strconv"
+	"os"
 )
+
 
 func MergeAttributesFilesForMap(omap map[string]interface{}, files []string) map[string]interface{} {
 
@@ -60,6 +60,7 @@ func ProcessOverride(omap map[string]interface{}) map[string]interface{} {
 	return omap
 }
 
+
 func Merge(envName string, files []string) []byte { // inputDir string,
 	// "out map" to store merged yamls
 	omap := MergeAttributesFiles(files)
@@ -86,16 +87,16 @@ func Merge(envName string, files []string) []byte { // inputDir string,
 // transform YAML to JSON
 func transform(in interface{}) (_ interface{}, err error) {
 	switch in.(type) {
-	case map[interface{}]interface{}:
+		case map[interface{}]interface{}:
 		o := make(map[string]interface{})
 		for k, v := range in.(map[interface{}]interface{}) {
 			sk := ""
 			switch k.(type) {
-			case string:
+				case string:
 				sk = k.(string)
-			case int:
+				case int:
 				sk = strconv.Itoa(k.(int))
-			default:
+				default:
 				return nil, errors.New(
 					fmt.Sprintf("type not match: expect map key string or int get: %T", k))
 			}
@@ -106,7 +107,7 @@ func transform(in interface{}) (_ interface{}, err error) {
 			o[sk] = v
 		}
 		return o, nil
-	case []interface{}:
+		case []interface{}:
 		in1 := in.([]interface{})
 		len1 := len(in1)
 		o := make([]interface{}, len1)
@@ -117,7 +118,7 @@ func transform(in interface{}) (_ interface{}, err error) {
 			}
 		}
 		return o, nil
-	default:
+		default:
 		return in, nil
 	}
 	return in, nil

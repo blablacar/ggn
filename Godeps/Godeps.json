@@ -48,13 +48,13 @@
 		},
 		{
 			"ImportPath": "github.com/blablacar/dgr/bin-dgr/common",
-			"Comment": "70-3-gf4a45eb",
-			"Rev": "f4a45ebcd77f9ac4b0c586812c82c33f9aef46b3"
+			"Comment": "71",
+			"Rev": "6108cd7767e0068eabe2ff38384dfa5e03cd6dac"
 		},
 		{
 			"ImportPath": "github.com/blablacar/dgr/bin-templater/template",
-			"Comment": "70-3-gf4a45eb",
-			"Rev": "f4a45ebcd77f9ac4b0c586812c82c33f9aef46b3"
+			"Comment": "71",
+			"Rev": "6108cd7767e0068eabe2ff38384dfa5e03cd6dac"
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/Godeps/_workspace/src/github.com/ugorji/go/codec",
