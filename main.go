@@ -8,10 +8,10 @@ import (
 )
 
 var CommitHash string
-var GgnVersion string
-var BuildDate string
+var Version string
+var BuildTime string
 
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
-	commands.Execute(CommitHash, GgnVersion, BuildDate)
+	commands.Execute(CommitHash, Version, BuildTime)
 }
