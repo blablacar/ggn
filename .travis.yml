@@ -7,4 +7,5 @@ install:
   - sudo apt-get install upx
 
 script:
-  - ./build.sh
+  - ./gomake
+fix trv
