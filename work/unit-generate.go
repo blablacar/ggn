@@ -38,7 +38,7 @@ func (u *Unit) Generate(tmpl *template.Templating) error {
 	if err != nil {
 		logs.WithEF(err, u.Fields).Panic("Cannot marshall attributes")
 	}
-	res := strings.Replace(string(out), "\\\"", "\\\\\\\"", -1)
+	res := strings.Replace(string(out), "\\\"", "\\\\\\\\\"", -1)
 	res = strings.Replace(res, "'", "\\'", -1)
 	data["attributes"] = res
 
@@ -71,9 +71,20 @@ func (u Unit) GenerateAttributes() map[string]interface{} {
 func (u Unit) prepareEnvironmentAttributes(data map[string]interface{}) {
 	var envAttr bytes.Buffer
 	var envAttrVars bytes.Buffer
+	var forbidenSplitChar []string
+	var shouldSplit bool
+
+	forbidenSplitChar = []string{`:`, `"`, `,`, `'`}
 	num := 0
 	for i, c := range data["attributes"].(string) {
 		if i%1950 == 0 {
+			shouldSplit = true
+		}
+		if stringInSlice(string(c), forbidenSplitChar) && i%1950 < 49 {
+			envAttr.WriteRune(c)
+			continue
+		}
+		if shouldSplit {
 			if num != 0 {
 				envAttr.WriteString("'\n")
 			}
@@ -83,6 +94,7 @@ func (u Unit) prepareEnvironmentAttributes(data map[string]interface{}) {
 			envAttrVars.WriteString("${ATTR_")
 			envAttrVars.WriteString(strconv.Itoa(num))
 			envAttrVars.WriteString("}")
+			shouldSplit = false
 			num++
 		}
 		envAttr.WriteRune(c)
@@ -91,4 +103,13 @@ func (u Unit) prepareEnvironmentAttributes(data map[string]interface{}) {
 
 	data["environmentAttributes"] = envAttr.String()
 	data["environmentAttributesVars"] = envAttrVars.String()
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
