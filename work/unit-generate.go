@@ -38,8 +38,10 @@ func (u *Unit) Generate(tmpl *template.Templating) error {
 	if err != nil {
 		logs.WithEF(err, u.Fields).Panic("Cannot marshall attributes")
 	}
-	res := strings.Replace(string(out), "\\\"", "\\\\\\\\\"", -1)
-	res = strings.Replace(res, "'", "\\'", -1)
+	res := strings.Replace(string(out), "\\\"", `\\\"`, -1)
+	res = strings.Replace(res, "'", `\\'`, -1)
+	res = strings.Replace(res, `"\\\"`, `"\\\\\\"`, -1)
+	res = strings.Replace(res, `\\\""`, `\\\\\\""`, -1)
 	data["attributes"] = res
 
 	u.prepareEnvironmentAttributes(data)
@@ -71,16 +73,16 @@ func (u Unit) GenerateAttributes() map[string]interface{} {
 func (u Unit) prepareEnvironmentAttributes(data map[string]interface{}) {
 	var envAttr bytes.Buffer
 	var envAttrVars bytes.Buffer
-	var forbidenSplitChar []string
+	var forbiddenSplitChar []string
 	var shouldSplit bool
 
-	forbidenSplitChar = []string{`:`, `"`, `,`, `'`}
+	forbiddenSplitChar = []string{`:`, `"`, `,`, `'`, `\`}
 	num := 0
 	for i, c := range data["attributes"].(string) {
 		if i%1950 == 0 {
 			shouldSplit = true
 		}
-		if stringInSlice(string(c), forbidenSplitChar) && i%1950 < 49 {
+		if stringInSlice(string(c), forbiddenSplitChar) && i%1950 < 49 {
 			envAttr.WriteRune(c)
 			continue
 		}
