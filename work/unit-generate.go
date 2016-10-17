@@ -11,6 +11,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"encoding/base64"
 )
 
 func (u *Unit) Generate(tmpl *template.Templating) error {
@@ -38,13 +39,13 @@ func (u *Unit) Generate(tmpl *template.Templating) error {
 	if err != nil {
 		logs.WithEF(err, u.Fields).Panic("Cannot marshall attributes")
 	}
-	res := strings.Replace(string(out), "\\\"", `\\\"`, -1)
+	res := strings.Replace(string(out), "\\\"", `\x5c\x22`, -1)
 	res = strings.Replace(res, "'", `\\'`, -1)
-	res = strings.Replace(res, `"\\\"`, `"\\\\\\"`, -1)
-	res = strings.Replace(res, `\\\""`, `\\\\\\""`, -1)
 	data["attributes"] = res
+	data["attributesBase64"] = "base64,"+ base64.StdEncoding.EncodeToString([]byte(out))
 
-	u.prepareEnvironmentAttributes(data)
+	data["environmentAttributes"],data["environmentAttributesVars"] = u.prepareEnvironmentAttributes(data["attributes"].(string),"ATTR_")
+	data["environmentAttributesBase64"] ,data["environmentAttributesVarsBase64"] =  u.prepareEnvironmentAttributes( data["attributesBase64"].(string),"ATTR_BASE64_")
 
 	var b bytes.Buffer
 	err = tmpl.Execute(&b, data)
@@ -70,15 +71,14 @@ func (u Unit) GenerateAttributes() map[string]interface{} {
 	return data
 }
 
-func (u Unit) prepareEnvironmentAttributes(data map[string]interface{}) {
+func (u Unit) prepareEnvironmentAttributes(data string,attrName string) (string,string){
 	var envAttr bytes.Buffer
 	var envAttrVars bytes.Buffer
-	var forbiddenSplitChar []string
+	var forbiddenSplitChar = []string{`:`, `.`, `"`, `,`, `'`, `*`}
 	var shouldSplit bool
 
-	forbiddenSplitChar = []string{`:`, `"`, `,`, `'`, `\`}
 	num := 0
-	for i, c := range data["attributes"].(string) {
+	for i, c := range data {
 		if i%1950 == 0 {
 			shouldSplit = true
 		}
@@ -90,11 +90,12 @@ func (u Unit) prepareEnvironmentAttributes(data map[string]interface{}) {
 			if num != 0 {
 				envAttr.WriteString("'\n")
 			}
-			envAttr.WriteString("Environment='ATTR_")
-			envAttr.WriteString(strconv.Itoa(num))
+			attrIndex := strconv.Itoa(num)
+			envAttr.WriteString("Environment='"+attrName)
+			envAttr.WriteString(attrIndex)
 			envAttr.WriteString("=")
-			envAttrVars.WriteString("${ATTR_")
-			envAttrVars.WriteString(strconv.Itoa(num))
+			envAttrVars.WriteString("${"+attrName)
+			envAttrVars.WriteString(attrIndex)
 			envAttrVars.WriteString("}")
 			shouldSplit = false
 			num++
@@ -102,9 +103,7 @@ func (u Unit) prepareEnvironmentAttributes(data map[string]interface{}) {
 		envAttr.WriteRune(c)
 	}
 	envAttr.WriteString("'\n")
-
-	data["environmentAttributes"] = envAttr.String()
-	data["environmentAttributesVars"] = envAttrVars.String()
+	return  envAttr.String(),envAttrVars.String()
 }
 
 func stringInSlice(a string, list []string) bool {
