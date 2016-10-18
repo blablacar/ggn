@@ -74,17 +74,21 @@ func (u Unit) GenerateAttributes() map[string]interface{} {
 func (u Unit) prepareEnvironmentAttributes(data string, attrName string) (string, string) {
 	var envAttr bytes.Buffer
 	var envAttrVars bytes.Buffer
-	var forbiddenSplitChar = []string{`:`, `.`, `"`, `,`, `'`, `*`}
+	var forbiddenSplitChar = []string{`:`, `.`, `"`, `,`, `'`, `*`, `=`, `\`}
 	var shouldSplit bool
 
 	num := 0
 	for i, c := range data {
+		y := i
+		charBuffer := string(c)
+
 		if i%1950 == 0 {
 			shouldSplit = true
 		}
-		if stringInSlice(string(c), forbiddenSplitChar) && i%1950 < 49 {
-			envAttr.WriteRune(c)
-			continue
+		for y > 1 && (stringInSlice(string(data[y]), forbiddenSplitChar) || stringInSlice(string(data[y-1]), forbiddenSplitChar)) && shouldSplit {
+			envAttr.Truncate(envAttr.Len() - 1)
+			charBuffer = string(data[y-1]) + charBuffer
+			y--
 		}
 		if shouldSplit {
 			if num != 0 {
@@ -100,7 +104,7 @@ func (u Unit) prepareEnvironmentAttributes(data string, attrName string) (string
 			shouldSplit = false
 			num++
 		}
-		envAttr.WriteRune(c)
+		envAttr.WriteString(charBuffer)
 	}
 	envAttr.WriteString("'\n")
 	return envAttr.String(), envAttrVars.String()
