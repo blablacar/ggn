@@ -2,6 +2,7 @@ package work
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"github.com/blablacar/dgr/bin-templater/template"
 	"github.com/blablacar/ggn/utils"
@@ -11,7 +12,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"encoding/base64"
 )
 
 func (u *Unit) Generate(tmpl *template.Templating) error {
@@ -42,10 +42,10 @@ func (u *Unit) Generate(tmpl *template.Templating) error {
 	res := strings.Replace(string(out), "\\\"", `\x5c\x22`, -1)
 	res = strings.Replace(res, "'", `\\'`, -1)
 	data["attributes"] = res
-	data["attributesBase64"] = "base64,"+ base64.StdEncoding.EncodeToString([]byte(out))
+	data["attributesBase64"] = "base64," + base64.StdEncoding.EncodeToString([]byte(out))
 
-	data["environmentAttributes"],data["environmentAttributesVars"] = u.prepareEnvironmentAttributes(data["attributes"].(string),"ATTR_")
-	data["environmentAttributesBase64"] ,data["environmentAttributesVarsBase64"] =  u.prepareEnvironmentAttributes( data["attributesBase64"].(string),"ATTR_BASE64_")
+	data["environmentAttributes"], data["environmentAttributesVars"] = u.prepareEnvironmentAttributes(data["attributes"].(string), "ATTR_")
+	data["environmentAttributesBase64"], data["environmentAttributesVarsBase64"] = u.prepareEnvironmentAttributes(data["attributesBase64"].(string), "ATTR_BASE64_")
 
 	var b bytes.Buffer
 	err = tmpl.Execute(&b, data)
@@ -71,7 +71,7 @@ func (u Unit) GenerateAttributes() map[string]interface{} {
 	return data
 }
 
-func (u Unit) prepareEnvironmentAttributes(data string,attrName string) (string,string){
+func (u Unit) prepareEnvironmentAttributes(data string, attrName string) (string, string) {
 	var envAttr bytes.Buffer
 	var envAttrVars bytes.Buffer
 	var forbiddenSplitChar = []string{`:`, `.`, `"`, `,`, `'`, `*`}
@@ -91,10 +91,10 @@ func (u Unit) prepareEnvironmentAttributes(data string,attrName string) (string,
 				envAttr.WriteString("'\n")
 			}
 			attrIndex := strconv.Itoa(num)
-			envAttr.WriteString("Environment='"+attrName)
+			envAttr.WriteString("Environment='" + attrName)
 			envAttr.WriteString(attrIndex)
 			envAttr.WriteString("=")
-			envAttrVars.WriteString("${"+attrName)
+			envAttrVars.WriteString("${" + attrName)
 			envAttrVars.WriteString(attrIndex)
 			envAttrVars.WriteString("}")
 			shouldSplit = false
@@ -103,7 +103,7 @@ func (u Unit) prepareEnvironmentAttributes(data string,attrName string) (string,
 		envAttr.WriteRune(c)
 	}
 	envAttr.WriteString("'\n")
-	return  envAttr.String(),envAttrVars.String()
+	return envAttr.String(), envAttrVars.String()
 }
 
 func stringInSlice(a string, list []string) bool {
