@@ -39,8 +39,8 @@ func (u *Unit) Generate(tmpl *template.Templating) error {
 	if err != nil {
 		logs.WithEF(err, u.Fields).Panic("Cannot marshall attributes")
 	}
-	res := strings.Replace(string(out), "\\\"", `\x5c\x22`, -1)
-	res = strings.Replace(res, "'", `\\'`, -1)
+	res := strings.Replace(string(out), "\\\"", "\\\\\\\"", -1)
+	res = strings.Replace(res, "'", `\'`, -1)
 	data["attributes"] = res
 	data["attributesBase64"] = "base64," + base64.StdEncoding.EncodeToString([]byte(out))
 
