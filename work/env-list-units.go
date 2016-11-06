@@ -2,9 +2,10 @@ package work
 
 import (
 	"bufio"
-	"github.com/n0rad/go-erlog/logs"
 	"strings"
 	"sync"
+
+	"github.com/n0rad/go-erlog/logs"
 )
 
 var statusCache map[string]UnitStatus

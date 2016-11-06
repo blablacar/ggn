@@ -31,9 +31,21 @@ Usage: gomake [-v version][-t token] command...
   -W, --work-path=path      set working path, default is ./
 EOF
 
+go_files=`find . -name '*.go' 2> /dev/null | grep -v ${target_name}/ | grep -v vendor/ | grep -v .git`
+err_count=0
+
+#color_red() {
+#    echo -n -e "\e[0;31m"
+#}
+#
+#color_reset() {
+#    echo -n -e "\e[0m"
+#}
 
 echo_red() {
-    echo -e "\e[0;31m${@}\e[0m"
+    echo -n -e "\e[0;31m"
+    echo "${@}"
+    echo -n -e "\e[0m"
 }
 
 echo_purple() {
@@ -46,6 +58,11 @@ echo_green() {
 
 echo_yellow() {
     echo -e "\e[0;93m${@}\e[0m"
+}
+
+err_count() {
+    c=$(echo -e "${1}" | wc -l)
+    ((err_count+=${c}))
 }
 
 gomake_update() {
@@ -66,11 +83,26 @@ build() {
     [ -z "$1" ] || osarchi="$1"
     [ ! -z ${version+x} ] || version="0"
 
-    [ -f ${GOPATH}/bin/godep ] || go get github.com/tools/godep
-    [ -f $(which upx) ] || (echo "upx is required to build" && exit 1)
+    mkdir -p ${work_path}/${target_name}/bindata
 
-    echo_green "Save Dependencies"
-    godep save ./${work_path}/... || echo_yellow "Cannot save dependencies. Continuing"
+    if [ `type -t pre-build`"" == 'function' ]; then
+        pre-build
+    fi
+
+    [ -f /usr/bin/upx ] || (echo "upx is required to build" && exit 1)
+
+    echo_green "Goimports"
+    [ -f ${GOPATH}/bin/goimports ] || go get -u golang.org/x/tools/cmd/goimports
+    goimports -w ${go_files}
+
+#    echo_green "Save Dependencies"
+#    [ -f ${GOPATH}/bin/godep ] || go get github.com/tools/godep
+#    godep save ./${work_path}/... || echo_yellow "Cannot save dependencies. Continuing"
+
+    if [ "$(ls -A ${work_path}/${target_name}/bindata)" ]; then
+        [ -f ${GOPATH}/bin/go-bindata ] || go get -u github.com/jteeuwen/go-bindata/...
+        go-bindata -nomemcopy -pkg dist -prefix dist/bindata -o ${work_path}/${target_name}/bindata.go ${work_path}/${target_name}/bindata/...
+    fi
 
     IFS=',' read -ra current <<< "$osarchi"
     for e in "${current[@]}"; do
@@ -101,8 +133,6 @@ quality() {
     start=`date +%s`
     cd ${work_path}
 
-    go_files=`find . -name '*.go' 2> /dev/null | grep -v ${target_name}/ | grep -v vendor/ | grep -v .git`
-
     echo_green "Format"
     gofmt -w -s ${go_files}
 
@@ -111,7 +141,9 @@ quality() {
 
     echo_green "Err check"
     [ -f ${GOPATH}/bin/errcheck ] || go get -u github.com/kisielk/errcheck
-    errcheck ./... | grep -v 'vendor/' | grep -v 'Close(' | grep -v '_test.go'
+    res=$(errcheck ./... | grep -v 'vendor/' | grep -v 'Close(' | grep -v '_test.go')
+    err_count "${res}"
+    echo_red "${res}"
 
     echo_green "Lint"
     [ -f ${GOPATH}/bin/golint ] || go get -u github.com/golang/lint/golint
@@ -253,7 +285,7 @@ fi
 command_count=0
 for i in "${commands[@]}"; do
     case ${i} in
-        test|build|release|clean|quality|gomake_update) ${i}; ((++command_count));;
+        test|build|release|clean|quality|gomake_update|install) ${i}; ((++command_count));;
         *)                                              echo_red "Unknown command '${i}'"; echo ${helper}; exit 1;;
     esac
 done

@@ -1,11 +1,12 @@
 package work
 
 import (
+	"io/ioutil"
+	"os"
+
 	"github.com/blablacar/ggn/ggn"
 	"github.com/n0rad/go-erlog/data"
 	"github.com/n0rad/go-erlog/logs"
-	"io/ioutil"
-	"os"
 )
 
 const PATH_ENV = "/env"
@@ -39,6 +40,21 @@ func (w Work) ListEnvs() []string {
 
 	var envs []string
 	for _, file := range files {
+		if file.Mode()&os.ModeSymlink == os.ModeSymlink {
+			followed_file, err := os.Readlink(path + "/" + file.Name())
+			if err != nil {
+				continue
+			}
+			if followed_file[0] != '/' {
+				followed_file = path + "/" + followed_file
+			}
+			file, err = os.Lstat(followed_file)
+			if err != nil {
+				continue
+			}
+			logs.WithField("followed_link", file.Name()).Trace("Followed Link")
+		}
+
 		if !file.IsDir() {
 			continue
 		}

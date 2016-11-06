@@ -1,11 +1,12 @@
 package commands
 
 import (
+	"os"
+
 	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/work"
 	"github.com/n0rad/go-erlog/logs"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var autocompleteTarget string

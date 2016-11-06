@@ -3,17 +3,19 @@ package work
 import (
 	"bufio"
 	"encoding/json"
+
 	"github.com/coreos/fleet/unit"
 	"github.com/juju/errors"
 	"github.com/n0rad/go-erlog/data"
 	"github.com/n0rad/go-erlog/logs"
 
-	"github.com/blablacar/dgr/bin-dgr/common"
 	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/blablacar/dgr/bin-dgr/common"
 )
 
 type Unit struct {

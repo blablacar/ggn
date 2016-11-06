@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/blablacar/ggn/commands"
-	_ "github.com/n0rad/go-erlog/register"
 	"math/rand"
 	"time"
+
+	"github.com/blablacar/ggn/commands"
+	_ "github.com/n0rad/go-erlog/register"
 )
 
 var CommitHash string

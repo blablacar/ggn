@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/blablacar/dgr/bin-templater/template"
-	"github.com/blablacar/ggn/utils"
-	"github.com/n0rad/go-erlog/logs"
-	"github.com/peterbourgon/mergemap"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/blablacar/dgr/bin-templater/template"
+	"github.com/blablacar/ggn/utils"
+	"github.com/n0rad/go-erlog/logs"
+	"github.com/peterbourgon/mergemap"
 )
 
 func (u *Unit) Generate(tmpl *template.Templating) error {

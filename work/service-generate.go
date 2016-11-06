@@ -1,15 +1,16 @@
 package work
 
 import (
+	"io/ioutil"
+	"net/http"
+	"strings"
+
 	"github.com/appc/spec/discovery"
 	"github.com/appc/spec/schema"
 	"github.com/blablacar/dgr/bin-dgr/common"
 	"github.com/blablacar/dgr/bin-templater/template"
 	"github.com/n0rad/go-erlog/errs"
 	"github.com/n0rad/go-erlog/logs"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 func (s *Service) Generate() error {

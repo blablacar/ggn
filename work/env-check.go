@@ -1,8 +1,9 @@
 package work
 
 import (
-	"github.com/n0rad/go-erlog/logs"
 	"sync"
+
+	"github.com/n0rad/go-erlog/logs"
 )
 
 func (e Env) Check() {

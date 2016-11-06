@@ -1,10 +1,11 @@
 package work
 
 import (
-	"github.com/n0rad/go-erlog/logs"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/n0rad/go-erlog/logs"
 )
 
 func (u *Unit) Start(command string) error {

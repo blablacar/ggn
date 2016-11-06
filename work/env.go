@@ -2,6 +2,14 @@ package work
 
 import (
 	"fmt"
+	"io/ioutil"
+	"math/rand"
+	"os"
+	"strings"
+	"sync"
+	txttmpl "text/template"
+	"time"
+
 	"github.com/blablacar/attributes-merger/attributes"
 	"github.com/blablacar/dgr/bin-dgr/common"
 	"github.com/blablacar/dgr/bin-templater/template"
@@ -12,13 +20,6 @@ import (
 	"github.com/n0rad/go-erlog/data"
 	"github.com/n0rad/go-erlog/logs"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"math/rand"
-	"os"
-	"strings"
-	"sync"
-	txttmpl "text/template"
-	"time"
 )
 
 const PATH_SERVICES = "/services"

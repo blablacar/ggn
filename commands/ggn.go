@@ -3,6 +3,9 @@ package commands
 import (
 	"bufio"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/blablacar/dgr/bin-dgr/common"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/work"
@@ -10,8 +13,6 @@ import (
 	"github.com/n0rad/go-erlog/logs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"os"
-	"strings"
 )
 
 const FLEET_SUPPORTED_VERSION = "0.11.5"

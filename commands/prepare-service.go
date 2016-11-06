@@ -1,12 +1,13 @@
 package commands
 
 import (
-	"github.com/blablacar/ggn/work"
-	"github.com/n0rad/go-erlog/logs"
-	"github.com/spf13/cobra"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/blablacar/ggn/work"
+	"github.com/n0rad/go-erlog/logs"
+	"github.com/spf13/cobra"
 )
 
 func prepareServiceCommands(service *work.Service) *cobra.Command {

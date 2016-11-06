@@ -3,13 +3,14 @@ package work
 import (
 	"bufio"
 	"fmt"
-	"github.com/mgutz/ansi"
-	"github.com/n0rad/go-erlog/logs"
 	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/mgutz/ansi"
+	"github.com/n0rad/go-erlog/logs"
 )
 
 func (s *Service) Update() error {

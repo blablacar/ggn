@@ -1,9 +1,10 @@
 package utils
 
 import (
+	"strings"
+
 	"github.com/blablacar/attributes-merger/attributes"
 	"github.com/google/cadvisor/utils"
-	"strings"
 )
 
 func AttributeFiles(path string) ([]string, error) {

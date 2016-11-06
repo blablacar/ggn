@@ -1,13 +1,14 @@
 package ggn
 
 import (
+	"io/ioutil"
+	"os"
+	"time"
+
 	"github.com/ghodss/yaml"
 	"github.com/mitchellh/go-homedir"
 	"github.com/n0rad/go-erlog/data"
 	"github.com/n0rad/go-erlog/logs"
-	"io/ioutil"
-	"os"
-	"time"
 )
 
 type Config struct {

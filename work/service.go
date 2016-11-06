@@ -3,6 +3,12 @@ package work
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/blablacar/attributes-merger/attributes"
 	"github.com/blablacar/dgr/bin-templater/template"
 	"github.com/blablacar/ggn/ggn"
@@ -14,11 +20,6 @@ import (
 	"github.com/n0rad/go-erlog/logs"
 	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"os"
-	"strings"
-	"sync"
-	"time"
 )
 
 type Service struct {
