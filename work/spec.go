@@ -6,6 +6,7 @@ import (
 
 const PATH_ATTRIBUTES = "/attributes"
 const PATH_TEMPLATES = "/templates"
+const PATH_COMMON_ATTRIBUTES = "/common-attributes"
 
 const ACTIVE_ACTIVE = "active"
 const SUB_RUNNING = "running"

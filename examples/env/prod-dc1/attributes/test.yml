@@ -1,0 +1,6 @@
+include:
+  - test.includeFile
+  - env:prod-dc2:test.includeFile
+
+default:
+  attribute: attributeValue

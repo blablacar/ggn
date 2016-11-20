@@ -153,8 +153,53 @@ func (e *Env) loadAttributes() {
 	if err != nil {
 		logs.WithEF(err, e.fields).WithField("path", e.path+PATH_ATTRIBUTES).Fatal("Cannot load attribute files")
 	}
+	files, err = e.addIncludeFiles(files)
+	if err != nil {
+		logs.WithEF(err, e.fields).WithField("path", e.path+PATH_ATTRIBUTES).Fatal("Cannot load include files")
+	}
+
 	e.attributes = attributes.MergeAttributesFiles(files)
 	logs.WithFields(e.fields).WithField("attributes", e.attributes).Debug("Attributes loaded")
+}
+
+func (e *Env) addIncludeFiles(files []string) ([]string, error) {
+	type includeFiles struct {
+		Include []string
+	}
+	for _, file := range files {
+		var f includeFiles
+		yml, err := ioutil.ReadFile(file)
+		if err != nil {
+			return nil, err
+		}
+		err = yaml.Unmarshal(yml, &f)
+		for _, inclusion := range f.Include {
+			sepCount := strings.Count(inclusion, ":")
+			if sepCount == 2 {
+				fields := strings.Split(inclusion, ":")
+				includeFile := strings.Replace(fields[2], ".", "/", -1) + ".yml"
+				if fields[1] == "" {
+					logs.WithField("include", inclusion).Fatal("Trying to include environment attributes from itself")
+				} else { // env:prod-dc1:some.include
+					includeFile = fmt.Sprintf("%v%v/%v%v/%v",
+						ggn.Home.Config.WorkPath,
+						PATH_ENV,
+						fields[1],
+						PATH_COMMON_ATTRIBUTES,
+						includeFile,
+					)
+					files = append(files, includeFile)
+				}
+			} else { // some.global.include
+				includeFile := strings.Replace(inclusion, ".", "/", -1) + ".yml"
+				includeFile = fmt.Sprintf("%v%v/%v", ggn.Home.Config.WorkPath, PATH_COMMON_ATTRIBUTES, includeFile)
+				files = append(files, includeFile)
+
+			}
+		}
+	}
+	return files, nil
+
 }
 
 func (e Env) ListServices() []string {
