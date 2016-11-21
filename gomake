@@ -20,6 +20,7 @@ Usage: gomake [-v version][-t token] command...
       build                 build (current platform only by default)
       quality               Format, Fix, check error handled, lint, vet, misspell, ineffassign, Gocyclo
       test                  run go tests
+      install               install release to \$GOPATH/bin
       release               clean, build all platform, test, check git is clean, tag, push tag & build ZIPs
       gomake_update         self updating by downloading and replacing with latest version
 
@@ -89,14 +90,12 @@ build() {
         pre-build
     fi
 
-    [ -f /usr/bin/upx ] || (echo "upx is required to build" && exit 1)
-
     echo_green "Goimports"
     [ -f ${GOPATH}/bin/goimports ] || go get -u golang.org/x/tools/cmd/goimports
     goimports -w ${go_files}
 
 #    echo_green "Save Dependencies"
-#    [ -f ${GOPATH}/bin/godep ] || go get github.com/tools/godep
+    [ -f ${GOPATH}/bin/godep ] || go get github.com/tools/godep
 #    godep save ./${work_path}/... || echo_yellow "Cannot save dependencies. Continuing"
 
     if [ "$(ls -A ${work_path}/${target_name}/bindata)" ]; then
@@ -113,6 +112,7 @@ build() {
 
         if [ ${upx} ]; then
             echo_green "Compressing ${e}"
+            [ -f /usr/bin/upx ] || (echo "upx is required to compress" && exit 1)
             upx ${work_path}/${target_name}/${app}-v${version}-${e}/${app} &> /dev/null
         fi
 
@@ -285,7 +285,7 @@ fi
 command_count=0
 for i in "${commands[@]}"; do
     case ${i} in
-        test|build|release|clean|quality|gomake_update|install) ${i}; ((++command_count));;
+        test|build|release|clean|quality|install|gomake_update) ${i}; ((++command_count));;
         *)                                              echo_red "Unknown command '${i}'"; echo ${helper}; exit 1;;
     esac
 done
