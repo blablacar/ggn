@@ -250,9 +250,58 @@ func (s *Service) loadAttributes() {
 	if err != nil {
 		logs.WithEF(err, s.fields).WithField("path", s.path+PATH_ATTRIBUTES).Fatal("Cannot load Attributes files")
 	}
+	files, err = s.addIncludeFiles(files)
+	if err != nil {
+		logs.WithEF(err, s.fields).WithField("path", s.path+PATH_ATTRIBUTES).Fatal("Cannot load include files")
+	}
 	attr = attributes.MergeAttributesFilesForMap(attr, files)
 	s.attributes = attr
 	logs.WithFields(s.fields).WithField("attributes", s.attributes).Debug("Attributes loaded")
+}
+
+func (s *Service) addIncludeFiles(files []string) ([]string, error) {
+	type includeFiles struct {
+		Include []string
+	}
+	for _, file := range files {
+		var f includeFiles
+		yml, err := ioutil.ReadFile(file)
+		if err != nil {
+			return nil, err
+		}
+		err = yaml.Unmarshal(yml, &f)
+		for _, inclusion := range f.Include {
+			sepCount := strings.Count(inclusion, ":")
+			if sepCount == 2 {
+				fields := strings.Split(inclusion, ":")
+				includeFile := strings.Replace(fields[2], ".", "/", -1) + ".yml"
+				if fields[1] == "" { // env::some.include
+					includeFile = fmt.Sprintf("%v%v/%v",
+						s.env.path,
+						PATH_COMMON_ATTRIBUTES,
+						includeFile,
+					)
+					files = append(files, includeFile)
+				} else { // env:prod-dc1:some.include
+					includeFile = fmt.Sprintf("%v%v/%v%v/%v",
+						ggn.Home.Config.WorkPath,
+						PATH_ENV,
+						fields[1],
+						PATH_COMMON_ATTRIBUTES,
+						includeFile,
+					)
+					files = append(files, includeFile)
+				}
+
+			} else { // some.global.include
+				includeFile := strings.Replace(inclusion, ".", "/", -1) + ".yml"
+				includeFile = fmt.Sprintf("%v%v/%v", ggn.Home.Config.WorkPath, PATH_COMMON_ATTRIBUTES, includeFile)
+				files = append(files, includeFile)
+
+			}
+		}
+	}
+	return files, nil
 }
 
 func (s *Service) loadUnitTemplate(filename string) (*template.Templating, error) {
