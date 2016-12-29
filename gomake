@@ -151,7 +151,7 @@ quality() {
     if [ "${errcheck}" = true ]; then
         echo_green "Err check"
         command -v errcheck > /dev/null || go get -u github.com/kisielk/errcheck
-        res=$(errcheck ./... | grep -v 'vendor/' | grep -v 'Close(' | grep -v '_test.go')
+        res=$(set +o pipefail; errcheck ./... | grep -v 'vendor/' | grep -v 'Close(' | grep -v '_test.go')
         err_count "${res}"
         echo_red "${res}"
     fi
