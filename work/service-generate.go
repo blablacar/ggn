@@ -9,6 +9,7 @@ import (
 	"github.com/appc/spec/schema"
 	"github.com/blablacar/dgr/bin-dgr/common"
 	"github.com/blablacar/dgr/bin-templater/template"
+	"github.com/blablacar/ggn/ggn"
 	"github.com/n0rad/go-erlog/errs"
 	"github.com/n0rad/go-erlog/logs"
 )
@@ -36,6 +37,16 @@ func (s *Service) Generate() error {
 		}
 	}
 
+	if len(s.manifest.GgnMinimalVersion) > 0 {
+		var currentVersion = common.Version(ggn.GgnVersion)
+		logs.WithField("version", s.manifest.GgnMinimalVersion).Debug("Found ggn minimal version")
+		if s.manifest.GgnMinimalVersion.GreaterThan(currentVersion) {
+			logs.WithFields(s.fields).
+				WithField("ggn-minimalversion", s.manifest.GgnMinimalVersion).
+				WithField("ggn-version", currentVersion).
+				Fatal("You don't use the minimal required version of ggn for this service")
+		}
+	}
 	if len(s.nodesAsJsonMap) == 0 {
 		logs.WithFields(s.fields).Fatal("No node to process in manifest")
 		return nil

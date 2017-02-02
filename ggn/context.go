@@ -6,6 +6,10 @@ import (
 
 var Home HomeStruct
 
+var CommitHash string
+var GgnVersion string
+var BuildDate string
+
 func GetUserAndHost() string {
 	user := os.Getenv("USER")
 	if Home.Config.User != "" {

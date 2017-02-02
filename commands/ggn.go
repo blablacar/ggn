@@ -17,14 +17,10 @@ import (
 
 const FLEET_SUPPORTED_VERSION = "0.11.5"
 
-var CommitHash string
-var GgnVersion string
-var BuildDate string
-
 func Execute(commitHash string, ggnVersion string, buildDate string) {
-	CommitHash = commitHash
-	GgnVersion = ggnVersion
-	BuildDate = buildDate
+	ggn.CommitHash = commitHash
+	ggn.GgnVersion = ggnVersion
+	ggn.BuildDate = buildDate
 
 	checkFleetVersion()
 

@@ -42,6 +42,7 @@ type HookInfo struct {
 }
 
 type ServiceManifest struct {
+	GgnMinimalVersion common.Version      `yaml:"ggnminimalversion"`
 	ConcurrentUpdater int                 `yaml:"concurrentUpdater"`
 	Containers        []common.ACFullname `yaml:"containers"`
 	ExecStartPre      []string            `yaml:"execStartPre"`
