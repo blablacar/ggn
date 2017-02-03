@@ -42,8 +42,8 @@ func (s *Service) Generate() error {
 		logs.WithField("version", s.manifest.GgnMinimalVersion).Debug("Found ggn minimal version")
 		if s.manifest.GgnMinimalVersion.GreaterThan(currentVersion) {
 			logs.WithFields(s.fields).
-				WithField("ggn-minimalversion", s.manifest.GgnMinimalVersion).
-				WithField("ggn-version", currentVersion).
+				WithField("minimalversion", s.manifest.GgnMinimalVersion).
+				WithField("version", currentVersion).
 				Fatal("You don't use the minimal required version of ggn for this service")
 		}
 	}
