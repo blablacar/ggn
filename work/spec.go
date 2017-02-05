@@ -42,12 +42,13 @@ type HookInfo struct {
 }
 
 type ServiceManifest struct {
-	GgnMinimalVersion common.Version      `yaml:"ggnMinimalVersion"`
-	ConcurrentUpdater int                 `yaml:"concurrentUpdater"`
-	Containers        []common.ACFullname `yaml:"containers"`
-	ExecStartPre      []string            `yaml:"execStartPre"`
-	ExecStart         []string            `yaml:"execStart"`
-	Nodes             interface{}         `yaml:"nodes"`
+	ExposeNodesInUnitEnv bool                `yaml:"exposeNodesInUnitEnv"`
+	GgnMinimalVersion    common.Version      `yaml:"ggnMinimalVersion"`
+	ConcurrentUpdater    int                 `yaml:"concurrentUpdater"`
+	Containers           []common.ACFullname `yaml:"containers"`
+	ExecStartPre         []string            `yaml:"execStartPre"`
+	ExecStart            []string            `yaml:"execStart"`
+	Nodes                interface{}         `yaml:"nodes"`
 }
 
 type UnitType int

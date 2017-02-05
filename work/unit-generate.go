@@ -35,7 +35,9 @@ func (u *Unit) Generate(tmpl *template.Templating) error {
 	}
 	data["aciList"] = aciList
 	data["acis"] = acis
-	data["service_nodes"] = u.Service.nodesAsJsonMap
+	if u.Service.manifest.ExposeNodesInUnitEnv {
+		data["service_nodes"] = u.Service.nodesAsJsonMap
+	}
 
 	out, err := json.Marshal(data)
 	if err != nil {
