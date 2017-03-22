@@ -237,9 +237,9 @@ func (s *Service) runHook(isEarly bool, command string, action string) {
 		Attributes: string(out),
 	}
 	if isEarly {
-		s.GetEnv().RunEarlyHook(info)
+		s.GetEnv().RunEarlyHookFatal(info)
 	} else {
-		s.GetEnv().RunLateHook(info)
+		s.GetEnv().RunLateHookFatal(info)
 	}
 
 }

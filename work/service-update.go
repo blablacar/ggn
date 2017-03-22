@@ -41,10 +41,13 @@ ask:
 		if same {
 			logs.WithFields(uField).Info("Remote service is already up to date")
 			if !u.IsRunning() {
-				logs.WithFields(uField).Info("But service is not running")
+				logs.WithFields(uField).Warn("But service is not running")
+			} else if !u.IsAvailable("service/update") {
+				logs.WithFields(uField).Warn("But service is not available")
 			} else if !BuildFlags.All {
 				return
 			}
+
 		}
 
 		if BuildFlags.Yes {

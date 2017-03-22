@@ -18,6 +18,7 @@ import (
 	"github.com/coreos/etcd/client"
 	"github.com/juju/errors"
 	"github.com/n0rad/go-erlog/data"
+	"github.com/n0rad/go-erlog/errs"
 	"github.com/n0rad/go-erlog/logs"
 	"gopkg.in/yaml.v2"
 )
@@ -261,20 +262,28 @@ func (e Env) ListMachineNames() ([]string, error) {
 
 const PATH_HOOKS = "/hooks"
 
-func (e Env) RunEarlyHook(info HookInfo) {
-	e.runHook("/early", info)
+func (e Env) RunEarlyHookFatal(info HookInfo) {
+	if err := e.runHookAndGetNumRun("/early", info); err != nil {
+		logs.WithE(err).Fatal("hook failed")
+	}
 }
 
-func (e Env) RunLateHook(info HookInfo) {
-	e.runHook("/late", info)
+func (e Env) RunLateHookFatal(info HookInfo) {
+	if err := e.runHookAndGetNumRun("/late", info); err != nil {
+		logs.WithE(err).Fatal("hook failed")
+	}
 }
 
-func (e Env) runHook(path string, info HookInfo) {
+func (e Env) RunHook(info HookInfo) error {
+	return e.runHookAndGetNumRun("/command", info)
+}
+
+func (e Env) runHookAndGetNumRun(path string, info HookInfo) error {
 	logs.WithFields(e.fields).WithField("path", path).WithField("info", info).Debug("Running hook")
 	files, err := ioutil.ReadDir(e.path + PATH_HOOKS + path)
 	if err != nil {
 		logs.WithEF(err, e.fields).Debug("Cannot read hook directory")
-		return
+		return nil
 	}
 
 	envs := map[string]string{}
@@ -302,10 +311,11 @@ func (e Env) runHook(path string, info HookInfo) {
 
 			logs.WithFields(hookFields).Debug("Running Hook")
 			if err := common.ExecCmd("bash", "-c", strings.Join(args, " ")); err != nil {
-				logs.WithFields(hookFields).Fatal("Hook status is failed")
+				return errs.WithF(hookFields, "Hook status is failed")
 			}
 		}
 	}
+	return nil
 }
 
 const FLEETCTL_ENDPOINT = "FLEETCTL_ENDPOINT"

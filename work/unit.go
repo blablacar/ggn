@@ -80,8 +80,8 @@ func (u *Unit) Check(command string) {
 		Action:  "check",
 		Command: command,
 	}
-	u.Service.GetEnv().RunEarlyHook(info)
-	defer u.Service.GetEnv().RunLateHook(info)
+	u.Service.GetEnv().RunEarlyHookFatal(info)
+	defer u.Service.GetEnv().RunLateHookFatal(info)
 
 	statuses := u.Service.GetEnv().ListUnits()
 	var status UnitStatus
@@ -108,7 +108,10 @@ func (u *Unit) Check(command string) {
 	}
 	if !same {
 		logs.WithFields(u.Fields).Warn("Unit is not up to date")
-		return
+	}
+
+	if !u.IsAvailable(command) {
+		logs.WithFields(u.Fields).Warn("Unit is not available")
 	}
 }
 
@@ -178,9 +181,9 @@ func (u *Unit) runHook(isEarly bool, command string, action string) {
 		Attributes: string(out),
 	}
 	if isEarly {
-		u.Service.GetEnv().RunEarlyHook(info)
+		u.Service.GetEnv().RunEarlyHookFatal(info)
 	} else {
-		u.Service.GetEnv().RunLateHook(info)
+		u.Service.GetEnv().RunLateHookFatal(info)
 	}
 
 }
@@ -233,4 +236,24 @@ func (u *Unit) IsLoaded() bool {
 		return true
 	}
 	return false
+}
+
+func (u *Unit) IsAvailable(command string) bool {
+	out, err := json.Marshal(u.GenerateAttributes())
+	if err != nil {
+		logs.WithEF(err, u.Fields).Fatal("Cannot marshall attributes")
+	}
+	info := HookInfo{
+		Service:    u.Service,
+		Unit:       u,
+		Action:     "unit/isAvailable",
+		Command:    command,
+		Attributes: string(out),
+	}
+
+	if err = u.Service.GetEnv().RunHook(info); err != nil {
+		logs.WithEF(err, u.Fields).Debug("isAvailable hook failed")
+		return false
+	}
+	return true
 }
