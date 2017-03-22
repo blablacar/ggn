@@ -11,8 +11,8 @@ func (e Env) Check() {
 	logs.WithFields(e.fields).Debug("Running check")
 
 	info := HookInfo{Command: "env/check", Action: "env/check"}
-	e.RunEarlyHook(info)
-	defer e.RunLateHook(info)
+	e.RunEarlyHookFatal(info)
+	defer e.RunLateHookFatal(info)
 
 	e.concurrentChecker(e.ListServices())
 
