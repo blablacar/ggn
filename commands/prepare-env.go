@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/blablacar/ggn/work"
+	"github.com/n0rad/go-erlog/logs"
 	"github.com/spf13/cobra"
 )
 
@@ -52,9 +53,37 @@ func prepareEnvCommands(env *work.Env) *cobra.Command {
 	}
 	envCmd.AddCommand(generateCmd, fleetctlCmd, checkCmd, listUnitsCmd, listMachinesCmd)
 
+	unitNames := make(map[string]struct{})
+	conflictUnits := make(map[string]struct{})
 	for _, serviceName := range env.ListServices() {
 		service := env.LoadService(serviceName)
 		envCmd.AddCommand(prepareServiceCommands(service))
+
+		for _, unitName := range service.ListUnits() {
+			if _, ok := unitNames[unitName]; ok {
+				conflictUnits[unitName] = struct{}{}
+			}
+			unitNames[unitName] = struct{}{}
+		}
+	}
+
+	for _, serviceName := range env.ListServices() {
+		service := env.LoadService(serviceName)
+		for _, unitName := range service.ListUnits() {
+			unit := service.LoadUnit(unitName)
+			if _, ok := conflictUnits[unitName]; ok {
+				envCmd.AddCommand(&cobra.Command{
+					Use:   unit.Name,
+					Short: getShortDescription(unit, "Run command for"),
+					Run: func(cmd *cobra.Command, args []string) {
+						logs.WithField("unit", unitName).Fatal("unit name in conflict. please specify service")
+					},
+				})
+			} else {
+				envCmd.AddCommand(prepareUnitCommands(unit))
+			}
+
+		}
 	}
 
 	return envCmd
