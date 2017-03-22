@@ -119,9 +119,11 @@ build() {
         $(cd ${work_path} && GOOS="${e%-*}" GOARCH="${e#*-}" go build -ldflags "${ldflags}" -o ${target_name}/${binaryPath} ${build_packages})
 
         if [ "$upx" = true ]; then
-            echo_green "Compressing ${e}" # TODO compress on release only
-            command -v upx > /dev/null || (echo "upx is required to compress" && exit 1)
-            upx ${work_path}/${target_name}/${binaryPath} &> /dev/null
+            if [ "${e%-*}" != "darwin" ]; then
+                echo_green "Compressing ${e}" # TODO compress on release only
+                command -v upx > /dev/null || (echo "upx is required to compress" && exit 1)
+                upx ${work_path}/${target_name}/${binaryPath} &> /dev/null
+            fi
         fi
 
         if [ "${e%-*}" == "windows" ]; then
