@@ -299,6 +299,7 @@ func (e Env) runHookAndGetNumRun(path string, info HookInfo) error {
 	envs["ACTION"] = info.Action
 	envs["ATTRIBUTES"] = info.Attributes
 	envs["GGN_HOME_PATH"] = ggn.Home.Path
+	envs["LOG_LEVEL"] = logs.GetLevel().String()
 
 	for _, f := range files {
 		if !f.IsDir() {
