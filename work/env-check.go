@@ -18,7 +18,7 @@ func (e Env) Check() {
 
 	//	e.Generate()
 
-	//	units, _, err := e.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-unit-files", "-no-legend", "-fields", "unit")
+	//	units, _, err := e.RunFleetCmdGetOutput("list-unit-files", "-no-legend", "-fields", "unit")
 	//	if err != nil {
 	//		e.log.WithError(err).Fatal("Cannot list unit files")
 	//	}
@@ -65,7 +65,7 @@ func (e Env) concurrentChecker(services []string) {
 //
 //	e.Generate()
 //
-//	units, _, err := e.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-unit-files", "-no-legend", "-fields", "unit")
+//	units, _, err := e.RunFleetCmdGetOutput("list-unit-files", "-no-legend", "-fields", "unit")
 //	if err != nil {
 //		e.log.WithError(err).Fatal("Cannot list unit files")
 //	}
