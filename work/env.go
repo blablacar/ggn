@@ -32,6 +32,7 @@ type Config struct {
 		Password                 string `yaml:"password,omitempty"`
 		Strict_host_key_checking bool   `yaml:"strict_host_key_checking,omitempty"`
 		Sudo                     bool   `yaml:"sudo,omitempty"`
+		Driver                   string `yaml:"driver,omitempty"`
 	} `yaml:"fleet,omitempty"`
 }
 
@@ -81,7 +82,7 @@ func (e Env) GetAttributes() map[string]interface{} {
 }
 
 func (e Env) FleetctlListUnits() {
-	stdout, _, err := e.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-units", "--full", "--no-legend")
+	stdout, _, err := e.RunFleetCmdGetOutput("list-units", "--full", "--no-legend")
 	if err != nil {
 		logs.WithEF(err, e.fields).Fatal("Failed to list-units")
 	}
@@ -93,7 +94,7 @@ func (e Env) FleetctlListUnits() {
 }
 
 func (e Env) FleetctlListMachines() {
-	stdout, _, err := e.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-machines", "--full", "--no-legend")
+	stdout, _, err := e.RunFleetCmdGetOutput("list-machines", "--full", "--no-legend")
 	if err != nil {
 		logs.WithEF(err, e.fields).Fatal("Failed to list-machines")
 	}
@@ -127,6 +128,11 @@ func (e *Env) loadConfig() {
 		if err != nil {
 			panic(err)
 		}
+	}
+
+	// backward compatibility with fleet < 1.0.0 : etcd as default driver
+	if e.config.Fleet.Driver == "" {
+		e.config.Fleet.Driver = "etcd"
 	}
 
 	src := strings.Split(e.config.Fleet.Endpoint, ",")
@@ -323,6 +329,7 @@ const FLEETCTL_ENDPOINT = "FLEETCTL_ENDPOINT"
 const FLEETCTL_SSH_USERNAME = "FLEETCTL_SSH_USERNAME"
 const FLEETCTL_STRICT_HOST_KEY_CHECKING = "FLEETCTL_STRICT_HOST_KEY_CHECKING"
 const FLEETCTL_SUDO = "FLEETCTL_SUDO"
+const FLEETCTL_DRIVER = "FLEETCTL_DRIVER"
 
 func (e Env) RunFleetCmd(args ...string) error {
 	_, _, err := e.runFleetCmdInternal(false, args)
@@ -356,6 +363,7 @@ func (e Env) runFleetCmdInternal(getOutput bool, args []string) (string, string,
 	}
 
 	envs := map[string]string{}
+	envs[FLEETCTL_DRIVER] = e.config.Fleet.Driver
 	envs[FLEETCTL_ENDPOINT] = e.config.Fleet.Endpoint
 	if e.config.Fleet.Username != "" {
 		envs[FLEETCTL_SSH_USERNAME] = e.config.Fleet.Username

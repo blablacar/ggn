@@ -159,7 +159,7 @@ func (s *Service) ListUnits() []string {
 }
 
 func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this method should be in unit
-	stdout, stderr, err := s.env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "cat", unit)
+	stdout, stderr, err := s.env.RunFleetCmdGetOutput("cat", unit)
 	if err != nil && stderr == "Unit "+unit+" not found" {
 		return "", nil
 	}
@@ -167,7 +167,7 @@ func (s *Service) GetFleetUnitContent(unit string) (string, error) { //TODO this
 }
 
 func (s *Service) FleetListUnits(command string) {
-	stdout, _, err := s.env.RunFleetCmdGetOutput("-strict-host-key-checking=false", "list-units", "--full", "--no-legend")
+	stdout, _, err := s.env.RunFleetCmdGetOutput("list-units", "--full", "--no-legend")
 	if err != nil {
 		logs.WithEF(err, s.fields).Fatal("Failed to list-units")
 	}
