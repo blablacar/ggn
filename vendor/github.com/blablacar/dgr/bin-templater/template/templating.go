@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/leekchan/gtf"
-	"gopkg.in/yaml.v2"
 	"io"
 	"os"
 	"path"
@@ -14,6 +12,9 @@ import (
 	"strings"
 	txttmpl "text/template"
 	"time"
+
+	"github.com/leekchan/gtf"
+	"gopkg.in/yaml.v2"
 )
 
 type Templating struct {

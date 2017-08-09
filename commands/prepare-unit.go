@@ -9,6 +9,7 @@ import (
 func prepareUnitCommands(unit *work.Unit) *cobra.Command {
 	var follow bool
 	var lines int
+	var manifestAttributesFlag string
 
 	unitCmd := &cobra.Command{
 		Use:   unit.Name,
@@ -35,6 +36,9 @@ func prepareUnitCommands(unit *work.Unit) *cobra.Command {
 		Use:   "update",
 		Short: getShortDescription(unit, "Update"),
 		Run: func(cmd *cobra.Command, args []string) {
+			if err := unit.Service.LoadManifestAttributes(manifestAttributesFlag); err != nil {
+				logs.WithE(err).Fatal("Loading manifest attributes failed")
+			}
 			unit.Update("unit/update")
 		},
 	}
@@ -75,6 +79,10 @@ func prepareUnitCommands(unit *work.Unit) *cobra.Command {
 		Use:   "diff",
 		Short: getShortDescription(unit, "Diff"),
 		Run: func(cmd *cobra.Command, args []string) {
+			if err := unit.Service.LoadManifestAttributes(manifestAttributesFlag); err != nil {
+				logs.WithE(err).Fatal("Loading manifest attributes failed")
+
+			}
 			unit.Diff("unit/diff")
 		},
 	}
@@ -83,6 +91,9 @@ func prepareUnitCommands(unit *work.Unit) *cobra.Command {
 		Use:   "check",
 		Short: getShortDescription(unit, "check"),
 		Run: func(cmd *cobra.Command, args []string) {
+			if err := unit.Service.LoadManifestAttributes(manifestAttributesFlag); err != nil {
+				logs.WithE(err).Fatal("Loading manifest attributes failed")
+			}
 			unit.Check("unit/check")
 		},
 	}
@@ -98,6 +109,9 @@ func prepareUnitCommands(unit *work.Unit) *cobra.Command {
 		Use:   "load",
 		Short: getShortDescription(unit, "load"),
 		Run: func(cmd *cobra.Command, args []string) {
+			if err := unit.Service.LoadManifestAttributes(manifestAttributesFlag); err != nil {
+				logs.WithE(err).Fatal("Loading manifest attributes failed")
+			}
 			unit.Load("unit/load")
 		},
 	}
@@ -114,12 +128,16 @@ func prepareUnitCommands(unit *work.Unit) *cobra.Command {
 		Use:   "generate",
 		Short: getShortDescription(unit, "generate"),
 		Run: func(cmd *cobra.Command, args []string) {
+			if err := unit.Service.LoadManifestAttributes(manifestAttributesFlag); err != nil {
+				logs.WithE(err).Fatal("Loading manifest attributes failed")
+			}
 			if err := unit.Service.Generate(); err != nil {
 				logs.WithE(err).Error("Generate failed")
 			}
 		},
 	}
 
+	unitCmd.PersistentFlags().StringVarP(&manifestAttributesFlag, "manifest-attributes", "A", "{}", "Attributes to template the service manifest with.")
 	journalCmd.Flags().BoolVarP(&follow, "follow", "f", false, "follow")
 	journalCmd.Flags().IntVarP(&lines, "lines", "l", 10, "lines")
 	updateCmd.Flags().BoolVarP(&work.BuildFlags.Force, "force", "f", false, "force update even if up to date")

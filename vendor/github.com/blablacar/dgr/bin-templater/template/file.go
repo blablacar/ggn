@@ -3,14 +3,15 @@ package template
 import (
 	"bufio"
 	"bytes"
-	"github.com/n0rad/go-erlog/data"
-	"github.com/n0rad/go-erlog/errs"
-	"github.com/n0rad/go-erlog/logs"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	txttmpl "text/template"
+
+	"github.com/n0rad/go-erlog/data"
+	"github.com/n0rad/go-erlog/errs"
+	"github.com/n0rad/go-erlog/logs"
+	"gopkg.in/yaml.v2"
 )
 
 type TemplateFile struct {
@@ -65,7 +66,7 @@ func (t *TemplateFile) loadTemplateConfig(src string) error {
 	return nil
 }
 
-func (f *TemplateFile) runTemplate(dst string, attributes map[string]interface{}, failOnNoValue bool) error {
+func (f *TemplateFile) RunTemplate(dst string, attributes map[string]interface{}, failOnNoValue bool) error {
 	if logs.IsTraceEnabled() {
 		logs.WithF(f.fields).WithField("attributes", attributes).WithField("failOnNoValue", failOnNoValue).Trace("templating with attributes")
 	}

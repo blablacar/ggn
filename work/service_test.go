@@ -1,6 +1,10 @@
 package work
 
-import "testing"
+import (
+	"os"
+	"regexp"
+	"testing"
+)
 
 func TestAddServiceIncludeFiles(t *testing.T) {
 	service := Service{}
@@ -24,4 +28,58 @@ func TestAddServiceIncludeFiles(t *testing.T) {
 			t.Fail()
 		}
 	}
+}
+
+func TestRenderManifest(t *testing.T) {
+	attr := make(map[string]interface{})
+	attr["version"] = 123
+	service := Service{
+		path:               "./testdata/cassandra-tmpl",
+		manifestAttributes: attr,
+	}
+
+	template, err := service.renderManifest()
+	if err != nil {
+		t.Fatalf("Unexpected error : %q", err)
+	}
+
+	foundVersion, _ := regexp.Match("pod-cassandra:123", template)
+	if !foundVersion {
+		t.Errorf("Unexpected template rendering : %q", template)
+	}
+}
+
+func TestReadManifest(t *testing.T) {
+	attr := make(map[string]interface{})
+	attr["version"] = 123
+	service := Service{
+		path:               "./testdata/cassandra-tmpl",
+		manifestAttributes: attr,
+	}
+
+	nowhere := Service{path: "/nowhere"}
+	_, err := nowhere.readManifest(false)
+	if !os.IsNotExist(err) {
+		t.Errorf("Unexpected error on non-existant manifest : %q", err)
+	}
+
+	manifest, _ := service.readManifest(false)
+	foundTag, _ := regexp.Match("pod-cassandra:{{.version}}", manifest)
+	if !foundTag {
+		t.Errorf("Unexpected manifest content : %q", manifest)
+	}
+}
+
+func TestReloadService(t *testing.T) {
+	attr := make(map[string]interface{})
+	attr["version"] = 123
+	service := Service{
+		path:               "./testdata/cassandra-tmpl",
+		manifestAttributes: attr,
+	}
+	service.reloadService()
+	if service.manifest.Containers[0] != "aci.blbl.cr/pod-cassandra:123" {
+		t.Errorf("Unexpected manifest content : %q", service.manifest)
+	}
+
 }

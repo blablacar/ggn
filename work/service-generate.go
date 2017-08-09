@@ -22,6 +22,11 @@ func (s *Service) Generate() error {
 		return nil
 	}
 
+	if s.isTemplatedManifest {
+		logs.WithFields(s.fields).Debug("Reloading templated service manifest")
+		s.reloadService()
+	}
+
 	logs.WithFields(s.fields).Debug("Generating units")
 
 	serviceTmpl, err := s.loadUnitTemplate(PATH_UNIT_SERVICE_TEMPLATE)
