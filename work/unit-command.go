@@ -17,6 +17,7 @@ func (u *Unit) Start(command string) error {
 		logs.WithFields(u.Fields).Debug("unit is not loaded yet")
 		if err := u.Service.Generate(); err != nil {
 			logs.WithEF(err, u.Fields).Fatal("Generate failed")
+			return err
 		}
 		u.Load(command)
 	} else {

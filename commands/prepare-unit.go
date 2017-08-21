@@ -120,6 +120,7 @@ func prepareUnitCommands(unit *work.Unit) *cobra.Command {
 		},
 	}
 
+	unitCmd.PersistentFlags().StringVarP(&work.BuildFlags.ManifestAttributes, "manifest-attributes", "A", "{}", "Attributes to template the service manifest with.")
 	journalCmd.Flags().BoolVarP(&follow, "follow", "f", false, "follow")
 	journalCmd.Flags().IntVarP(&lines, "lines", "l", 10, "lines")
 	updateCmd.Flags().BoolVarP(&work.BuildFlags.Force, "force", "f", false, "force update even if up to date")

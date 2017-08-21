@@ -94,21 +94,13 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 		},
 	}
 
+	serviceCmd.PersistentFlags().StringVarP(&work.BuildFlags.ManifestAttributes, "manifest-attributes", "A", "{}", "Attributes to template the service manifest with.")
+
 	lockCmd.Flags().StringVarP(&ttl, "duration", "t", "1h", "lock duration")
 	updateCmd.Flags().BoolVarP(&work.BuildFlags.All, "all", "a", false, "process all units, even up to date")
 	updateCmd.Flags().BoolVarP(&work.BuildFlags.Yes, "yes", "y", false, "process units without asking")
 
 	serviceCmd.AddCommand(generateCmd, lockCmd, unlockCmd, updateCmd, checkCmd, diffCmd, listCmd)
-
-	//	var units []string
-	//	hystrix.Go("list_units", func() error {
-	//		units = service.ListUnits()
-	//		return nil
-	//	}, func(err error) error {
-	//		entry := service.GetLog()
-	//		entry.WithError(err).Warn("Cannot list units. Some command may be missing")
-	//		return nil
-	//	})
 
 	for _, unitName := range service.ListUnits() {
 		unit := service.LoadUnit(unitName)

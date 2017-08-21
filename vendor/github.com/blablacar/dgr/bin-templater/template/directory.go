@@ -1,14 +1,15 @@
 package template
 
 import (
-	"github.com/leekchan/gtf"
-	"github.com/n0rad/go-erlog/data"
-	"github.com/n0rad/go-erlog/errs"
-	"github.com/n0rad/go-erlog/logs"
 	"io/ioutil"
 	"os"
 	"strings"
 	txttmpl "text/template"
+
+	"github.com/leekchan/gtf"
+	"github.com/n0rad/go-erlog/data"
+	"github.com/n0rad/go-erlog/errs"
+	"github.com/n0rad/go-erlog/logs"
 )
 
 type TemplateDir struct {
@@ -114,7 +115,7 @@ func (t *TemplateDir) processSingleDir(src string, dst string, attributes map[st
 			if err != nil {
 				return err
 			}
-			if err2 := template.runTemplate(dstObj, attributes, !t.continueOnError); err2 != nil {
+			if err2 := template.RunTemplate(dstObj, attributes, !t.continueOnError); err2 != nil {
 				if t.continueOnError {
 					err = err2
 					logs.WithEF(err, t.fields).Error("Templating failed")

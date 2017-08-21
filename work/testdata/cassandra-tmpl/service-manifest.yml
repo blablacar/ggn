@@ -1,0 +1,5 @@
+containers:
+  - aci.blbl.cr/pod-cassandra:{{.version}}
+
+nodes:
+  - hostname: cassandra1

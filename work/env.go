@@ -221,6 +221,7 @@ func (e Env) ListServices() []string {
 		if !file.IsDir() {
 			continue
 		}
+
 		if _, err := os.Stat(path + "/" + file.Name() + PATH_SERVICE_MANIFEST); os.IsNotExist(err) {
 			continue
 		}
