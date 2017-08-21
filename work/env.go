@@ -223,9 +223,7 @@ func (e Env) ListServices() []string {
 		}
 
 		if _, err := os.Stat(path + "/" + file.Name() + PATH_SERVICE_MANIFEST); os.IsNotExist(err) {
-			if _, err := os.Stat(path + "/" + file.Name() + PATH_SERVICE_MANIFEST_TEMPLATE); os.IsNotExist(err) {
-				continue
-			}
+			continue
 		}
 
 		services = append(services, file.Name())
