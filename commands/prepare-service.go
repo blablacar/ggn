@@ -12,7 +12,6 @@ import (
 
 func prepareServiceCommands(service *work.Service) *cobra.Command {
 	var ttl string
-	var manifestAttributesFlag string
 
 	serviceCmd := &cobra.Command{
 		Use:   service.Name,
@@ -24,10 +23,6 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 		Short: "generate units for " + service.Name + " on env " + service.GetEnv().GetName(),
 		Long:  `generate units using remote resolved or local pod/aci manifests`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := service.LoadManifestAttributes(manifestAttributesFlag); err != nil {
-				logs.WithE(err).Fatal("Loading manifest attributes failed")
-			}
-
 			if err := service.Generate(); err != nil {
 				logs.WithE(err).Fatal("Generate failed")
 			}
@@ -38,9 +33,6 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 		Use:   "check [manifest...]",
 		Short: "Check units for " + service.Name + " on env " + service.GetEnv().GetName(),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := service.LoadManifestAttributes(manifestAttributesFlag); err != nil {
-				logs.WithE(err).Fatal("Check failed")
-			}
 			if err := service.Check(); err != nil {
 				logs.WithE(err).Fatal("Check failed")
 			}
@@ -51,9 +43,6 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 		Use:   "diff [manifest...]",
 		Short: "diff units for " + service.Name + " on env " + service.GetEnv().GetName(),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := service.LoadManifestAttributes(manifestAttributesFlag); err != nil {
-				logs.WithE(err).Fatal("Diff failed")
-			}
 			service.Diff()
 		},
 	}
@@ -98,9 +87,6 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 		Use:   "update",
 		Short: "update " + service.Name + " on env " + service.GetEnv().GetName(),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := service.LoadManifestAttributes(manifestAttributesFlag); err != nil {
-				logs.WithE(err).Fatal("Loading manifest attributes failed")
-			}
 			err := service.Update()
 			if err != nil {
 				os.Exit(1)
@@ -108,7 +94,7 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 		},
 	}
 
-	serviceCmd.PersistentFlags().StringVarP(&manifestAttributesFlag, "manifest-attributes", "A", "{}", "Attributes to template the service manifest with.")
+	serviceCmd.PersistentFlags().StringVarP(&work.BuildFlags.ManifestAttributes, "manifest-attributes", "A", "{}", "Attributes to template the service manifest with.")
 
 	lockCmd.Flags().StringVarP(&ttl, "duration", "t", "1h", "lock duration")
 	updateCmd.Flags().BoolVarP(&work.BuildFlags.All, "all", "a", false, "process all units, even up to date")

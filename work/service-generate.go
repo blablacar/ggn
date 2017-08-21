@@ -22,9 +22,14 @@ func (s *Service) Generate() error {
 		return nil
 	}
 
-	if s.isTemplatedManifest {
-		logs.WithFields(s.fields).Debug("Reloading templated service manifest")
-		s.reloadService()
+	if err := s.LoadManifestAttributes(BuildFlags.ManifestAttributes); err != nil {
+		logs.WithE(err).Fatal("Loading manifest attributes failed")
+	}
+
+	logs.WithFields(s.fields).Debug("Templating service manifest")
+	err := s.reloadService()
+	if err != nil {
+		return errs.WithEF(err, s.fields, "Cannot render service template")
 	}
 
 	logs.WithFields(s.fields).Debug("Generating units")

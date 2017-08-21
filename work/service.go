@@ -23,23 +23,22 @@ import (
 )
 
 type Service struct {
-	fields              data.Fields
-	env                 Env
-	path                string
-	Name                string
-	hasTimer            bool
-	manifest            ServiceManifest
-	nodesAsJsonMap      []interface{}
-	lockPath            string
-	attributes          map[string]interface{}
-	generated           bool
-	generatedMutex      *sync.Mutex
-	units               map[string]*Unit
-	unitsMutex          *sync.Mutex
-	aciList             []string
-	aciListMutex        *sync.Mutex
-	manifestAttributes  map[string]interface{}
-	isTemplatedManifest bool
+	fields             data.Fields
+	env                Env
+	path               string
+	Name               string
+	hasTimer           bool
+	manifest           ServiceManifest
+	nodesAsJsonMap     []interface{}
+	lockPath           string
+	attributes         map[string]interface{}
+	generated          bool
+	generatedMutex     *sync.Mutex
+	units              map[string]*Unit
+	unitsMutex         *sync.Mutex
+	aciList            []string
+	aciListMutex       *sync.Mutex
+	manifestAttributes map[string]interface{}
 }
 
 func NewService(path string, name string, env Env) *Service {
@@ -71,10 +70,13 @@ func NewService(path string, name string, env Env) *Service {
 	return service
 }
 
-func (s *Service) reloadService() {
-	s.loadManifest(true)
+func (s *Service) reloadService() error {
+	if err := s.loadManifest(true); err != nil {
+		return err
+	}
 	s.loadAttributes()
 	s.prepareNodesAsJsonMap()
+	return nil
 }
 
 func (s *Service) prepareNodesAsJsonMap() {
@@ -326,7 +328,7 @@ func (s *Service) loadUnitTemplate(filename string) (*template.Templating, error
 }
 
 func (s *Service) renderManifest() ([]byte, error) {
-	path := s.path + PATH_SERVICE_MANIFEST_TEMPLATE
+	path := s.path + PATH_SERVICE_MANIFEST
 	fstat, err := os.Stat(path)
 	if err != nil {
 		return nil, err
@@ -338,7 +340,7 @@ func (s *Service) renderManifest() ([]byte, error) {
 
 	manifest, err := ioutil.TempFile(os.TempDir(), "prefix")
 	defer os.Remove(manifest.Name())
-	err = t.RunTemplate(manifest.Name(), s.manifestAttributes, false)
+	err = t.RunTemplate(manifest.Name(), s.manifestAttributes, true)
 	if err != nil {
 		return nil, err
 	}
@@ -349,19 +351,10 @@ func (s *Service) readManifest(renderManifest bool) ([]byte, error) {
 	var err error
 	var manifest []byte
 
-	manifestPath := s.path + PATH_SERVICE_MANIFEST_TEMPLATE
-	if _, err := os.Stat(manifestPath); !os.IsNotExist(err) {
-		s.isTemplatedManifest = true
-	} else {
-		manifestPath = s.path + PATH_SERVICE_MANIFEST
-		s.isTemplatedManifest = false
-	}
+	manifestPath := s.path + PATH_SERVICE_MANIFEST
 
-	if s.isTemplatedManifest && renderManifest {
+	if renderManifest {
 		manifest, err = s.renderManifest()
-		if err != nil {
-			return nil, err
-		}
 	} else {
 		manifest, err = ioutil.ReadFile(manifestPath)
 	}
@@ -369,17 +362,17 @@ func (s *Service) readManifest(renderManifest bool) ([]byte, error) {
 	return manifest, err
 }
 
-func (s *Service) loadManifest(renderManifest bool) {
+func (s *Service) loadManifest(renderManifest bool) error {
 	manifest := ServiceManifest{}
 
 	source, err := s.readManifest(renderManifest)
 	if err != nil {
-		logs.WithEF(err, s.fields).Warn("Cannot find manifest for service")
+		return errs.WithEF(err, s.fields, "Cannot find manifest for service")
 	}
 
 	err = yaml.Unmarshal([]byte(source), &manifest)
 	if err != nil {
-		logs.WithEF(err, s.fields).Warn("Cannot Read service manifest")
+		return errs.WithEF(err, s.fields, "Cannot Read service manifest")
 	}
 
 	if manifest.ConcurrentUpdater == 0 {
@@ -388,6 +381,7 @@ func (s *Service) loadManifest(renderManifest bool) {
 
 	logs.WithFields(s.fields).WithField("manifest", manifest).Debug("Manifest loaded")
 	s.manifest = manifest
+	return nil
 }
 
 func (s *Service) LoadManifestAttributes(attr string) error {
