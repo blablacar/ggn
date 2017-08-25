@@ -18,6 +18,7 @@ import (
 	"github.com/n0rad/go-erlog/data"
 	"github.com/n0rad/go-erlog/errs"
 	"github.com/n0rad/go-erlog/logs"
+	"github.com/peterbourgon/mergemap"
 	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
 )
@@ -340,7 +341,8 @@ func (s *Service) renderManifest() ([]byte, error) {
 
 	manifest, err := ioutil.TempFile(os.TempDir(), "prefix")
 	defer os.Remove(manifest.Name())
-	err = t.RunTemplate(manifest.Name(), s.manifestAttributes, true)
+
+	err = t.RunTemplate(manifest.Name(), mergemap.Merge(s.manifestAttributes, s.attributes), true)
 	if err != nil {
 		return nil, err
 	}
