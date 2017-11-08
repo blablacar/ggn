@@ -131,5 +131,5 @@ func prepareUnitCommands(unit *work.Unit) *cobra.Command {
 }
 
 func getShortDescription(unit *work.Unit, action string) string {
-	return action + " '" + unit.Name + "' from '" + unit.Service.GetName() + "' on env '" + unit.Service.GetEnv().GetName() + "'"
+	return action + " '" + unit.Name + "' from '" + unit.Service.GetName() + "' on env '" + unit.Service.GetEnv().GetDirName() + "'"
 }

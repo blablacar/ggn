@@ -15,12 +15,12 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 
 	serviceCmd := &cobra.Command{
 		Use:   service.Name,
-		Short: "run command for " + service.Name + " on env " + service.GetEnv().GetName(),
+		Short: "run command for " + service.Name + " on env " + service.GetEnv().GetDirName(),
 	}
 
 	generateCmd := &cobra.Command{
 		Use:   "generate",
-		Short: "generate units for " + service.Name + " on env " + service.GetEnv().GetName(),
+		Short: "generate units for " + service.Name + " on env " + service.GetEnv().GetDirName(),
 		Long:  `generate units using remote resolved or local pod/aci manifests`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := service.Generate(); err != nil {
@@ -31,7 +31,7 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 
 	checkCmd := &cobra.Command{
 		Use:   "check [manifest...]",
-		Short: "Check units for " + service.Name + " on env " + service.GetEnv().GetName(),
+		Short: "Check units for " + service.Name + " on env " + service.GetEnv().GetDirName(),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := service.Check(); err != nil {
 				logs.WithE(err).Fatal("Check failed")
@@ -41,7 +41,7 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 
 	diffCmd := &cobra.Command{
 		Use:   "diff [manifest...]",
-		Short: "diff units for " + service.Name + " on env " + service.GetEnv().GetName(),
+		Short: "diff units for " + service.Name + " on env " + service.GetEnv().GetDirName(),
 		Run: func(cmd *cobra.Command, args []string) {
 			service.Diff()
 		},
@@ -49,7 +49,7 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 
 	lockCmd := &cobra.Command{
 		Use:   "lock [message...]",
-		Short: "lock " + service.Name + " on env " + service.GetEnv().GetName(),
+		Short: "lock " + service.Name + " on env " + service.GetEnv().GetDirName(),
 		Long: `Add a lock to the service in etcd to prevent somebody else to do modification actions on this service/units.` +
 			`lock is ignored if set by the current user`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -69,7 +69,7 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 
 	unlockCmd := &cobra.Command{
 		Use:   "unlock",
-		Short: "unlock " + service.Name + " on env " + service.GetEnv().GetName(),
+		Short: "unlock " + service.Name + " on env " + service.GetEnv().GetDirName(),
 		Run: func(cmd *cobra.Command, args []string) {
 			service.Unlock("service/unlock")
 		},
@@ -77,7 +77,7 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 
 	listCmd := &cobra.Command{
 		Use:   "list-units",
-		Short: "list-units on " + service.Name + " on env " + service.GetEnv().GetName(),
+		Short: "list-units on " + service.Name + " on env " + service.GetEnv().GetDirName(),
 		Run: func(cmd *cobra.Command, args []string) {
 			service.FleetListUnits("service/unlock")
 		},
@@ -85,7 +85,7 @@ func prepareServiceCommands(service *work.Service) *cobra.Command {
 
 	updateCmd := &cobra.Command{
 		Use:   "update",
-		Short: "update " + service.Name + " on env " + service.GetEnv().GetName(),
+		Short: "update " + service.Name + " on env " + service.GetEnv().GetDirName(),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := service.Update()
 			if err != nil {

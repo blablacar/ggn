@@ -34,7 +34,7 @@ type Unit struct {
 func NewUnit(path string, hostname string, utype UnitType, service *Service) *Unit {
 	l := service.GetFields()
 
-	filename := service.GetEnv().GetName() + "_" + service.GetName() + "_" + hostname + utype.String()
+	filename := service.GetEnv().GetEnvName() + "_" + service.GetName() + "_" + hostname + utype.String()
 
 	name := hostname
 	if utype != TYPE_SERVICE {

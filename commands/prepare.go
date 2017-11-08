@@ -19,8 +19,8 @@ func loadEnvCommandsReturnNewRoot(osArgs []string, rootCmd *cobra.Command) *cobr
 		env := work.LoadEnv(envNames)
 
 		envCmd := &cobra.Command{
-			Use:   env.GetName(),
-			Short: "Run command for " + env.GetName(),
+			Use:   env.GetDirName(),
+			Short: "Run command for " + env.GetDirName(),
 			Run: func(cmd *cobra.Command, args []string) {
 
 				newRootCmd.AddCommand(prepareEnvCommands(env))

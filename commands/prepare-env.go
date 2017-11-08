@@ -8,13 +8,13 @@ import (
 
 func prepareEnvCommands(env *work.Env) *cobra.Command {
 	envCmd := &cobra.Command{
-		Use:   env.GetName(),
-		Short: "Run command for " + env.GetName(),
+		Use:   env.GetDirName(),
+		Short: "Run command for " + env.GetDirName(),
 	}
 
 	checkCmd := &cobra.Command{
 		Use:   "check",
-		Short: "Check of " + env.GetName(),
+		Short: "Check of " + env.GetDirName(),
 		Run: func(cmd *cobra.Command, args []string) {
 			env.Check()
 		},
@@ -22,7 +22,7 @@ func prepareEnvCommands(env *work.Env) *cobra.Command {
 
 	fleetctlCmd := &cobra.Command{
 		Use:   "fleetctl",
-		Short: "Run fleetctl command on " + env.GetName(),
+		Short: "Run fleetctl command on " + env.GetDirName(),
 		Run: func(cmd *cobra.Command, args []string) {
 			env.Fleetctl(args)
 		},
@@ -30,7 +30,7 @@ func prepareEnvCommands(env *work.Env) *cobra.Command {
 
 	listUnitsCmd := &cobra.Command{
 		Use:   "list-units",
-		Short: "Run list-units command on " + env.GetName(),
+		Short: "Run list-units command on " + env.GetDirName(),
 		Run: func(cmd *cobra.Command, args []string) {
 			env.FleetctlListUnits()
 		},
@@ -38,7 +38,7 @@ func prepareEnvCommands(env *work.Env) *cobra.Command {
 
 	listMachinesCmd := &cobra.Command{
 		Use:   "list-machines",
-		Short: "Run list-machines command on " + env.GetName(),
+		Short: "Run list-machines command on " + env.GetDirName(),
 		Run: func(cmd *cobra.Command, args []string) {
 			env.FleetctlListMachines()
 		},
@@ -46,7 +46,7 @@ func prepareEnvCommands(env *work.Env) *cobra.Command {
 
 	generateCmd := &cobra.Command{
 		Use:   "generate",
-		Short: "Generate units for " + env.GetName(),
+		Short: "Generate units for " + env.GetDirName(),
 		Run: func(cmd *cobra.Command, args []string) {
 			env.Generate()
 		},

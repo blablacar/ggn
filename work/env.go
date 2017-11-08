@@ -34,11 +34,12 @@ type Config struct {
 		Sudo                     bool   `yaml:"sudo,omitempty"`
 		Driver                   string `yaml:"driver,omitempty"`
 	} `yaml:"fleet,omitempty"`
+	EnvName string `yaml:"envName,omitempty"`
 }
 
 type Env struct {
 	path          string
-	name          string
+	dirName       string
 	fields        data.Fields
 	attributes    map[string]interface{}
 	config        Config
@@ -59,7 +60,7 @@ func NewEnvironment(root string, name string) *Env {
 		services:      map[string]*Service{},
 		servicesMutex: &sync.Mutex{},
 		path:          path,
-		name:          name,
+		dirName:       name,
 		fields:        fields,
 		config:        Config{},
 	}
@@ -69,8 +70,12 @@ func NewEnvironment(root string, name string) *Env {
 	return env
 }
 
-func (e Env) GetName() string {
-	return e.name
+func (e Env) GetDirName() string {
+	return e.dirName
+}
+
+func (e Env) GetEnvName() string {
+	return e.config.EnvName
 }
 
 func (e Env) GetFields() data.Fields {
@@ -133,6 +138,9 @@ func (e *Env) loadConfig() {
 	// backward compatibility with fleet < 1.0.0 : etcd as default driver
 	if e.config.Fleet.Driver == "" {
 		e.config.Fleet.Driver = "etcd"
+	}
+	if e.config.EnvName == "" {
+		e.config.EnvName = e.dirName
 	}
 
 	src := strings.Split(e.config.Fleet.Endpoint, ",")
@@ -239,7 +247,7 @@ func (e Env) ListMachineNames() ([]string, error) {
 		return inMemoryNames, nil
 	}
 
-	data, modification := ggn.Home.LoadMachinesCacheWithDate(e.name)
+	data, modification := ggn.Home.LoadMachinesCacheWithDate(e.dirName)
 	if data == "" || modification.Add(12*time.Hour).Before(time.Now()) {
 		logs.WithFields(e.fields).Debug("reloading list machines cache")
 		datatmp, _, err := e.RunFleetCmdGetOutput("list-machines", "--fields=metadata", "--no-legend")
@@ -247,7 +255,7 @@ func (e Env) ListMachineNames() ([]string, error) {
 			return nil, errors.Annotate(err, "Cannot list-machines")
 		}
 		data = datatmp
-		ggn.Home.SaveMachinesCache(e.name, data)
+		ggn.Home.SaveMachinesCache(e.dirName, data)
 	}
 
 	var names []string
@@ -257,7 +265,7 @@ func (e Env) ListMachineNames() ([]string, error) {
 		metas := strings.Split(machine, ",")
 		for _, meta := range metas {
 			elem := strings.Split(meta, "=")
-			if elem[0] == "name" {
+			if elem[0] == "dirName" {
 				// TODO this is specific to blablacar's metadata ??
 				names = append(names, elem[1])
 			}
@@ -294,7 +302,8 @@ func (e Env) runHookAndGetNumRun(path string, info HookInfo) error {
 	}
 
 	envs := map[string]string{}
-	envs["ENV"] = e.name
+	envs["ENVDIR"] = e.dirName
+	envs["ENV"] = e.config.EnvName
 	envs["COMMAND"] = info.Command
 	if info.Unit != nil {
 		envs["UNIT"] = info.Unit.GetName()
@@ -310,7 +319,7 @@ func (e Env) runHookAndGetNumRun(path string, info HookInfo) error {
 
 	for _, f := range files {
 		if !f.IsDir() {
-			hookFields := data.WithField("name", f.Name())
+			hookFields := data.WithField("dirName", f.Name())
 
 			args := []string{e.path + PATH_HOOKS + path + "/" + f.Name()}
 			for key, val := range envs {

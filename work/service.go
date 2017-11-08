@@ -184,7 +184,7 @@ func (s *Service) FleetListUnits(command string) {
 	}
 
 	unitStatuses := strings.Split(stdout, "\n")
-	prefix := s.env.GetName() + "_" + s.Name + "_"
+	prefix := s.env.GetEnvName() + "_" + s.Name + "_"
 	for _, unitStatus := range unitStatuses {
 		if strings.HasPrefix(unitStatus, prefix) {
 			fmt.Println(unitStatus)
