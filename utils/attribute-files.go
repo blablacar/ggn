@@ -3,7 +3,6 @@ package utils
 import (
 	"strings"
 
-	"github.com/blablacar/attributes-merger/attributes"
 	"github.com/google/cadvisor/utils"
 )
 
@@ -13,7 +12,7 @@ func AttributeFiles(path string) ([]string, error) {
 		return res, nil
 	}
 
-	in := attributes.NewInputs(path)
+	in := NewInputs(path)
 	// initialize input files list
 	err := in.ListFiles()
 	if err != nil {

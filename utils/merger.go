@@ -1,4 +1,4 @@
-package work
+package utils
 
 import (
 	"errors"
@@ -39,6 +39,11 @@ func MergeAttributesFilesForMap(omap map[string]interface{}, files []string) (ma
 		omap = mergemap.Merge(newMap, json)
 	}
 	return ProcessOverride(newMap), nil
+}
+
+func MergeAttributesFiles(files []string) (map[string]interface{}, error) {
+	omap := make(map[string]interface{})
+	return MergeAttributesFilesForMap(omap, files)
 }
 
 func ProcessOverride(omap map[string]interface{}) map[string]interface{} {

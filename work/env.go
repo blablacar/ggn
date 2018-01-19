@@ -10,7 +10,6 @@ import (
 	txttmpl "text/template"
 	"time"
 
-	"github.com/blablacar/attributes-merger/attributes"
 	"github.com/blablacar/dgr/bin-dgr/common"
 	"github.com/blablacar/dgr/bin-templater/template"
 	"github.com/blablacar/ggn/ggn"
@@ -173,7 +172,10 @@ func (e *Env) loadAttributes() {
 		logs.WithEF(err, e.fields).WithField("path", e.path+PATH_ATTRIBUTES).Fatal("Cannot load include files")
 	}
 
-	e.attributes = attributes.MergeAttributesFiles(files)
+	e.attributes, err = utils.MergeAttributesFiles(files)
+	if err != nil {
+		logs.WithEF(err, e.fields).WithField("path", e.path+PATH_ATTRIBUTES).Fatal("Failed to merge attributes")
+	}
 	logs.WithFields(e.fields).WithField("attributes", e.attributes).Debug("Attributes loaded")
 }
 

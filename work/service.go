@@ -264,7 +264,7 @@ func (s *Service) loadAttributes() {
 	if err != nil {
 		logs.WithEF(err, s.fields).WithField("path", s.path+PATH_ATTRIBUTES).Fatal("Cannot load include files")
 	}
-	attr, err = MergeAttributesFilesForMap(attr, files)
+	attr, err = utils.MergeAttributesFilesForMap(attr, files)
 	if err != nil {
 		logs.WithEF(err, s.fields).WithField("path", s.path+PATH_ATTRIBUTES).Fatal("Failed to merge attributes")
 	}
