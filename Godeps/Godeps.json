@@ -42,11 +42,6 @@
 			"Rev": "b889d03467ae08bb6c13241762a64305b69bcf82"
 		},
 		{
-			"ImportPath": "github.com/blablacar/attributes-merger/attributes",
-			"Comment": "0.1-6-g431a372",
-			"Rev": "431a37282b0ef85175c8c30eb79f3918c378c7d1"
-		},
-		{
 			"ImportPath": "github.com/blablacar/dgr/bin-dgr/common",
 			"Comment": "71",
 			"Rev": "6108cd7767e0068eabe2ff38384dfa5e03cd6dac"

@@ -1,17 +1,18 @@
-package attributes
+package work
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"strconv"
+
+	"github.com/n0rad/go-erlog/data"
+	"github.com/n0rad/go-erlog/errs"
 	"github.com/peterbourgon/mergemap"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"os"
-	"strconv"
 )
 
-func MergeAttributesFilesForMap(omap map[string]interface{}, files []string) map[string]interface{} {
+func MergeAttributesFilesForMap(omap map[string]interface{}, files []string) (map[string]interface{}, error) {
 
 	newMap := make(map[string]interface{})
 	newMap["default"] = omap
@@ -19,30 +20,25 @@ func MergeAttributesFilesForMap(omap map[string]interface{}, files []string) map
 	// loop over attributes files
 	// merge override files to default files
 	for _, file := range files {
-		var data interface{}
+		var contentData interface{}
 		yml, err := ioutil.ReadFile(file)
 		if err != nil {
-			panic(err)
+			return newMap, errs.WithEF(err, data.WithField("file", file), "Failed to read file")
 		}
-		// yaml to data
-		err = yaml.Unmarshal(yml, &data)
+		// yaml to contentData
+		err = yaml.Unmarshal(yml, &contentData)
 		if err != nil {
-			panic(err)
+			return newMap, errs.WithEF(err, data.WithField("file", file), "Failed to unmarshal file")
 		}
-		data, err = transform(data)
+		contentData, err = transformYampToJson(contentData)
 		if err != nil {
-			panic(err)
+			return newMap, errs.WithEF(err, data.WithField("file", file), "Failed to transform file to json")
 		}
-		// data to map
-		json := data.(map[string]interface{})
+		// contentData to map
+		json := contentData.(map[string]interface{})
 		omap = mergemap.Merge(newMap, json)
 	}
-	return ProcessOverride(newMap)
-}
-
-func MergeAttributesFiles(files []string) map[string]interface{} {
-	omap := make(map[string]interface{})
-	return MergeAttributesFilesForMap(omap, files)
+	return ProcessOverride(newMap), nil
 }
 
 func ProcessOverride(omap map[string]interface{}) map[string]interface{} {
@@ -60,31 +56,8 @@ func ProcessOverride(omap map[string]interface{}) map[string]interface{} {
 	return omap
 }
 
-func Merge(envName string, files []string) []byte { // inputDir string,
-	// "out map" to store merged yamls
-	omap := MergeAttributesFiles(files)
-
-	envjson := os.Getenv(envName)
-	if envjson != "" {
-		var envattr map[string]interface{}
-		err := json.Unmarshal([]byte(envjson), &envattr)
-		if err != nil {
-			panic(err)
-		}
-		omap = mergemap.Merge(omap, envattr)
-	}
-
-	// map to json
-	out, err := json.Marshal(omap)
-	if err != nil {
-		panic(err)
-	}
-
-	return out
-}
-
-// transform YAML to JSON
-func transform(in interface{}) (_ interface{}, err error) {
+// transformYampToJson YAML to JSON
+func transformYampToJson(in interface{}) (_ interface{}, err error) {
 	switch in.(type) {
 	case map[interface{}]interface{}:
 		o := make(map[string]interface{})
@@ -99,7 +72,7 @@ func transform(in interface{}) (_ interface{}, err error) {
 				return nil, errors.New(
 					fmt.Sprintf("type not match: expect map key string or int get: %T", k))
 			}
-			v, err = transform(v)
+			v, err = transformYampToJson(v)
 			if err != nil {
 				return nil, err
 			}
@@ -111,7 +84,7 @@ func transform(in interface{}) (_ interface{}, err error) {
 		len1 := len(in1)
 		o := make([]interface{}, len1)
 		for i := 0; i < len1; i++ {
-			o[i], err = transform(in1[i])
+			o[i], err = transformYampToJson(in1[i])
 			if err != nil {
 				return nil, err
 			}

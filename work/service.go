@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/blablacar/attributes-merger/attributes"
 	"github.com/blablacar/dgr/bin-templater/template"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/utils"
@@ -88,7 +87,7 @@ func (s *Service) prepareNodesAsJsonMap() {
 	tmpRes, err := utils.TransformYamlToJson(s.manifest.Nodes)
 	var res []interface{} = tmpRes.([]interface{})
 	if err != nil {
-		logs.WithEF(err, s.fields).Fatal("Cannot transform yaml to json")
+		logs.WithEF(err, s.fields).Fatal("Cannot transformYampToJson yaml to json")
 	}
 
 	if res[0].(map[string]interface{})[NODE_HOSTNAME].(string) == "*" {
@@ -265,7 +264,10 @@ func (s *Service) loadAttributes() {
 	if err != nil {
 		logs.WithEF(err, s.fields).WithField("path", s.path+PATH_ATTRIBUTES).Fatal("Cannot load include files")
 	}
-	attr = attributes.MergeAttributesFilesForMap(attr, files)
+	attr, err = MergeAttributesFilesForMap(attr, files)
+	if err != nil {
+		logs.WithEF(err, s.fields).WithField("path", s.path+PATH_ATTRIBUTES).Fatal("Failed to merge attributes")
+	}
 	s.attributes = attr
 	logs.WithFields(s.fields).WithField("attributes", s.attributes).Debug("Attributes loaded")
 }
