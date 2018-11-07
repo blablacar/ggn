@@ -79,7 +79,7 @@ func TestReloadService(t *testing.T) {
 	}
 	service.reloadService()
 	if service.manifest.Containers[0] != "aci.blbl.cr/pod-cassandra:123" {
-		t.Errorf("Unexpected manifest content : %q", service.manifest)
+		t.Errorf("Unexpected manifest content : %q", service.manifest.Containers[0])
 	}
 
 }

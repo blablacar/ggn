@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"context"
+
 	"github.com/blablacar/dgr/bin-templater/template"
 	"github.com/blablacar/ggn/ggn"
 	"github.com/blablacar/ggn/utils"
@@ -18,7 +20,6 @@ import (
 	"github.com/n0rad/go-erlog/errs"
 	"github.com/n0rad/go-erlog/logs"
 	"github.com/peterbourgon/mergemap"
-	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
 )
 

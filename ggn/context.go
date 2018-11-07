@@ -11,7 +11,12 @@ var GgnVersion string
 var BuildDate string
 
 func GetUserAndHost() string {
-	user := os.Getenv("USER")
+	var user string
+	if Home.Config.EnvVarUser != "" {
+		user = os.Getenv(Home.Config.EnvVarUser)
+	} else {
+		user = os.Getenv("USER")
+	}
 	if Home.Config.User != "" {
 		user = Home.Config.User
 	}
