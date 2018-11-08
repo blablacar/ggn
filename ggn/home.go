@@ -6,14 +6,15 @@ import (
 	"time"
 
 	"github.com/ghodss/yaml"
-	"github.com/mitchellh/go-homedir"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/n0rad/go-erlog/data"
 	"github.com/n0rad/go-erlog/logs"
 )
 
 type Config struct {
-	WorkPath string `yaml:"workPath,omitempty"`
-	User     string `yaml:"user,omitempty"`
+	WorkPath   string `yaml:"workPath,omitempty"`
+	User       string `yaml:"user,omitempty"`
+	EnvVarUser string `yaml:"envVarUser,omitempty"`
 }
 
 type HomeStruct struct {
