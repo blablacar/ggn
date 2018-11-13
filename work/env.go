@@ -149,6 +149,38 @@ func (e *Env) loadConfig() {
 		dest[v] = src[i]
 	}
 	e.config.Fleet.Endpoint = strings.Join(dest, ",")
+
+	if _, ok := ggn.Home.Config.OverrideConfig[e.config.EnvName]; ok {
+		e.overrideFleetEnv()
+	}
+}
+
+func (e *Env) overrideFleetEnv() {
+	overridedEnv := ggn.Home.Config.OverrideConfig[e.config.EnvName]
+	if overridedEnv.Fleet.Endpoint != "" {
+		src := strings.Split(overridedEnv.Fleet.Endpoint, ",")
+		dest := make([]string, len(src))
+		perm := rand.Perm(len(src))
+		for i, v := range perm {
+			dest[v] = src[i]
+		}
+		e.config.Fleet.Endpoint = strings.Join(dest, ",")
+	}
+	if overridedEnv.Fleet.Username != "" {
+		e.config.Fleet.Username = overridedEnv.Fleet.Username
+	}
+	if overridedEnv.Fleet.Driver != "" {
+		e.config.Fleet.Driver = overridedEnv.Fleet.Driver
+	}
+	if overridedEnv.Fleet.Password != "" {
+		e.config.Fleet.Password = overridedEnv.Fleet.Password
+	}
+	if overridedEnv.Fleet.Strict_host_key_checking != nil {
+		e.config.Fleet.Strict_host_key_checking = *overridedEnv.Fleet.Strict_host_key_checking
+	}
+	if overridedEnv.Fleet.Sudo != nil {
+		e.config.Fleet.Sudo = *overridedEnv.Fleet.Sudo
+	}
 }
 
 func (e *Env) loadPartials() {
