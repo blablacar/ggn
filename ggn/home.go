@@ -15,6 +15,17 @@ type Config struct {
 	WorkPath   string `yaml:"workPath,omitempty"`
 	User       string `yaml:"user,omitempty"`
 	EnvVarUser string `yaml:"envVarUser,omitempty"`
+
+	OverrideConfig map[string]struct {
+		Fleet struct {
+			Endpoint                 string `yaml:"endpoint,omitempty"`
+			Username                 string `yaml:"username,omitempty"`
+			Password                 string `yaml:"password,omitempty"`
+			Strict_host_key_checking *bool  `yaml:"strict_host_key_checking,omitempty"`
+			Sudo                     *bool  `yaml:"sudo,omitempty"`
+			Driver                   string `yaml:"driver,omitempty"`
+		} `yaml:"fleet,omitempty"`
+	} `yaml:"overrideConfig,omitempty"`
 }
 
 type HomeStruct struct {
